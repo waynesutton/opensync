@@ -1,8 +1,6 @@
-# claude-code-sync
+# Claude Code Sync Plugin
 
-Sync your Claude Code sessions to a web dashboard. Track your coding sessions, analyze tool usage, and monitor token consumption across projects.
-
-Works with the [opencode-sync webui](https://github.com/yourusername/opencode-sync-webui) to give you a unified view of all your AI coding sessions.
+Sync your Claude Code sessions to the OpenSync dashboard. Track coding sessions, analyze tool usage, and monitor token consumption across projects.
 
 ## Installation
 
@@ -40,7 +38,7 @@ export CLAUDE_SYNC_API_KEY="optional-api-key"
 export CLAUDE_SYNC_AUTO="true"
 ```
 
-## Configuration options
+### Configuration Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -68,19 +66,19 @@ Shows your current configuration and tests the connection to your Convex backend
 
 Manually sync the current session without waiting for it to end.
 
-## What gets synced
+## What Gets Synced
 
-The plugin captures:
-
-- **Session metadata**: project name, working directory, git branch, timestamps
-- **User prompts**: your messages to Claude (truncated for privacy)
-- **Tool calls**: which tools were used and their outcomes
-- **Token usage**: input and output token counts
-- **Model info**: which Claude model was used
+| Data | Description |
+|------|-------------|
+| Session metadata | Project name, working directory, git branch, timestamps |
+| User prompts | Your messages to Claude (truncated for privacy) |
+| Tool calls | Which tools were used and their outcomes |
+| Token usage | Input and output token counts |
+| Model info | Which Claude model was used |
 
 Sensitive data like passwords, tokens, and API keys are automatically redacted.
 
-## How it works
+## How It Works
 
 The plugin registers hooks that fire at key points in Claude Code's lifecycle:
 
@@ -104,7 +102,64 @@ All events are sent to your Convex backend in real-time.
 
 - Claude Code v1.0.41 or later
 - Python 3.10+ with `uv` available
-- A deployed Convex backend (see webui setup)
+- A deployed Convex backend (see [OpenSync Setup Guide](./SETUP.md))
+
+---
+
+## Backend Setup (For Maintainers)
+
+If you're setting up the OpenSync backend to support Claude Code sessions, follow these additional steps.
+
+### Step 1: Update the Convex Schema
+
+Add the `source` field to distinguish between OpenCode and Claude Code sessions. In `convex/schema.ts`:
+
+```typescript
+sessions: defineTable({
+  // Existing fields...
+  
+  // Add this field
+  source: v.union(v.literal("opencode"), v.literal("claude-code")),
+  
+  // Claude Code specific fields
+  startType: v.optional(v.string()),
+  endReason: v.optional(v.string()),
+  messageCount: v.optional(v.number()),
+  toolCallCount: v.optional(v.number()),
+  tokenUsage: v.optional(v.object({
+    input: v.number(),
+    output: v.number(),
+  })),
+  model: v.optional(v.string()),
+})
+  .index("by_session_id", ["sessionId"])
+  .index("by_source", ["source"])
+  .index("by_project", ["projectName"])
+```
+
+Push the schema:
+
+```bash
+npx convex dev
+```
+
+### Step 2: Add Sync Functions
+
+Create `convex/sync.ts` with the `recordEvent` mutation to handle events from Claude Code. See the full implementation in the main codebase.
+
+### Step 3: Run Migration (If Existing Data)
+
+If you have existing OpenCode sessions, migrate them to include the source field:
+
+```bash
+npx convex run migrations:addSourceToExisting
+```
+
+### Step 4: Update the WebUI (Optional)
+
+Add source filtering to the sessions list so users can filter between OpenCode and Claude Code sessions.
+
+---
 
 ## Troubleshooting
 
@@ -123,6 +178,18 @@ Check that:
 
 Run `/claude-code-sync:sync-status` to diagnose issues.
 
-## License
+### Hook not firing
 
-MIT
+Check that the plugin is loaded:
+
+```
+/plugins
+```
+
+You should see `claude-code-sync` in the list.
+
+## Related
+
+- [OpenSync Setup Guide](./SETUP.md) - Deploy your own OpenSync instance
+- [OpenCode Plugin](./OPENCODE-PLUGIN.md) - Sync OpenCode sessions
+- [API Reference](./API.md) - Access your sessions programmatically
