@@ -228,7 +228,11 @@ export function DashboardPage() {
             modelStats={modelStats || []}
             projectStats={projectStats || []}
             sessions={displaySessions}
-            onSelectSession={setSelectedSessionId}
+            onSelectSession={(id) => {
+              // Navigate to sessions view when clicking a session in overview
+              setSelectedSessionId(id);
+              if (id) setViewMode("sessions");
+            }}
             selectedSessionId={selectedSessionId}
           />
         )}
@@ -764,25 +768,6 @@ function AnalyticsView({
           </div>
         </div>
 
-        {/* Daily chart */}
-        <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
-          <h3 className="text-xs font-normal text-zinc-400 mb-4">Daily Activity</h3>
-          <div className="h-40">
-            <AreaChart
-              data={dailyStats.map((d) => ({
-                label: d.date,
-                value: d.totalTokens,
-              }))}
-              height={160}
-              color="#3b82f6"
-            />
-          </div>
-          <div className="flex justify-between mt-2 text-[10px] text-zinc-600">
-            <span>{dailyStats[0]?.date}</span>
-            <span>{dailyStats[dailyStats.length - 1]?.date}</span>
-          </div>
-        </div>
-
         {/* Model and Provider breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Models */}
@@ -873,6 +858,25 @@ function AnalyticsView({
           {projectStats.length === 0 && (
             <div className="px-4 py-8 text-center text-sm text-zinc-600">No project data</div>
           )}
+        </div>
+
+        {/* Daily chart */}
+        <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+          <h3 className="text-xs font-normal text-zinc-400 mb-4">Daily Activity</h3>
+          <div className="h-40">
+            <AreaChart
+              data={dailyStats.map((d) => ({
+                label: d.date,
+                value: d.totalTokens,
+              }))}
+              height={160}
+              color="#3b82f6"
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-[10px] text-zinc-600">
+            <span>{dailyStats[0]?.date}</span>
+            <span>{dailyStats[dailyStats.length - 1]?.date}</span>
+          </div>
         </div>
       </div>
     </div>
