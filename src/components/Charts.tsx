@@ -292,6 +292,7 @@ interface StatCardProps {
   trendColor?: string;
   icon?: React.ReactNode;
   className?: string;
+  theme?: "dark" | "tan";
 }
 
 export function StatCard({
@@ -302,17 +303,23 @@ export function StatCard({
   trendColor = "#3b82f6",
   icon,
   className,
+  theme = "dark",
 }: StatCardProps) {
+  const isDark = theme === "dark";
   return (
-    <div className={cn("p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/50", className)}>
+    <div className={cn(
+      "p-4 rounded-lg border",
+      isDark ? "bg-zinc-900/50 border-zinc-800/50" : "bg-[#f5f3f0] border-[#e6e4e1]",
+      className
+    )}>
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-xs text-zinc-500 font-normal">{label}</p>
-          <p className="text-xl font-light text-zinc-100">{value}</p>
-          {subValue && <p className="text-xs text-zinc-600">{subValue}</p>}
+          <p className={cn("text-xs font-normal", isDark ? "text-zinc-500" : "text-[#6b6b6b]")}>{label}</p>
+          <p className={cn("text-xl font-light", isDark ? "text-zinc-100" : "text-[#1a1a1a]")}>{value}</p>
+          {subValue && <p className={cn("text-xs", isDark ? "text-zinc-600" : "text-[#8b7355]")}>{subValue}</p>}
         </div>
         <div className="flex flex-col items-end gap-2">
-          {icon && <div className="text-zinc-600">{icon}</div>}
+          {icon && <div className={isDark ? "text-zinc-600" : "text-[#8b7355]"}>{icon}</div>}
           {trend && trend.length > 1 && <Sparkline data={trend} color={trendColor} />}
         </div>
       </div>

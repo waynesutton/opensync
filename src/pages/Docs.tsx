@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, Github, ChevronDown } from "lucide-react";
+import { ArrowLeft, ExternalLink, Github, ChevronDown, Sun, Moon } from "lucide-react";
+import { cn } from "../lib/utils";
+import { useTheme, getThemeClasses } from "../lib/theme";
 
 // FAQ data
 const faqs = [
@@ -47,25 +49,28 @@ const faqs = [
 ];
 
 // FAQ Item component
-function FaqItem({ question, answer }: { question: string; answer: string }) {
+function FaqItem({ question, answer, theme }: { question: string; answer: string; theme: "dark" | "tan" }) {
   const [isOpen, setIsOpen] = useState(false);
+  const t = getThemeClasses(theme);
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-[#161616]">
+    <div className={cn("rounded-lg border", t.border, t.bgCard)}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-zinc-800/30"
+        className={cn("flex w-full items-center justify-between p-4 text-left transition-colors", t.bgHover)}
       >
-        <span className="text-sm font-medium text-zinc-300">{question}</span>
+        <span className={cn("text-sm font-medium", t.textSecondary)}>{question}</span>
         <ChevronDown
-          className={`h-4 w-4 text-zinc-500 transition-transform ${
+          className={cn(
+            "h-4 w-4 transition-transform",
+            t.textSubtle,
             isOpen ? "rotate-180" : ""
-          }`}
+          )}
         />
       </button>
       {isOpen && (
-        <div className="border-t border-zinc-800 px-4 pb-4 pt-3">
-          <p className="text-xs leading-relaxed text-zinc-500">{answer}</p>
+        <div className={cn("border-t px-4 pb-4 pt-3", t.border)}>
+          <p className={cn("text-xs leading-relaxed", t.textSubtle)}>{answer}</p>
         </div>
       )}
     </div>
@@ -73,89 +78,102 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export function DocsPage() {
+  const { theme, toggleTheme } = useTheme();
+  const t = getThemeClasses(theme);
   const convexUrl =
     import.meta.env.VITE_CONVEX_URL?.replace(".cloud", ".site") ||
     "https://your-app.convex.site";
 
   return (
-    <div className="min-h-screen bg-[#0E0E0E] text-zinc-100">
+    <div className={cn("min-h-screen", t.bgPrimary, t.textPrimary)}>
       {/* Subtle gradient overlay */}
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.02),_transparent_50%)]" />
+      <div className={cn(
+        "pointer-events-none fixed inset-0",
+        theme === "dark" 
+          ? "bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.02),_transparent_50%)]"
+          : "bg-[radial-gradient(ellipse_at_top,_rgba(0,0,0,0.02),_transparent_50%)]"
+      )} />
 
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-800 bg-[#0E0E0E]/90 backdrop-blur-sm">
+      <header className={cn("sticky top-0 z-10 border-b backdrop-blur-sm", t.border, theme === "dark" ? "bg-[#0E0E0E]/90" : "bg-[#faf8f5]/90")}>
         <div className="mx-auto flex h-12 max-w-4xl items-center justify-between px-6">
           <Link
             to="/"
-            className="flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-300"
+            className={cn("flex items-center gap-2 text-sm transition-colors", t.textSubtle)}
           >
             <ArrowLeft className="h-4 w-4" />
             back
           </Link>
-          <span className="text-sm font-medium text-zinc-400">opensync</span>
-          <div className="w-12" />
+          <span className={cn("text-sm font-medium", t.textMuted)}>opensync</span>
+          <button
+            onClick={toggleTheme}
+            className={cn("p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+            title={theme === "dark" ? "Switch to tan mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
         </div>
       </header>
 
       <main className="relative mx-auto max-w-4xl px-6 py-12">
         {/* Page title */}
-        <h1 className="text-2xl font-semibold text-zinc-100">Documentation</h1>
-        <p className="mt-2 text-sm text-zinc-500">
+        <h1 className={cn("text-2xl font-semibold", t.textPrimary)}>Documentation</h1>
+        <p className={cn("mt-2 text-sm", t.textSubtle)}>
           Sync, search, and share your OpenCode and Claude Code sessions with
           Convex
         </p>
 
         {/* OpenCode Sync Plugin */}
         <section className="mt-12">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
+          <h2 className={cn("mb-4 text-sm font-medium uppercase tracking-wider", t.textSubtle)}>
             OpenCode Sync Plugin
           </h2>
-          <p className="mb-4 text-xs text-zinc-500">
+          <p className={cn("mb-4 text-xs", t.textSubtle)}>
             Sync your OpenCode sessions to the cloud automatically.
           </p>
           <div className="space-y-3">
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">1. Install the plugin</p>
-              <pre className="overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>1. Install the plugin</p>
+              <pre className={cn("overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>npm install -g opencode-sync-plugin</code>
               </pre>
             </div>
 
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">2. Authenticate</p>
-              <pre className="overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>2. Authenticate</p>
+              <pre className={cn("overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>opencode-sync login</code>
               </pre>
-              <p className="mt-2 text-xs text-zinc-600">
+              <p className={cn("mt-2 text-xs", t.textDim)}>
                 Enter the Convex URL:{" "}
-                <code className="rounded bg-zinc-800 px-1">{convexUrl}</code>
+                <code className={cn("rounded px-1", t.bgCode)}>{convexUrl}</code>
               </p>
             </div>
 
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>
                 3. Add to your opencode.json
               </p>
-              <pre className="overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+              <pre className={cn("overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>{`{
   "plugin": ["opencode-sync-plugin"]
 }`}</code>
               </pre>
             </div>
 
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">Commands</p>
-              <div className="space-y-2 text-xs text-zinc-500">
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>Commands</p>
+              <div className={cn("space-y-2 text-xs", t.textSubtle)}>
                 <div>
-                  <code className="rounded bg-zinc-800 px-1">opencode-sync login</code>
+                  <code className={cn("rounded px-1", t.bgCode)}>opencode-sync login</code>
                   <span className="ml-2">Authenticate with the backend</span>
                 </div>
                 <div>
-                  <code className="rounded bg-zinc-800 px-1">opencode-sync status</code>
+                  <code className={cn("rounded px-1", t.bgCode)}>opencode-sync status</code>
                   <span className="ml-2">Check sync status and configuration</span>
                 </div>
                 <div>
-                  <code className="rounded bg-zinc-800 px-1">opencode-sync sync</code>
+                  <code className={cn("rounded px-1", t.bgCode)}>opencode-sync sync</code>
                   <span className="ml-2">Manually sync current session</span>
                 </div>
               </div>
@@ -165,32 +183,32 @@ export function DocsPage() {
 
         {/* Claude Code Sync Plugin */}
         <section className="mt-12">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
+          <h2 className={cn("mb-4 text-sm font-medium uppercase tracking-wider", t.textSubtle)}>
             Claude Code Sync Plugin
           </h2>
-          <p className="mb-4 text-xs text-zinc-500">
+          <p className={cn("mb-4 text-xs", t.textSubtle)}>
             Sync your Claude Code sessions to the same dashboard.
           </p>
           <div className="space-y-3">
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">1. Install from marketplace</p>
-              <pre className="overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>1. Install from marketplace</p>
+              <pre className={cn("overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>/plugin install yourusername/claude-code-sync</code>
               </pre>
-              <p className="mt-2 text-xs text-zinc-600">
+              <p className={cn("mt-2 text-xs", t.textDim)}>
                 Or during development:
               </p>
-              <pre className="mt-2 overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+              <pre className={cn("mt-2 overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>claude --plugin-dir /path/to/claude-code-sync</code>
               </pre>
             </div>
 
-            <div className="rounded-lg border border-zinc-800 bg-[#161616] p-4">
-              <p className="mb-2 text-sm text-zinc-300">2. Configure</p>
-              <p className="mb-2 text-xs text-zinc-600">
-                Create <code className="rounded bg-zinc-800 px-1">~/.claude-code-sync.json</code>:
+            <div className={cn("rounded-lg border p-4", t.border, t.bgCard)}>
+              <p className={cn("mb-2 text-sm", t.textSecondary)}>2. Configure</p>
+              <p className={cn("mb-2 text-xs", t.textDim)}>
+                Create <code className={cn("rounded px-1", t.bgCode)}>~/.claude-code-sync.json</code>:
               </p>
-              <pre className="overflow-x-auto rounded bg-[#0E0E0E] p-3 text-xs text-zinc-400">
+              <pre className={cn("overflow-x-auto rounded p-3 text-xs", t.bgCode, t.textMuted)}>
                 <code>{`{
   "convex_url": "${convexUrl.replace(".site", ".cloud")}",
   "api_key": "osk_your_api_key",
@@ -453,12 +471,12 @@ export function DocsPage() {
 
         {/* FAQ */}
         <section className="mt-12">
-          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-500">
+          <h2 className={cn("mb-4 text-sm font-medium uppercase tracking-wider", t.textSubtle)}>
             Frequently Asked Questions
           </h2>
           <div className="space-y-2">
             {faqs.map((faq, index) => (
-              <FaqItem key={index} question={faq.question} answer={faq.answer} />
+              <FaqItem key={index} question={faq.question} answer={faq.answer} theme={theme} />
             ))}
           </div>
         </section>
@@ -533,19 +551,19 @@ export function DocsPage() {
         </section>
 
         {/* Footer */}
-        <footer className="mt-16 border-t border-zinc-800 pt-8 text-center">
-          <p className="text-xs text-zinc-600">
+        <footer className={cn("mt-16 border-t pt-8 text-center", t.border)}>
+          <p className={cn("text-xs", t.textDim)}>
             Built on{" "}
             <a
               href="https://convex.dev"
-              className="text-zinc-500 hover:text-zinc-400"
+              className={cn("transition-colors", t.textSubtle)}
             >
               Convex
             </a>{" "}
             and{" "}
             <a
               href="https://workos.com"
-              className="text-zinc-500 hover:text-zinc-400"
+              className={cn("transition-colors", t.textSubtle)}
             >
               WorkOS
             </a>

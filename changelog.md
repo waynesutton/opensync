@@ -8,6 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Tan mode theme toggle for Dashboard, Settings, and Docs pages (dark mode remains default)
+- Theme switcher icon in header to toggle between dark and tan modes
+- Theme persistence via localStorage
 - Modern dashboard redesign with three view modes: Overview, Sessions, Analytics
 - New analytics Convex queries: dailyStats, modelStats, projectStats, providerStats, summaryStats, sessionsWithDetails
 - Reusable chart components: BarChart, AreaChart, DonutChart, Sparkline, ProgressBar, StatCard, DataTable

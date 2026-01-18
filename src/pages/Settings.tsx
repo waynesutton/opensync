@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
+import { useTheme, getThemeClasses } from "../lib/theme";
 import { AreaChart, BarChart, ProgressBar, DonutChart } from "../components/Charts";
 import {
   ArrowLeft,
@@ -26,6 +27,8 @@ import {
   Folder,
   Bot,
   Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 // Convex URL from environment
@@ -33,9 +36,12 @@ const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
 
 // Colors for charts
 const MODEL_COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+const TAN_MODEL_COLORS = ["#EB5601", "#8b7355", "#d14a01", "#6b6b6b", "#a67c52", "#4a4a4a"];
 
 export function SettingsPage() {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const t = getThemeClasses(theme);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
@@ -95,24 +101,33 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0E0E0E]">
+    <div className={cn("min-h-screen", t.bgPrimary)}>
       {/* Header */}
-      <header className="border-b border-zinc-800/50 bg-[#0E0E0E] sticky top-0 z-10">
+      <header className={cn("border-b sticky top-0 z-10", t.border, t.bgPrimary)}>
         <div className="max-w-5xl mx-auto px-6 h-12 flex items-center gap-4">
           <Link
             to="/"
-            className="flex items-center gap-2 text-zinc-500 hover:text-zinc-400 transition-colors"
+            className={cn("flex items-center gap-2 transition-colors", t.textSubtle, t.bgHover)}
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm">Back</span>
           </Link>
-          <span className="text-zinc-300 text-sm font-normal">Settings</span>
+          <span className={cn("text-sm font-normal", t.textSecondary)}>Settings</span>
+          <div className="flex-1" />
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className={cn("p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+            title={theme === "dark" ? "Switch to tan mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* Tabs */}
-        <div className="flex items-center gap-1 mb-8 border-b border-zinc-800/50 pb-4">
+        <div className={cn("flex items-center gap-1 mb-8 border-b pb-4", t.border)}>
           {(["usage", "api", "profile"] as const).map((tab) => (
             <button
               key={tab}
@@ -120,8 +135,8 @@ export function SettingsPage() {
               className={cn(
                 "px-4 py-2 text-sm rounded-md transition-colors capitalize",
                 activeTab === tab
-                  ? "bg-zinc-800/50 text-zinc-200"
-                  : "text-zinc-500 hover:text-zinc-400 hover:bg-zinc-800/30"
+                  ? cn(t.bgToggleActive, t.textPrimary)
+                  : cn(t.textSubtle, t.bgHover)
               )}
             >
               {tab === "api" ? "API Access" : tab}
@@ -134,7 +149,7 @@ export function SettingsPage() {
           <div className="space-y-8">
             {/* Summary stats */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <BarChart3 className="h-4 w-4" />
                 Overview
               </h2>
@@ -143,32 +158,36 @@ export function SettingsPage() {
                   icon={<MessageSquare className="h-4 w-4" />}
                   label="Sessions"
                   value={stats?.sessionCount.toLocaleString() || "0"}
+                  theme={theme}
                 />
                 <StatCard
                   icon={<Cpu className="h-4 w-4" />}
                   label="Total Tokens"
                   value={formatNumber(stats?.totalTokens || 0)}
+                  theme={theme}
                 />
                 <StatCard
                   icon={<Coins className="h-4 w-4" />}
                   label="Total Cost"
                   value={`$${(stats?.totalCost || 0).toFixed(2)}`}
+                  theme={theme}
                 />
                 <StatCard
                   icon={<Clock className="h-4 w-4" />}
                   label="Total Time"
                   value={formatDuration(stats?.totalDurationMs || 0)}
+                  theme={theme}
                 />
               </div>
             </section>
 
             {/* Usage chart */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <TrendingUp className="h-4 w-4" />
                 Token Usage (30 days)
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
                 <div className="h-48">
                   <AreaChart
                     data={(dailyStats || []).map((d) => ({
@@ -176,10 +195,10 @@ export function SettingsPage() {
                       value: d.totalTokens,
                     }))}
                     height={192}
-                    color="#3b82f6"
+                    color={theme === "dark" ? "#3b82f6" : "#EB5601"}
                   />
                 </div>
-                <div className="flex justify-between mt-2 text-[10px] text-zinc-600">
+                <div className={cn("flex justify-between mt-2 text-[10px]", t.textDim)}>
                   <span>{dailyStats?.[0]?.date || ""}</span>
                   <span>{dailyStats?.[dailyStats.length - 1]?.date || ""}</span>
                 </div>
@@ -188,14 +207,14 @@ export function SettingsPage() {
 
             {/* Daily breakdown */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4">Daily Activity</h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <h2 className={cn("text-sm font-normal mb-4", t.textMuted)}>Daily Activity</h2>
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
                 <div className="h-32">
                   <BarChart
                     data={(dailyStats || []).slice(-14).map((d) => ({
                       label: new Date(d.date).toLocaleDateString("en", { weekday: "short" }),
                       value: d.sessions,
-                      color: "bg-emerald-600",
+                      color: theme === "dark" ? "bg-emerald-600" : "bg-[#EB5601]",
                     }))}
                     height={128}
                     formatValue={(v) => `${v} sessions`}
@@ -206,11 +225,11 @@ export function SettingsPage() {
 
             {/* Model usage */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <Bot className="h-4 w-4" />
                 Usage by Model
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Donut chart */}
                   <div className="flex justify-center">
@@ -220,7 +239,7 @@ export function SettingsPage() {
                       data={(modelStats || []).slice(0, 5).map((m, i) => ({
                         label: m.model,
                         value: m.totalTokens,
-                        color: MODEL_COLORS[i % MODEL_COLORS.length],
+                        color: theme === "dark" ? MODEL_COLORS[i % MODEL_COLORS.length] : TAN_MODEL_COLORS[i % TAN_MODEL_COLORS.length],
                       }))}
                     />
                   </div>
@@ -229,29 +248,29 @@ export function SettingsPage() {
                     {(modelStats || []).map((m, i) => (
                       <div key={m.model} className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-2 text-sm text-zinc-300">
+                          <span className={cn("flex items-center gap-2 text-sm", t.textSecondary)}>
                             <span
                               className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: MODEL_COLORS[i % MODEL_COLORS.length] }}
+                              style={{ backgroundColor: theme === "dark" ? MODEL_COLORS[i % MODEL_COLORS.length] : TAN_MODEL_COLORS[i % TAN_MODEL_COLORS.length] }}
                             />
                             <span className="truncate max-w-[200px]">{m.model}</span>
                           </span>
-                          <span className="text-sm text-zinc-600">{formatNumber(m.totalTokens)}</span>
+                          <span className={cn("text-sm", t.textDim)}>{formatNumber(m.totalTokens)}</span>
                         </div>
                         <ProgressBar
                           value={m.totalTokens}
                           max={modelStats?.[0]?.totalTokens || 1}
                           showPercentage={false}
-                          color={`bg-[${MODEL_COLORS[i % MODEL_COLORS.length]}]`}
+                          color={theme === "dark" ? `bg-[${MODEL_COLORS[i % MODEL_COLORS.length]}]` : `bg-[${TAN_MODEL_COLORS[i % TAN_MODEL_COLORS.length]}]`}
                         />
-                        <div className="flex justify-between text-[10px] text-zinc-600">
+                        <div className={cn("flex justify-between text-[10px]", t.textDim)}>
                           <span>{m.sessions} sessions</span>
                           <span>${m.cost.toFixed(4)}</span>
                         </div>
                       </div>
                     ))}
                     {(!modelStats || modelStats.length === 0) && (
-                      <p className="text-sm text-zinc-600 text-center py-4">No model data yet</p>
+                      <p className={cn("text-sm text-center py-4", t.textDim)}>No model data yet</p>
                     )}
                   </div>
                 </div>
@@ -260,14 +279,14 @@ export function SettingsPage() {
 
             {/* Projects */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <Folder className="h-4 w-4" />
                 Usage by Project
               </h2>
-              <div className="rounded-lg bg-zinc-900/30 border border-zinc-800/50 overflow-hidden">
+              <div className={cn("rounded-lg border overflow-hidden", t.bgCard, t.border)}>
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-800/30 text-[10px] text-zinc-600 uppercase tracking-wider">
+                    <tr className={cn("border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
                       <th className="px-4 py-2 text-left font-normal">Project</th>
                       <th className="px-4 py-2 text-right font-normal">Sessions</th>
                       <th className="px-4 py-2 text-right font-normal">Tokens</th>
@@ -276,17 +295,17 @@ export function SettingsPage() {
                   </thead>
                   <tbody>
                     {(projectStats || []).slice(0, 10).map((p) => (
-                      <tr key={p.project} className="border-b border-zinc-800/20">
-                        <td className="px-4 py-2.5 text-sm text-zinc-300 truncate max-w-[300px]">{p.project}</td>
-                        <td className="px-4 py-2.5 text-sm text-zinc-500 text-right">{p.sessions}</td>
-                        <td className="px-4 py-2.5 text-sm text-zinc-500 text-right">{formatNumber(p.totalTokens)}</td>
-                        <td className="px-4 py-2.5 text-sm text-zinc-500 text-right">${p.cost.toFixed(4)}</td>
+                      <tr key={p.project} className={cn("border-b", t.borderLight)}>
+                        <td className={cn("px-4 py-2.5 text-sm truncate max-w-[300px]", t.textSecondary)}>{p.project}</td>
+                        <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{p.sessions}</td>
+                        <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{formatNumber(p.totalTokens)}</td>
+                        <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>${p.cost.toFixed(4)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {(!projectStats || projectStats.length === 0) && (
-                  <div className="px-4 py-8 text-center text-sm text-zinc-600">No project data yet</div>
+                  <div className={cn("px-4 py-8 text-center text-sm", t.textDim)}>No project data yet</div>
                 )}
               </div>
             </section>
@@ -298,18 +317,18 @@ export function SettingsPage() {
           <div className="space-y-8">
             {/* Plugin Setup */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <Terminal className="h-4 w-4" />
                 Plugin Setup
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
-                <p className="text-sm text-zinc-500 mb-4">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+                <p className={cn("text-sm mb-4", t.textSubtle)}>
                   Configure the{" "}
                   <a
                     href="https://www.npmjs.com/package/opencode-sync-plugin"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                    className={cn("inline-flex items-center gap-1", theme === "dark" ? "text-blue-400 hover:text-blue-300" : "text-[#EB5601] hover:text-[#d14a01]")}
                   >
                     opencode-sync-plugin
                     <ExternalLink className="h-3 w-3" />
@@ -319,14 +338,14 @@ export function SettingsPage() {
                 {/* Convex URL */}
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1.5 block">Convex URL</label>
+                    <label className={cn("text-xs mb-1.5 block", t.textSubtle)}>Convex URL</label>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 text-sm font-mono text-zinc-300 bg-zinc-800/50 px-3 py-2 rounded border border-zinc-700/50 overflow-x-auto">
+                      <code className={cn("flex-1 text-sm font-mono px-3 py-2 rounded border overflow-x-auto", t.bgCode, t.border, t.textSecondary)}>
                         {CONVEX_URL || "Not configured"}
                       </code>
                       <button
                         onClick={handleCopyUrl}
-                        className="p-2 rounded hover:bg-zinc-800 border border-zinc-700/50 text-zinc-500 hover:text-zinc-400 transition-colors"
+                        className={cn("p-2 rounded border transition-colors", t.border, t.textSubtle, t.bgHover)}
                         title="Copy"
                       >
                         {copiedUrl ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
@@ -336,23 +355,23 @@ export function SettingsPage() {
 
                   {/* API Key Status */}
                   <div>
-                    <label className="text-xs text-zinc-500 mb-1.5 block">API Key</label>
+                    <label className={cn("text-xs mb-1.5 block", t.textSubtle)}>API Key</label>
                     {currentUser?.hasApiKey || newApiKey ? (
                       <div className="flex items-center gap-2">
-                        <code className="flex-1 text-sm font-mono text-zinc-300 bg-zinc-800/50 px-3 py-2 rounded border border-zinc-700/50">
+                        <code className={cn("flex-1 text-sm font-mono px-3 py-2 rounded border", t.bgCode, t.border, t.textSecondary)}>
                           {newApiKey && showApiKey ? newApiKey : "osk_••••••••••••••••"}
                         </code>
                         {newApiKey && (
                           <>
                             <button
                               onClick={() => setShowApiKey(!showApiKey)}
-                              className="p-2 rounded hover:bg-zinc-800 border border-zinc-700/50 text-zinc-500 hover:text-zinc-400 transition-colors"
+                              className={cn("p-2 rounded border transition-colors", t.border, t.textSubtle, t.bgHover)}
                             >
                               {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                             </button>
                             <button
                               onClick={handleCopyKey}
-                              className="p-2 rounded hover:bg-zinc-800 border border-zinc-700/50 text-zinc-500 hover:text-zinc-400 transition-colors"
+                              className={cn("p-2 rounded border transition-colors", t.border, t.textSubtle, t.bgHover)}
                             >
                               {copiedKey ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                             </button>
@@ -360,18 +379,18 @@ export function SettingsPage() {
                         )}
                       </div>
                     ) : (
-                      <p className="text-sm text-zinc-600">No API key generated</p>
+                      <p className={cn("text-sm", t.textDim)}>No API key generated</p>
                     )}
                   </div>
                 </div>
 
                 {/* Quick Setup */}
-                <div className="mt-4 p-3 rounded bg-zinc-800/30 border border-zinc-700/30">
-                  <p className="text-xs font-normal text-zinc-400 mb-2">Quick setup</p>
-                  <div className="space-y-1 text-xs font-mono text-zinc-500">
+                <div className={cn("mt-4 p-3 rounded border", t.bgSecondary, t.borderLight)}>
+                  <p className={cn("text-xs font-normal mb-2", t.textMuted)}>Quick setup</p>
+                  <div className={cn("space-y-1 text-xs font-mono", t.textSubtle)}>
                     <p>npm install -g opencode-sync-plugin</p>
                     <p>opencode-sync login</p>
-                    <p className="text-zinc-700"># Paste credentials when prompted</p>
+                    <p className={t.textDim}># Paste credentials when prompted</p>
                   </div>
                 </div>
               </div>
@@ -379,29 +398,29 @@ export function SettingsPage() {
 
             {/* API Key Management */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <Key className="h-4 w-4" />
                 API Key Management
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
-                <p className="text-sm text-zinc-500 mb-4">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+                <p className={cn("text-sm mb-4", t.textSubtle)}>
                   Generate an API key to access your sessions from external applications.
                 </p>
 
                 {currentUser?.hasApiKey || newApiKey ? (
                   <div className="space-y-3">
                     {newApiKey && showApiKey && (
-                      <div className="p-3 rounded bg-zinc-800/30 border border-zinc-700/30">
-                        <p className="text-xs text-zinc-500 mb-2">
+                      <div className={cn("p-3 rounded border", t.bgSecondary, t.borderLight)}>
+                        <p className={cn("text-xs mb-2", t.textSubtle)}>
                           Copy this key now. You won't see it again.
                         </p>
                         <div className="flex items-center gap-2">
-                          <code className="flex-1 text-sm font-mono text-zinc-300 bg-zinc-900/50 px-2 py-1 rounded overflow-x-auto">
+                          <code className={cn("flex-1 text-sm font-mono px-2 py-1 rounded overflow-x-auto", t.bgCode, t.textSecondary)}>
                             {newApiKey}
                           </code>
                           <button
                             onClick={handleCopyKey}
-                            className="p-2 rounded hover:bg-zinc-800 text-zinc-500 hover:text-zinc-400 transition-colors"
+                            className={cn("p-2 rounded transition-colors", t.textSubtle, t.bgHover)}
                           >
                             {copiedKey ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                           </button>
@@ -423,7 +442,10 @@ export function SettingsPage() {
                 ) : (
                   <button
                     onClick={handleGenerateKey}
-                    className="flex items-center gap-2 px-4 py-2 rounded-md bg-zinc-800 text-zinc-200 hover:bg-zinc-700 transition-colors text-sm"
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-md transition-colors text-sm",
+                      theme === "dark" ? "bg-zinc-800 text-zinc-200 hover:bg-zinc-700" : "bg-[#EB5601] text-white hover:bg-[#d14a01]"
+                    )}
                   >
                     <Key className="h-4 w-4" />
                     Generate API Key
@@ -434,20 +456,20 @@ export function SettingsPage() {
 
             {/* API Endpoints */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <Zap className="h-4 w-4" />
                 API Endpoints
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
                 <div className="space-y-2 text-sm font-mono">
-                  <EndpointRow method="GET" path="/api/sessions" />
-                  <EndpointRow method="GET" path="/api/search?q=query" />
-                  <EndpointRow method="GET" path="/api/context?q=query" />
-                  <EndpointRow method="GET" path="/api/export?id=sessionId" />
+                  <EndpointRow method="GET" path="/api/sessions" theme={theme} />
+                  <EndpointRow method="GET" path="/api/search?q=query" theme={theme} />
+                  <EndpointRow method="GET" path="/api/context?q=query" theme={theme} />
+                  <EndpointRow method="GET" path="/api/export?id=sessionId" theme={theme} />
                 </div>
                 <Link
                   to="/docs"
-                  className="mt-4 inline-block text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                  className={cn("mt-4 inline-block text-sm transition-colors", theme === "dark" ? "text-blue-400 hover:text-blue-300" : "text-[#EB5601] hover:text-[#d14a01]")}
                 >
                   View full API documentation
                 </Link>
@@ -460,26 +482,26 @@ export function SettingsPage() {
         {activeTab === "profile" && (
           <div className="space-y-8">
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4 flex items-center gap-2">
+              <h2 className={cn("text-sm font-normal mb-4 flex items-center gap-2", t.textMuted)}>
                 <User className="h-4 w-4" />
                 Profile
               </h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
+              <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
                 <div className="flex items-center gap-4">
                   {user?.profilePictureUrl ? (
                     <img src={user.profilePictureUrl} alt="" className="h-14 w-14 rounded-full" />
                   ) : (
-                    <div className="h-14 w-14 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-500 text-lg font-normal">
+                    <div className={cn("h-14 w-14 rounded-full flex items-center justify-center text-lg font-normal", t.bgSecondary, t.textSubtle)}>
                       {user?.firstName?.[0] || user?.email?.[0] || "?"}
                     </div>
                   )}
                   <div>
-                    <p className="text-zinc-200">{user?.firstName} {user?.lastName}</p>
-                    <p className="text-sm text-zinc-500">{user?.email}</p>
+                    <p className={t.textPrimary}>{user?.firstName} {user?.lastName}</p>
+                    <p className={cn("text-sm", t.textSubtle)}>{user?.email}</p>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-zinc-800/50">
+                <div className={cn("mt-6 pt-4 border-t", t.border)}>
                   <button
                     onClick={signOut}
                     className="flex items-center gap-2 px-4 py-2 rounded-md text-sm text-red-400/80 hover:bg-red-500/10 transition-colors"
@@ -493,23 +515,23 @@ export function SettingsPage() {
 
             {/* Account info */}
             <section>
-              <h2 className="text-sm font-normal text-zinc-400 mb-4">Account</h2>
-              <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50 space-y-3">
+              <h2 className={cn("text-sm font-normal mb-4", t.textMuted)}>Account</h2>
+              <div className={cn("p-4 rounded-lg border space-y-3", t.bgCard, t.border)}>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-500">Member since</span>
-                  <span className="text-sm text-zinc-300">
+                  <span className={cn("text-sm", t.textSubtle)}>Member since</span>
+                  <span className={cn("text-sm", t.textSecondary)}>
                     {currentUser?.createdAt
                       ? new Date(currentUser.createdAt).toLocaleDateString()
                       : "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-500">Total sessions</span>
-                  <span className="text-sm text-zinc-300">{stats?.sessionCount || 0}</span>
+                  <span className={cn("text-sm", t.textSubtle)}>Total sessions</span>
+                  <span className={cn("text-sm", t.textSecondary)}>{stats?.sessionCount || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-zinc-500">Total messages</span>
-                  <span className="text-sm text-zinc-300">{stats?.messageCount || 0}</span>
+                  <span className={cn("text-sm", t.textSubtle)}>Total messages</span>
+                  <span className={cn("text-sm", t.textSecondary)}>{stats?.messageCount || 0}</span>
                 </div>
               </div>
             </section>
@@ -525,30 +547,34 @@ function StatCard({
   icon,
   label,
   value,
+  theme = "dark",
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
+  theme?: "dark" | "tan";
 }) {
+  const t = getThemeClasses(theme);
   return (
-    <div className="p-4 rounded-lg bg-zinc-900/30 border border-zinc-800/50">
-      <div className="flex items-center gap-2 text-zinc-500 mb-2">
+    <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+      <div className={cn("flex items-center gap-2 mb-2", t.textSubtle)}>
         {icon}
         <span className="text-xs">{label}</span>
       </div>
-      <p className="text-xl font-light text-zinc-200">{value}</p>
+      <p className={cn("text-xl font-light", t.textPrimary)}>{value}</p>
     </div>
   );
 }
 
 // Endpoint row component
-function EndpointRow({ method, path }: { method: string; path: string }) {
+function EndpointRow({ method, path, theme = "dark" }: { method: string; path: string; theme?: "dark" | "tan" }) {
+  const t = getThemeClasses(theme);
   return (
     <div className="flex items-center gap-2">
-      <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-xs">
+      <span className={cn("px-1.5 py-0.5 rounded text-xs", theme === "dark" ? "bg-emerald-500/20 text-emerald-400" : "bg-[#EB5601]/20 text-[#EB5601]")}>
         {method}
       </span>
-      <span className="text-zinc-500">{path}</span>
+      <span className={t.textSubtle}>{path}</span>
     </div>
   );
 }

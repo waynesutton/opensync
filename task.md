@@ -32,6 +32,8 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] Session sorting by date, tokens, cost, duration
 - [x] Settings page redesign with tabbed interface
 - [x] Mobile-responsive dashboard layout
+- [x] Tan mode theme toggle for Dashboard, Settings, and Docs pages (dark mode default)
+- [x] Theme switcher icon in header with localStorage persistence
 
 ## In Progress
 

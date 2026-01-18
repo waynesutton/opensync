@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { useAuth } from "./lib/auth";
+import { ThemeProvider } from "./lib/theme";
 import { LoginPage } from "./pages/Login";
 import { DashboardPage } from "./pages/Dashboard";
 import { DocsPage } from "./pages/Docs";
@@ -58,6 +59,7 @@ function NotFoundPage() {
 
 export default function App() {
   return (
+    <ThemeProvider>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/callback" element={<LoginPage />} />
@@ -82,5 +84,6 @@ export default function App() {
       {/* Catch-all 404 route */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </ThemeProvider>
   );
 }
