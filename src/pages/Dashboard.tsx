@@ -32,6 +32,14 @@ import {
   Sun,
   Moon,
   X,
+  LayoutList,
+  Layers,
+  Play,
+  Hash,
+  Zap,
+  Activity,
+  Timer,
+  BarChart3,
 } from "lucide-react";
 
 // View modes
@@ -292,7 +300,6 @@ export function DashboardPage() {
         {viewMode === "analytics" && (
           <AnalyticsView
             summaryStats={summaryStats}
-            dailyStats={dailyStats || []}
             modelStats={modelStats || []}
             projectStats={projectStats || []}
             providerStats={providerStats || []}
@@ -498,6 +505,9 @@ function OverviewView({
   );
 }
 
+// Sessions view mode type
+type SessionsViewMode = "list" | "timeline";
+
 // Sessions View - Table with filters
 function SessionsView({
   sessions,
@@ -548,6 +558,37 @@ function SessionsView({
     selectedSession?.session?._id ? { sessionId: selectedSession.session._id } : "skip"
   );
   const [copied, setCopied] = useState(false);
+  const [sessionsViewMode, setSessionsViewMode] = useState<SessionsViewMode>("list");
+  
+  // Drag scroll state for sessions list
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Horizontal drag scroll handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   const handleCopy = async () => {
     if (markdown) {
@@ -623,6 +664,34 @@ function SessionsView({
 
           <div className="flex-1" />
 
+          {/* View mode toggle */}
+          <div className={cn("flex items-center gap-1 rounded-md p-0.5 border", t.bgToggle, t.border)}>
+            <button
+              onClick={() => setSessionsViewMode("list")}
+              className={cn(
+                "p-1 rounded transition-colors",
+                sessionsViewMode === "list"
+                  ? cn(t.bgToggleActive, t.textPrimary)
+                  : cn(t.textSubtle, "hover:opacity-80")
+              )}
+              title="List view"
+            >
+              <LayoutList className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setSessionsViewMode("timeline")}
+              className={cn(
+                "p-1 rounded transition-colors",
+                sessionsViewMode === "timeline"
+                  ? cn(t.bgToggleActive, t.textPrimary)
+                  : cn(t.textSubtle, "hover:opacity-80")
+              )}
+              title="Timeline view"
+            >
+              <Layers className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
           <span className={cn("text-xs", t.textDim)}>{sessions.length} of {total}</span>
         </div>
 
@@ -653,32 +722,57 @@ function SessionsView({
           </div>
         )}
 
-        {/* Sort header */}
-        <div className={cn("grid grid-cols-12 gap-2 px-4 py-2 border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
-          <div className="col-span-5">Title</div>
-          <SortHeader label="Tokens" field="totalTokens" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
-          <SortHeader label="Cost" field="cost" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
-          <SortHeader label="Duration" field="durationMs" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
-          <div className="col-span-1" />
-        </div>
-
-        {/* Sessions */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide">
-          {sessions.map((session) => (
-            <SessionTableRow
-              key={session._id}
-              session={session}
-              isSelected={selectedSession?.session?._id === session._id}
-              onClick={() => onSelectSession(session._id)}
-              theme={theme}
-            />
-          ))}
-          {sessions.length === 0 && (
-            <div className={cn("px-4 py-12 text-center text-sm", t.textDim)}>
-              No sessions found
+        {/* List View */}
+        {sessionsViewMode === "list" && (
+          <>
+            {/* Sort header */}
+            <div className={cn("grid grid-cols-12 gap-2 px-4 py-2 border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
+              <div className="col-span-5">Title</div>
+              <SortHeader label="Tokens" field="totalTokens" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
+              <SortHeader label="Cost" field="cost" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
+              <SortHeader label="Duration" field="durationMs" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
+              <div className="col-span-1" />
             </div>
-          )}
-        </div>
+
+            {/* Sessions list with drag scroll */}
+            <div 
+              ref={scrollContainerRef}
+              className={cn(
+                "flex-1 overflow-y-auto overflow-x-auto scrollbar-hide cursor-grab",
+                isDragging && "cursor-grabbing select-none"
+              )}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+            >
+              {sessions.map((session) => (
+                <SessionTableRow
+                  key={session._id}
+                  session={session}
+                  isSelected={selectedSession?.session?._id === session._id}
+                  onClick={() => onSelectSession(session._id)}
+                  theme={theme}
+                />
+              ))}
+              {sessions.length === 0 && (
+                <div className={cn("px-4 py-12 text-center text-sm", t.textDim)}>
+                  No sessions found
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Timeline View */}
+        {sessionsViewMode === "timeline" && (
+          <TimelineView
+            sessions={sessions}
+            selectedSessionId={selectedSession?.session?._id}
+            onSelectSession={onSelectSession}
+            theme={theme}
+          />
+        )}
       </div>
 
       {/* Session detail - full width on mobile */}
@@ -783,17 +877,210 @@ function SessionsView({
   );
 }
 
+// Timeline View for Sessions - DAW-style track visualization
+function TimelineView({
+  sessions,
+  selectedSessionId,
+  onSelectSession,
+  theme,
+}: {
+  sessions: any[];
+  selectedSessionId?: Id<"sessions">;
+  onSelectSession: (id: Id<"sessions"> | null) => void;
+  theme: "dark" | "tan";
+}) {
+  const t = getThemeClasses(theme);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  // Group sessions by project
+  const sessionsByProject = useMemo(() => {
+    const grouped: Record<string, any[]> = {};
+    sessions.forEach((s) => {
+      const project = s.projectName || s.projectPath || "Other";
+      if (!grouped[project]) grouped[project] = [];
+      grouped[project].push(s);
+    });
+    return grouped;
+  }, [sessions]);
+
+  // Calculate time range for visualization
+  const timeRange = useMemo(() => {
+    if (sessions.length === 0) return { min: Date.now() - 86400000, max: Date.now() };
+    const times = sessions.map((s) => s.createdAt);
+    return { min: Math.min(...times), max: Math.max(...times) };
+  }, [sessions]);
+
+  const getPositionPercent = (timestamp: number) => {
+    const range = timeRange.max - timeRange.min;
+    if (range === 0) return 50;
+    return ((timestamp - timeRange.min) / range) * 100;
+  };
+
+  const getWidthPercent = (durationMs?: number) => {
+    if (!durationMs) return 2;
+    const range = timeRange.max - timeRange.min;
+    if (range === 0) return 5;
+    return Math.max(2, Math.min(30, (durationMs / range) * 100));
+  };
+
+  // Drag handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  // Model colors for tracks
+  const getTrackColor = (model?: string, index?: number) => {
+    const idx = index || 0;
+    if (theme === "dark") {
+      const colors = ["bg-blue-500/70", "bg-emerald-500/70", "bg-amber-500/70", "bg-purple-500/70", "bg-cyan-500/70", "bg-rose-500/70"];
+      return colors[idx % colors.length];
+    }
+    const colors = ["bg-[#EB5601]/70", "bg-[#8b7355]/70", "bg-[#d14a01]/70", "bg-[#6b6b6b]/70", "bg-[#a67c52]/70", "bg-[#4a4a4a]/70"];
+    return colors[idx % colors.length];
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Timeline header with time markers */}
+      <div className={cn("flex border-b", t.border)}>
+        <div className={cn("w-48 shrink-0 px-3 py-2 border-r text-[10px] uppercase tracking-wider", t.border, t.textDim)}>
+          Projects
+        </div>
+        <div className="flex-1 relative h-8">
+          <div className={cn("absolute inset-0 flex items-center px-4 text-[10px]", t.textDim)}>
+            {[0, 25, 50, 75, 100].map((pct) => (
+              <div key={pct} className="absolute" style={{ left: `${pct}%` }}>
+                <span className={cn("px-1", t.bgPrimary)}>
+                  {new Date(timeRange.min + ((timeRange.max - timeRange.min) * pct) / 100).toLocaleDateString("en", { month: "short", day: "numeric" })}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tracks */}
+      <div
+        ref={scrollRef}
+        className={cn(
+          "flex-1 overflow-auto scrollbar-hide cursor-grab",
+          isDragging && "cursor-grabbing select-none"
+        )}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
+        {Object.entries(sessionsByProject).map(([project, projectSessions], projectIdx) => (
+          <div key={project} className={cn("flex border-b min-w-max", t.border)}>
+            {/* Project label */}
+            <div className={cn("w-48 shrink-0 px-3 py-3 border-r flex items-center gap-2", t.border, t.bgSecondary)}>
+              <div className={cn("w-2 h-2 rounded-full", getTrackColor(undefined, projectIdx))} />
+              <div className="min-w-0">
+                <p className={cn("text-xs truncate font-medium", t.textSecondary)}>{project}</p>
+                <p className={cn("text-[10px]", t.textDim)}>{projectSessions.length} sessions</p>
+              </div>
+            </div>
+
+            {/* Timeline track */}
+            <div className={cn("flex-1 relative h-16 min-w-[800px]", t.bgPrimary)}>
+              {/* Grid lines */}
+              <div className="absolute inset-0 flex">
+                {[0, 25, 50, 75, 100].map((pct) => (
+                  <div
+                    key={pct}
+                    className={cn("absolute h-full border-l", t.borderLight)}
+                    style={{ left: `${pct}%` }}
+                  />
+                ))}
+              </div>
+
+              {/* Session blocks */}
+              {projectSessions.map((session, idx) => {
+                const left = getPositionPercent(session.createdAt);
+                const width = getWidthPercent(session.durationMs);
+                const isSelected = selectedSessionId === session._id;
+                
+                return (
+                  <button
+                    key={session._id}
+                    onClick={() => onSelectSession(session._id)}
+                    className={cn(
+                      "absolute top-2 h-12 rounded-sm transition-all flex items-center px-2 overflow-hidden",
+                      getTrackColor(session.model, projectIdx),
+                      isSelected && "ring-2 ring-offset-1",
+                      theme === "dark" ? "ring-white ring-offset-zinc-900" : "ring-[#1a1a1a] ring-offset-[#f5f0e8]"
+                    )}
+                    style={{ left: `${left}%`, width: `${width}%`, minWidth: "60px" }}
+                    title={`${session.title || "Untitled"} - ${formatNumber(session.totalTokens)} tokens`}
+                  >
+                    <div className="min-w-0 text-left">
+                      <p className={cn("text-[10px] font-medium truncate", theme === "dark" ? "text-white" : "text-white")}>
+                        {session.title || "Untitled"}
+                      </p>
+                      <p className={cn("text-[9px] opacity-80 truncate", theme === "dark" ? "text-white/70" : "text-white/80")}>
+                        {formatNumber(session.totalTokens)} tokens
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {sessions.length === 0 && (
+          <div className={cn("flex items-center justify-center h-40 text-sm", t.textDim)}>
+            No sessions found
+          </div>
+        )}
+      </div>
+
+      {/* Footer with legend */}
+      <div className={cn("px-4 py-2 border-t flex items-center gap-4 text-[10px]", t.border, t.textDim)}>
+        <span className="flex items-center gap-1">
+          <Play className="h-3 w-3" />
+          Click session to view details
+        </span>
+        <span className="flex items-center gap-1">
+          <Timer className="h-3 w-3" />
+          Width = duration
+        </span>
+        <span className="flex items-center gap-1">
+          <Zap className="h-3 w-3" />
+          Drag to scroll
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // Analytics View - Charts and insights
 function AnalyticsView({
   summaryStats,
-  dailyStats,
   modelStats,
   projectStats,
   providerStats,
   theme,
 }: {
   summaryStats: any;
-  dailyStats: any[];
   modelStats: any[];
   projectStats: any[];
   providerStats: any[];
@@ -801,46 +1088,87 @@ function AnalyticsView({
 }) {
   const t = getThemeClasses(theme);
   
+  // Calculate efficiency metrics
+  const avgTokensPerMessage = summaryStats?.totalMessages 
+    ? Math.round(summaryStats.totalTokens / summaryStats.totalMessages) 
+    : 0;
+  const promptToCompletionRatio = summaryStats?.completionTokens 
+    ? (summaryStats.promptTokens / summaryStats.completionTokens).toFixed(2) 
+    : "0";
+  const avgCostPer1kTokens = summaryStats?.totalTokens 
+    ? ((summaryStats.totalCost / summaryStats.totalTokens) * 1000).toFixed(4) 
+    : "0";
+  
   return (
     <div className="h-full overflow-y-auto">
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Token Breakdown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
-            <p className={cn("text-xs mb-1", t.textSubtle)}>Prompt Tokens</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className={cn("h-4 w-4", theme === "dark" ? "text-blue-400" : "text-[#EB5601]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Prompt Tokens</p>
+            </div>
             <p className={cn("text-2xl font-light", t.textPrimary)}>{formatNumber(summaryStats?.promptTokens || 0)}</p>
             <p className={cn("text-xs mt-1", t.textDim)}>
               {summaryStats?.totalSessions ? Math.round(summaryStats.promptTokens / summaryStats.totalSessions).toLocaleString() : 0} avg/session
             </p>
           </div>
           <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
-            <p className={cn("text-xs mb-1", t.textSubtle)}>Completion Tokens</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Activity className={cn("h-4 w-4", theme === "dark" ? "text-emerald-400" : "text-[#8b7355]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Completion Tokens</p>
+            </div>
             <p className={cn("text-2xl font-light", t.textPrimary)}>{formatNumber(summaryStats?.completionTokens || 0)}</p>
             <p className={cn("text-xs mt-1", t.textDim)}>
               {summaryStats?.totalSessions ? Math.round(summaryStats.completionTokens / summaryStats.totalSessions).toLocaleString() : 0} avg/session
             </p>
           </div>
           <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
-            <p className={cn("text-xs mb-1", t.textSubtle)}>Messages</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Hash className={cn("h-4 w-4", theme === "dark" ? "text-amber-400" : "text-[#d14a01]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Total Tokens</p>
+            </div>
+            <p className={cn("text-2xl font-light", t.textPrimary)}>{formatNumber(summaryStats?.totalTokens || 0)}</p>
+            <p className={cn("text-xs mt-1", t.textDim)}>
+              Ratio: {promptToCompletionRatio}:1
+            </p>
+          </div>
+          <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare className={cn("h-4 w-4", theme === "dark" ? "text-purple-400" : "text-[#6b6b6b]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Messages</p>
+            </div>
             <p className={cn("text-2xl font-light", t.textPrimary)}>{(summaryStats?.totalMessages || 0).toLocaleString()}</p>
             <p className={cn("text-xs mt-1", t.textDim)}>
               {summaryStats?.totalSessions ? (summaryStats.totalMessages / summaryStats.totalSessions).toFixed(1) : 0} avg/session
             </p>
           </div>
           <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
-            <p className={cn("text-xs mb-1", t.textSubtle)}>Avg Duration</p>
-            <p className={cn("text-2xl font-light", t.textPrimary)}>
-              {summaryStats?.totalSessions
-                ? formatDuration(summaryStats.totalDurationMs / summaryStats.totalSessions)
-                : "0s"}
+            <div className="flex items-center gap-2 mb-2">
+              <Timer className={cn("h-4 w-4", theme === "dark" ? "text-cyan-400" : "text-[#a67c52]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Total Duration</p>
+            </div>
+            <p className={cn("text-2xl font-light", t.textPrimary)}>{formatDuration(summaryStats?.totalDurationMs || 0)}</p>
+            <p className={cn("text-xs mt-1", t.textDim)}>
+              {summaryStats?.totalSessions ? formatDuration(summaryStats.totalDurationMs / summaryStats.totalSessions) : "0s"} avg
             </p>
-            <p className={cn("text-xs mt-1", t.textDim)}>per session</p>
+          </div>
+          <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className={cn("h-4 w-4", theme === "dark" ? "text-rose-400" : "text-[#4a4a4a]")} />
+              <p className={cn("text-xs", t.textSubtle)}>Tokens/Message</p>
+            </div>
+            <p className={cn("text-2xl font-light", t.textPrimary)}>{avgTokensPerMessage.toLocaleString()}</p>
+            <p className={cn("text-xs mt-1", t.textDim)}>
+              ${avgCostPer1kTokens}/1K tokens
+            </p>
           </div>
         </div>
 
         {/* Model and Provider breakdown */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Models */}
+          {/* Models with detailed metrics */}
           <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
             <h3 className={cn("text-xs font-normal mb-4", t.textMuted)}>Usage by Model</h3>
             <div className="space-y-3">
@@ -898,55 +1226,77 @@ function AnalyticsView({
           </div>
         </div>
 
-        {/* Projects table */}
+        {/* Efficiency Metrics */}
+        <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
+          <h3 className={cn("text-xs font-normal mb-4", t.textMuted)}>Efficiency Metrics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className={cn("text-[10px] uppercase tracking-wider mb-1", t.textDim)}>Cost per Session</p>
+              <p className={cn("text-lg font-light", t.textPrimary)}>
+                ${(summaryStats?.avgCostPerSession || 0).toFixed(4)}
+              </p>
+            </div>
+            <div>
+              <p className={cn("text-[10px] uppercase tracking-wider mb-1", t.textDim)}>Cost per 1K Tokens</p>
+              <p className={cn("text-lg font-light", t.textPrimary)}>
+                ${avgCostPer1kTokens}
+              </p>
+            </div>
+            <div>
+              <p className={cn("text-[10px] uppercase tracking-wider mb-1", t.textDim)}>Prompt/Completion Ratio</p>
+              <p className={cn("text-lg font-light", t.textPrimary)}>
+                {promptToCompletionRatio}:1
+              </p>
+            </div>
+            <div>
+              <p className={cn("text-[10px] uppercase tracking-wider mb-1", t.textDim)}>Avg Tokens per Message</p>
+              <p className={cn("text-lg font-light", t.textPrimary)}>
+                {avgTokensPerMessage.toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Projects table with expanded metrics */}
         <div className={cn("rounded-lg border overflow-hidden", t.bgCard, t.border)}>
           <div className={cn("px-4 py-3 border-b", t.border)}>
-            <h3 className={cn("text-xs font-normal", t.textMuted)}>Projects</h3>
+            <h3 className={cn("text-xs font-normal", t.textMuted)}>Projects Overview</h3>
           </div>
-          <table className="w-full">
-            <thead>
-              <tr className={cn("border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
-                <th className="px-4 py-2 text-left font-normal">Project</th>
-                <th className="px-4 py-2 text-right font-normal">Sessions</th>
-                <th className="px-4 py-2 text-right font-normal">Tokens</th>
-                <th className="px-4 py-2 text-right font-normal">Cost</th>
-                <th className="px-4 py-2 text-right font-normal">Last Active</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projectStats.map((p) => (
-                <tr key={p.project} className={cn("border-b transition-colors", t.borderLight, t.bgHover)}>
-                  <td className={cn("px-4 py-2.5 text-sm truncate max-w-[300px]", t.textSecondary)}>{p.project}</td>
-                  <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{p.sessions}</td>
-                  <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{formatNumber(p.totalTokens)}</td>
-                  <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>${p.cost.toFixed(4)}</td>
-                  <td className={cn("px-4 py-2.5 text-sm text-right", t.textDim)}>{getTimeAgo(p.lastActive)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className={cn("border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
+                  <th className="px-4 py-2 text-left font-normal">Project</th>
+                  <th className="px-4 py-2 text-right font-normal">Sessions</th>
+                  <th className="px-4 py-2 text-right font-normal">Messages</th>
+                  <th className="px-4 py-2 text-right font-normal">Total Tokens</th>
+                  <th className="px-4 py-2 text-right font-normal">Prompt</th>
+                  <th className="px-4 py-2 text-right font-normal">Completion</th>
+                  <th className="px-4 py-2 text-right font-normal">Duration</th>
+                  <th className="px-4 py-2 text-right font-normal">Cost</th>
+                  <th className="px-4 py-2 text-right font-normal">Last Active</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {projectStats.map((p) => (
+                  <tr key={p.project} className={cn("border-b transition-colors", t.borderLight, t.bgHover)}>
+                    <td className={cn("px-4 py-2.5 text-sm truncate max-w-[200px]", t.textSecondary)}>{p.project}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{p.sessions}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{p.messageCount || "-"}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>{formatNumber(p.totalTokens)}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textDim)}>{formatNumber(p.promptTokens || 0)}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textDim)}>{formatNumber(p.completionTokens || 0)}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textDim)}>{formatDuration(p.totalDurationMs)}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textSubtle)}>${p.cost.toFixed(4)}</td>
+                    <td className={cn("px-4 py-2.5 text-sm text-right", t.textDim)}>{getTimeAgo(p.lastActive)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           {projectStats.length === 0 && (
             <div className={cn("px-4 py-8 text-center text-sm", t.textDim)}>No project data</div>
           )}
-        </div>
-
-        {/* Daily chart */}
-        <div className={cn("p-4 rounded-lg border", t.bgCard, t.border)}>
-          <h3 className={cn("text-xs font-normal mb-4", t.textMuted)}>Daily Activity</h3>
-          <div className="h-40">
-            <AreaChart
-              data={dailyStats.map((d) => ({
-                label: d.date,
-                value: d.totalTokens,
-              }))}
-              height={160}
-              color={theme === "dark" ? "#3b82f6" : "#EB5601"}
-            />
-          </div>
-          <div className={cn("flex justify-between mt-2 text-[10px]", t.textDim)}>
-            <span>{dailyStats[0]?.date}</span>
-            <span>{dailyStats[dailyStats.length - 1]?.date}</span>
-          </div>
         </div>
       </div>
     </div>

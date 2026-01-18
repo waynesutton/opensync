@@ -28,7 +28,7 @@ Backend functions and schema.
 | `users.ts` | User queries/mutations: getOrCreate, me, stats, API key management |
 | `sessions.ts` | Session CRUD: list, get, getPublic, setVisibility, remove, getMarkdown, upsert, listExternalIds |
 | `messages.ts` | Message mutations: upsert with parts |
-| `analytics.ts` | Analytics queries: dailyStats, modelStats, projectStats, providerStats, summaryStats, sessionsWithDetails |
+| `analytics.ts` | Analytics queries: dailyStats, modelStats, projectStats (extended with messageCount, promptTokens, completionTokens, totalDurationMs), providerStats, summaryStats, sessionsWithDetails |
 | `search.ts` | Full-text and semantic search: searchSessions, searchMessages, semanticSearch, hybridSearch |
 | `embeddings.ts` | Vector embedding generation for semantic search |
 | `api.ts` | Internal API functions: listSessions, getSession, fullTextSearch, exportSession, getStats, semanticSearch, hybridSearch, getContext |

@@ -7,7 +7,8 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - fix filter ui
 - workos login fix
 - add claude code plugin
-- add semantic search
+- notifications matches the ui
+- small footer
 
 ## Completed
 
@@ -44,10 +45,16 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] Hidden scrollbar on sessions list while keeping scroll functionality
 - [x] Fixed Tokens/Cost/Duration table header alignment
 - [x] Fixed markdown download with sanitized filenames and loading state
+- [x] Timeline view for sessions (DAW-style track visualization grouped by project)
+- [x] Horizontal drag scrolling for sessions list and timeline view
+- [x] Sessions view mode toggle (list/timeline)
+- [x] Enhanced Analytics with efficiency metrics (tokens/message, cost per 1K, prompt/completion ratio)
+- [x] Extended project analytics table with full token breakdown and duration
+- [x] Removed Daily Activity chart from Analytics (replaced with detailed metrics)
 
 ## In Progress
 
-- [ ] Alt sessions view (waiting for design image)
+None currently.
 
 ## Backlog
 
@@ -104,8 +111,8 @@ See [SYNC-FOR-EVALS-PRD.md](docs/SYNC-FOR-EVALS-PRD.md) for full specification.
   - [x] Analytics overview with 30-day range
   - [x] Usage charts by model
   - [x] Model comparison with progress bars
+  - [x] Efficiency metrics (tokens per message, cost per 1K tokens, prompt/completion ratio)
   - [ ] Date range selector (custom ranges)
-  - [ ] Efficiency metrics (tokens per message, cost per 1K tokens)
 
 ### Low Priority (Marketplace)
 

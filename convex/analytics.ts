@@ -148,14 +148,18 @@ export const modelStats = query({
   },
 });
 
-// Project usage breakdown
+// Project usage breakdown with extended metrics
 export const projectStats = query({
   args: {},
   returns: v.array(
     v.object({
       project: v.string(),
       sessions: v.number(),
+      messageCount: v.number(),
       totalTokens: v.number(),
+      promptTokens: v.number(),
+      completionTokens: v.number(),
+      totalDurationMs: v.number(),
       cost: v.number(),
       lastActive: v.number(),
     })
@@ -176,10 +180,14 @@ export const projectStats = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    // Group by project
+    // Group by project with extended metrics
     const byProject: Record<string, {
       sessions: number;
+      messageCount: number;
       totalTokens: number;
+      promptTokens: number;
+      completionTokens: number;
+      totalDurationMs: number;
       cost: number;
       lastActive: number;
     }> = {};
@@ -189,13 +197,21 @@ export const projectStats = query({
       if (!byProject[project]) {
         byProject[project] = {
           sessions: 0,
+          messageCount: 0,
           totalTokens: 0,
+          promptTokens: 0,
+          completionTokens: 0,
+          totalDurationMs: 0,
           cost: 0,
           lastActive: 0,
         };
       }
       byProject[project].sessions += 1;
+      byProject[project].messageCount += session.messageCount || 0;
       byProject[project].totalTokens += session.totalTokens;
+      byProject[project].promptTokens += session.promptTokens;
+      byProject[project].completionTokens += session.completionTokens;
+      byProject[project].totalDurationMs += session.durationMs || 0;
       byProject[project].cost += session.cost;
       byProject[project].lastActive = Math.max(byProject[project].lastActive, session.updatedAt);
     }

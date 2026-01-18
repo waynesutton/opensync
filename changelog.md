@@ -11,12 +11,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Netlify logo added to login page footer alongside Convex and WorkOS logos
 - Close icon (X) button to session detail panel header for desktop users
 - Hidden scrollbar CSS utility class for cleaner UI while maintaining scroll functionality
+- Timeline view for sessions (DAW-style track visualization grouped by project)
+- Horizontal drag scrolling for sessions list and timeline view
+- Sessions view mode toggle (list/timeline) in the filter bar
+- Enhanced Analytics tab with efficiency metrics (tokens/message, cost per 1K tokens, prompt/completion ratio)
+- Extended project analytics table with messages, prompt tokens, completion tokens, and duration columns
+- New stat cards with icons for token breakdown (prompt, completion, total, messages, duration)
 
 ### Fixed
 
 - Fixed Tokens/Cost/Duration table header alignment in sessions view
 - Fixed markdown download with sanitized filenames and date timestamps
 - Added loading state to download button when markdown is being fetched
+
+### Changed
+
+- Removed Daily Activity chart from Analytics view (replaced with more detailed metrics)
+- Updated projectStats Convex query to include messageCount, promptTokens, completionTokens, and totalDurationMs
 - Tan mode theme toggle for Dashboard, Settings, and Docs pages (dark mode remains default)
 - Theme switcher icon in header to toggle between dark and tan modes
 - Theme persistence via localStorage
