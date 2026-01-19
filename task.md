@@ -93,6 +93,15 @@ None currently.
 
 ## Recently Completed
 
+- [x] Mobile optimization for Login and Dashboard pages
+  - Fixed Getting Started section on Login page (was hidden on mobile with the dashboard preview)
+  - Dashboard header: smaller padding, source dropdown hidden on small mobile, scrollable view toggles
+  - Sessions filter bar: wrapping layout, icon-only filter button on mobile, hidden timeline view
+  - Session rows: stacked mobile layout vs 12-column desktop grid
+  - Analytics filter bar: responsive search input, hidden advanced filters on mobile
+  - Footer: condensed text on mobile
+  - Added mobile Context icon in header nav
+
 - [x] Fixed public sessions not showing all data and missing theme toggle
   - Added dark/tan theme toggle button (Sun/Moon icons) to public session header
   - Added content normalization helpers (getTextContent, getToolCallDetails, getToolResult)

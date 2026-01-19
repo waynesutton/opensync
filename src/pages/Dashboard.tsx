@@ -132,26 +132,28 @@ export function DashboardPage() {
   return (
     <div className={cn("h-screen flex flex-col", t.bgPrimary)}>
       {/* Header */}
-      <header className={cn("h-12 border-b flex items-center px-4 gap-4", t.border, t.bgPrimary)}>
-        <Link to="/" className={cn("font-normal text-sm tracking-tight", t.textSecondary)}>
+      <header className={cn("h-12 border-b flex items-center px-3 sm:px-4 gap-2 sm:gap-4", t.border, t.bgPrimary)}>
+        <Link to="/" className={cn("font-normal text-sm tracking-tight shrink-0", t.textSecondary)}>
           opensync
         </Link>
 
-        {/* Source filter dropdown */}
-        <SourceDropdown
-          value={sourceFilter}
-          onChange={setSourceFilter}
-          theme={theme}
-        />
+        {/* Source filter dropdown - hidden on small mobile */}
+        <div className="hidden sm:block">
+          <SourceDropdown
+            value={sourceFilter}
+            onChange={setSourceFilter}
+            theme={theme}
+          />
+        </div>
 
-        {/* View toggles */}
-        <div className={cn("flex items-center gap-1 rounded-md p-0.5 border", t.bgToggle, t.border)}>
+        {/* View toggles - scrollable on mobile */}
+        <div className={cn("flex items-center gap-1 rounded-md p-0.5 border overflow-x-auto scrollbar-hide", t.bgToggle, t.border)}>
           {(["overview", "sessions", "evals", "analytics"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
               className={cn(
-                "px-3 py-1 text-xs rounded transition-colors capitalize",
+                "px-2 sm:px-3 py-1 text-[11px] sm:text-xs rounded transition-colors capitalize whitespace-nowrap shrink-0",
                 viewMode === mode
                   ? cn(t.bgToggleActive, t.textPrimary)
                   : cn(t.textSubtle, "hover:opacity-80")
@@ -163,17 +165,17 @@ export function DashboardPage() {
         </div>
 
         {/* Spacer */}
-        <div className="flex-1" />
+        <div className="flex-1 min-w-0" />
 
-        {/* Navigation links */}
-        <div className="flex items-center gap-3">
+        {/* Navigation links - hidden on mobile, icons only on tablet */}
+        <div className="hidden md:flex items-center gap-3">
           <Link
             to="/context"
             className={cn("flex items-center gap-1.5 text-xs transition-colors", t.textSubtle, "hover:opacity-80")}
             title="Search and context"
           >
             <Search className="h-3.5 w-3.5" />
-            Context
+            <span className="hidden lg:inline">Context</span>
           </Link>
           <Link
             to="/docs"
@@ -184,7 +186,15 @@ export function DashboardPage() {
         </div>
 
         {/* Right nav */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          {/* Context link - mobile only (icon) */}
+          <Link
+            to="/context"
+            className={cn("md:hidden p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+            title="Search and context"
+          >
+            <Search className="h-4 w-4" />
+          </Link>
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -304,7 +314,7 @@ export function DashboardPage() {
       </main>
 
       {/* Footer */}
-      <footer className={cn("h-10 border-t flex items-center justify-between px-4", t.border, t.bgPrimary)}>
+      <footer className={cn("h-10 border-t flex items-center justify-between px-3 sm:px-4", t.border, t.bgPrimary)}>
         <a
           href="https://github.com/waynesutton/opensync"
           target="_blank"
@@ -312,15 +322,16 @@ export function DashboardPage() {
           className={cn("flex items-center gap-1.5 text-xs transition-colors", t.textDim, "hover:opacity-80")}
         >
           <Github className="h-3.5 w-3.5" />
-          <span>opensync</span>
+          <span className="hidden sm:inline">opensync</span>
         </a>
         <a
           href="https://convex.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className={cn("text-xs transition-colors", t.textDim, "hover:opacity-80")}
+          className={cn("text-[10px] sm:text-xs transition-colors", t.textDim, "hover:opacity-80")}
         >
-          powered by convex
+          <span className="sm:hidden">convex</span>
+          <span className="hidden sm:inline">powered by convex</span>
         </a>
       </footer>
     </div>
@@ -846,23 +857,23 @@ function SessionsView({
         selectedSession ? "hidden lg:flex lg:w-1/2" : "w-full"
       )}>
         {/* Filters bar */}
-        <div className={cn("px-4 py-3 border-b flex items-center gap-3", t.border)}>
+        <div className={cn("px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center gap-2 sm:gap-3 flex-wrap", t.border)}>
           <button
             onClick={onToggleFilters}
             className={cn(
-              "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
+              "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors shrink-0",
               showFilters || hasActiveFilters
                 ? cn(t.bgToggleActive, t.textSecondary)
                 : cn(t.textSubtle, t.bgHover)
             )}
           >
             <Filter className="h-3 w-3" />
-            Filters
+            <span className="hidden sm:inline">Filters</span>
             {hasActiveFilters && <span className={cn("w-1.5 h-1.5 rounded-full", theme === "dark" ? "bg-blue-500" : "bg-[#EB5601]")} />}
           </button>
 
           {hasActiveFilters && (
-            <>
+            <div className="flex items-center gap-2 flex-wrap">
               {filterModel && (
                 <FilterPill label="Model" value={filterModel} active onClear={() => onFilterModel(undefined)} />
               )}
@@ -873,15 +884,15 @@ function SessionsView({
                 <FilterPill label="Provider" value={filterProvider} active onClear={() => onFilterProvider(undefined)} />
               )}
               <button onClick={onClearFilters} className={cn("text-xs", t.textSubtle)}>
-                Clear all
+                Clear
               </button>
-            </>
+            </div>
           )}
 
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0" />
 
           {/* View mode toggle */}
-          <div className={cn("flex items-center gap-1 rounded-md p-0.5 border", t.bgToggle, t.border)}>
+          <div className={cn("flex items-center gap-1 rounded-md p-0.5 border shrink-0", t.bgToggle, t.border)}>
             <button
               onClick={() => setSessionsViewMode("list")}
               className={cn(
@@ -897,7 +908,7 @@ function SessionsView({
             <button
               onClick={() => setSessionsViewMode("timeline")}
               className={cn(
-                "p-1 rounded transition-colors",
+                "hidden sm:block p-1 rounded transition-colors",
                 sessionsViewMode === "timeline"
                   ? cn(t.bgToggleActive, t.textPrimary)
                   : cn(t.textSubtle, "hover:opacity-80")
@@ -920,7 +931,7 @@ function SessionsView({
             </button>
           </div>
 
-          <span className={cn("text-xs", t.textDim)}>{sessions.length} of {total}</span>
+          <span className={cn("text-xs shrink-0", t.textDim)}>{sessions.length}<span className="hidden sm:inline"> of {total}</span></span>
         </div>
 
         {/* Filter dropdowns */}
@@ -953,13 +964,18 @@ function SessionsView({
         {/* List View */}
         {sessionsViewMode === "list" && (
           <>
-            {/* Sort header */}
-            <div className={cn("grid grid-cols-12 gap-2 px-4 py-2 border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
+            {/* Sort header - simplified on mobile */}
+            <div className={cn("hidden sm:grid grid-cols-12 gap-2 px-4 py-2 border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
               <div className="col-span-5">Title</div>
               <SortHeader label="Tokens" field="totalTokens" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
               <SortHeader label="Cost" field="cost" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
               <SortHeader label="Duration" field="durationMs" current={sortField} order={sortOrder} onChange={onSortChange} className="col-span-2" alignRight theme={theme} />
               <div className="col-span-1" />
+            </div>
+            {/* Mobile sort header */}
+            <div className={cn("sm:hidden flex items-center justify-between px-3 py-2 border-b text-[10px] uppercase tracking-wider", t.borderLight, t.textDim)}>
+              <span>Sessions</span>
+              <SortHeader label="Tokens" field="totalTokens" current={sortField} order={sortOrder} onChange={onSortChange} theme={theme} />
             </div>
 
             {/* Sessions list with drag scroll */}
@@ -2063,10 +2079,10 @@ function AnalyticsView({
         {/* Projects table with expanded metrics */}
         <div className={cn("rounded-lg border overflow-hidden", t.bgCard, t.border)}>
           {/* Filter bar */}
-          <div className={cn("px-4 py-3 border-b flex items-center gap-3 flex-wrap", t.border)}>
-            <h3 className={cn("text-xs font-normal", t.textMuted)}>Projects Overview</h3>
+          <div className={cn("px-3 sm:px-4 py-2 sm:py-3 border-b flex items-center gap-2 sm:gap-3 flex-wrap", t.border)}>
+            <h3 className={cn("text-xs font-normal", t.textMuted)}>Projects</h3>
             
-            <div className="flex-1" />
+            <div className="flex-1 min-w-0" />
             
             {/* Search */}
             <div className="relative">
@@ -2075,17 +2091,17 @@ function AnalyticsView({
                 type="text"
                 value={projectSearch}
                 onChange={(e) => setProjectSearch(e.target.value)}
-                placeholder="Search projects..."
+                placeholder="Search..."
                 className={cn(
-                  "h-7 pl-7 pr-3 rounded border text-xs focus:outline-none w-40",
+                  "h-7 pl-7 pr-2 rounded border text-xs focus:outline-none w-28 sm:w-40",
                   t.bgInput, t.borderInput, t.textSecondary, t.textPlaceholder, t.borderFocus
                 )}
               />
             </div>
             
-            {/* Min sessions filter */}
-            <div className="flex items-center gap-1.5">
-              <span className={cn("text-[10px]", t.textDim)}>Min sessions:</span>
+            {/* Min sessions filter - hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              <span className={cn("text-[10px]", t.textDim)}>Min:</span>
               <select
                 value={minSessions ?? ""}
                 onChange={(e) => setMinSessions(e.target.value ? Number(e.target.value) : undefined)}
@@ -2095,13 +2111,12 @@ function AnalyticsView({
                 <option value="2">2+</option>
                 <option value="5">5+</option>
                 <option value="10">10+</option>
-                <option value="25">25+</option>
               </select>
             </div>
             
-            {/* Min tokens filter */}
-            <div className="flex items-center gap-1.5">
-              <span className={cn("text-[10px]", t.textDim)}>Min tokens:</span>
+            {/* Min tokens filter - hidden on mobile */}
+            <div className="hidden md:flex items-center gap-1.5">
+              <span className={cn("text-[10px]", t.textDim)}>Tokens:</span>
               <select
                 value={minTokens ?? ""}
                 onChange={(e) => setMinTokens(e.target.value ? Number(e.target.value) : undefined)}
@@ -2111,7 +2126,6 @@ function AnalyticsView({
                 <option value="1000">1K+</option>
                 <option value="10000">10K+</option>
                 <option value="50000">50K+</option>
-                <option value="100000">100K+</option>
               </select>
             </div>
             
@@ -2122,7 +2136,7 @@ function AnalyticsView({
             )}
             
             <span className={cn("text-[10px]", t.textDim)}>
-              {filteredProjects.length} of {projectStats.length}
+              {filteredProjects.length}<span className="hidden sm:inline"> of {projectStats.length}</span>
             </span>
           </div>
           
@@ -2261,47 +2275,83 @@ function SessionTableRow({ session, isSelected, onClick, theme }: { session: any
   const isClaudeCode = source === "claude-code";
   
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full grid grid-cols-12 gap-2 px-4 py-2.5 transition-colors text-left items-center",
-        t.bgHover,
-        isSelected && t.bgActive
-      )}
-    >
-      <div className="col-span-5 flex items-center gap-2 min-w-0">
-        <MessageSquare className={cn("h-3.5 w-3.5 shrink-0", t.iconMuted)} />
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
-            {/* Source badge - shows CC for Claude Code, OC for OpenCode */}
-            <span className={cn(
-              "shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide",
-              isClaudeCode
-                ? "bg-amber-500/15 text-amber-500"
-                : "bg-blue-500/15 text-blue-400"
-            )}>
-              {isClaudeCode ? "CC" : "OC"}
-            </span>
+    <>
+      {/* Desktop row */}
+      <button
+        onClick={onClick}
+        className={cn(
+          "hidden sm:grid w-full grid-cols-12 gap-2 px-4 py-2.5 transition-colors text-left items-center",
+          t.bgHover,
+          isSelected && t.bgActive
+        )}
+      >
+        <div className="col-span-5 flex items-center gap-2 min-w-0">
+          <MessageSquare className={cn("h-3.5 w-3.5 shrink-0", t.iconMuted)} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
+              {/* Source badge - shows CC for Claude Code, OC for OpenCode */}
+              <span className={cn(
+                "shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide",
+                isClaudeCode
+                  ? "bg-amber-500/15 text-amber-500"
+                  : "bg-blue-500/15 text-blue-400"
+              )}>
+                {isClaudeCode ? "CC" : "OC"}
+              </span>
+            </div>
+            <p className={cn("text-[10px] truncate", t.textDim)}>
+              {session.model || "unknown"} · {getTimeAgo(session.updatedAt)}
+            </p>
           </div>
-          <p className={cn("text-[10px] truncate", t.textDim)}>
-            {session.model || "unknown"} · {getTimeAgo(session.updatedAt)}
-          </p>
         </div>
-      </div>
-      <div className="col-span-2 text-right">
-        <span className={cn("text-sm", t.textMuted)}>{formatNumber(session.totalTokens)}</span>
-      </div>
-      <div className="col-span-2 text-right">
-        <span className={cn("text-sm", t.textSubtle)}>${session.cost.toFixed(4)}</span>
-      </div>
-      <div className="col-span-2 text-right">
-        <span className={cn("text-sm", t.textDim)}>{formatDuration(session.durationMs)}</span>
-      </div>
-      <div className="col-span-1 flex justify-end">
-        {session.isPublic && <Globe className="h-3 w-3 text-emerald-500" />}
-      </div>
-    </button>
+        <div className="col-span-2 text-right">
+          <span className={cn("text-sm", t.textMuted)}>{formatNumber(session.totalTokens)}</span>
+        </div>
+        <div className="col-span-2 text-right">
+          <span className={cn("text-sm", t.textSubtle)}>${session.cost.toFixed(4)}</span>
+        </div>
+        <div className="col-span-2 text-right">
+          <span className={cn("text-sm", t.textDim)}>{formatDuration(session.durationMs)}</span>
+        </div>
+        <div className="col-span-1 flex justify-end">
+          {session.isPublic && <Globe className="h-3 w-3 text-emerald-500" />}
+        </div>
+      </button>
+      
+      {/* Mobile row */}
+      <button
+        onClick={onClick}
+        className={cn(
+          "sm:hidden w-full px-3 py-3 transition-colors text-left",
+          t.bgHover,
+          isSelected && t.bgActive
+        )}
+      >
+        <div className="flex items-start gap-2">
+          <MessageSquare className={cn("h-4 w-4 shrink-0 mt-0.5", t.iconMuted)} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
+              <span className={cn(
+                "shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase",
+                isClaudeCode ? "bg-amber-500/15 text-amber-500" : "bg-blue-500/15 text-blue-400"
+              )}>
+                {isClaudeCode ? "CC" : "OC"}
+              </span>
+              {session.isPublic && <Globe className="h-3 w-3 text-emerald-500 shrink-0" />}
+            </div>
+            <div className={cn("flex items-center gap-2 mt-1 text-[11px]", t.textDim)}>
+              <span>{formatNumber(session.totalTokens)} tokens</span>
+              <span>·</span>
+              <span>${session.cost.toFixed(4)}</span>
+              <span>·</span>
+              <span>{getTimeAgo(session.updatedAt)}</span>
+            </div>
+          </div>
+        </div>
+      </button>
+    </>
   );
 }
 

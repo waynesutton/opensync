@@ -11,9 +11,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - install.md file for AI agent installation following installmd.org spec (self-hosting setup instructions)
 - Collapsible Profile section in Settings page (collapsed by default for privacy during demos/recordings)
 - Theme toggle (dark/tan mode) on public session page (/s/:slug)
+- Mobile-optimized Dashboard: responsive header, filter bars, session rows with stacked layout on small screens
+- Mobile Context icon in header nav (visible only on mobile for quick access to search)
 
 ### Fixed
 
+- Fixed Getting Started section on Login page not showing on mobile (was hidden with dashboard preview)
 - Fixed setup banner flash on dashboard refresh: banner now waits for data to load before showing
 - Fixed delete account not removing Convex data: changed deletion order to delete Convex data first, then WorkOS
 - Fixed delete account redirecting to WorkOS logout URL instead of homepage: replaced signOut() with direct redirect

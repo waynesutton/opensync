@@ -208,10 +208,10 @@ export function LoginPage() {
               </div>
             </div>
 
-            {/* Right side: Mini dashboard mock + Getting started */}
-            <div className="hidden lg:flex lg:flex-col lg:gap-6">
-              {/* Dashboard preview */}
-              <div className={`overflow-hidden rounded-lg border ${
+            {/* Right side: Mini dashboard mock (desktop only) + Getting started (all screens) */}
+            <div className="flex flex-col gap-6">
+              {/* Dashboard preview - desktop only */}
+              <div className={`hidden lg:block overflow-hidden rounded-lg border ${
                 isDark ? "border-zinc-800 bg-[#161616]" : "border-[#e6e4e1] bg-[#f5f3f0]"
               }`}>
                 {/* Window chrome */}
