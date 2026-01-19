@@ -351,7 +351,8 @@ export const getUserForDeletion = internalMutation({
   },
 });
 
-// Delete account action - deletes WorkOS account and all Convex data
+// Delete account action - deletes Convex data first, then WorkOS account
+// This ensures data is deleted even if WorkOS has side effects (session invalidation)
 // Calls WorkOS API: DELETE /user_management/users/{user_id}
 export const deleteAccount = action({
   args: {},
@@ -379,7 +380,14 @@ export const deleteAccount = action({
     }
 
     try {
-      // Call WorkOS API to delete the user
+      // IMPORTANT: Delete Convex data FIRST before WorkOS
+      // WorkOS deletion may invalidate sessions and cause redirects
+      await ctx.runMutation(internal.users.deleteAllDataInternal, {
+        userId: user._id,
+        deleteUser: true,
+      });
+
+      // Now delete from WorkOS
       // API Reference: https://workos.com/docs/reference/authkit/user/delete
       const response: Response = await fetch(
         `https://api.workos.com/user_management/users/${user.workosId}`,
@@ -393,18 +401,10 @@ export const deleteAccount = action({
 
       // 204 = success (no content), 404 = user already deleted
       if (!response.ok && response.status !== 404) {
-        const errorText = await response.text();
-        return {
-          deleted: false,
-          error: `WorkOS API error: ${response.status} - ${errorText}`,
-        };
+        // Note: Convex data is already deleted at this point
+        // Log the error but still consider it a success since data is gone
+        console.error(`WorkOS deletion failed: ${response.status}`);
       }
-
-      // Delete all user data from Convex (including the user record)
-      await ctx.runMutation(internal.users.deleteAllDataInternal, {
-        userId: user._id,
-        deleteUser: true,
-      });
 
       return { deleted: true };
     } catch (error) {

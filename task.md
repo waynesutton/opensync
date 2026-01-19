@@ -93,6 +93,12 @@ None currently.
 
 ## Recently Completed
 
+- [x] Fixed delete account partial deletion and redirect issues
+  - Changed deleteAccount action to delete Convex data first, then WorkOS
+  - Prevents partial deletion when WorkOS deletion triggers session invalidation
+  - Fixed redirect to homepage instead of WorkOS logout URL after deletion
+  - Removed signOut() call which caused browser redirect interruption
+
 - [x] Login page feature list improvements
   - Updated tagline to mention eval datasets
   - Added Tag feature bullet for eval organization

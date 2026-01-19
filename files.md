@@ -25,7 +25,7 @@ Backend functions and schema.
 | `schema.ts` | Database schema: users, sessions (with eval fields: evalReady, reviewedAt, evalNotes, evalTags), messages, parts, sessionEmbeddings, messageEmbeddings, apiLogs |
 | `auth.config.ts` | WorkOS JWT validation configuration |
 | `convex.config.ts` | Convex app configuration |
-| `users.ts` | User queries/mutations: getOrCreate, me, stats, API key management, deleteAllData, deleteAccount (WorkOS API integration) |
+| `users.ts` | User queries/mutations: getOrCreate, me, stats, API key management, deleteAllData, deleteAccount (deletes Convex first, then WorkOS to prevent partial deletion) |
 | `sessions.ts` | Session CRUD: list, get, getPublic, setVisibility, remove, getMarkdown, upsert (with source param), listExternalIds, exportAllDataCSV |
 | `messages.ts` | Message mutations: upsert with parts and source parameter for auto-created sessions |
 | `analytics.ts` | Analytics queries with source filtering: dailyStats, modelStats, projectStats, providerStats, summaryStats, sessionsWithDetails, sourceStats |

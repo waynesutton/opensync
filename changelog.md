@@ -6,6 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed delete account not removing Convex data: changed deletion order to delete Convex data first, then WorkOS
+- Fixed delete account redirecting to WorkOS logout URL instead of homepage: replaced signOut() with direct redirect
+
 ### Changed
 
 - Removed search bar from Dashboard header, added search icon to Context link for cleaner UX

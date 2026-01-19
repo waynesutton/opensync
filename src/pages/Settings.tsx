@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -31,7 +31,6 @@ const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
 export function SettingsPage() {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
   const t = getThemeClasses(theme);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -107,9 +106,11 @@ export function SettingsPage() {
     try {
       const result = await deleteAccount();
       if (result.deleted) {
-        // Sign out and redirect to login
-        signOut();
-        navigate("/login");
+        // Account deleted successfully
+        // Don't call signOut() - it causes a redirect to WorkOS logout URL
+        // Instead, redirect directly to homepage
+        // The auth state will update automatically since the user no longer exists
+        window.location.href = "/";
       } else {
         setDeleteError(result.error || "Failed to delete account");
       }
