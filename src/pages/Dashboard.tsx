@@ -49,6 +49,8 @@ import {
 type ViewMode = "overview" | "sessions" | "analytics";
 type SortField = "updatedAt" | "createdAt" | "totalTokens" | "cost" | "durationMs";
 type SortOrder = "asc" | "desc";
+// Source filter type for filtering by plugin source
+type SourceFilter = "all" | "opencode" | "claude-code";
 
 export function DashboardPage() {
   const { user, signOut } = useAuth();
@@ -63,6 +65,8 @@ export function DashboardPage() {
   const [filterProject, setFilterProject] = useState<string | undefined>();
   const [filterProvider, setFilterProvider] = useState<string | undefined>();
   const [showFilters, setShowFilters] = useState(false);
+  // Source filter for OpenCode vs Claude Code sessions
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Keyboard shortcuts
@@ -84,12 +88,15 @@ export function DashboardPage() {
     getOrCreate();
   }, [getOrCreate]);
 
-  // Fetch data
-  const summaryStats = useQuery(api.analytics.summaryStats);
-  const dailyStats = useQuery(api.analytics.dailyStats, { days: 30 });
-  const modelStats = useQuery(api.analytics.modelStats);
-  const projectStats = useQuery(api.analytics.projectStats);
-  const providerStats = useQuery(api.analytics.providerStats);
+  // Convert sourceFilter to query arg (undefined means all)
+  const sourceArg = sourceFilter === "all" ? undefined : sourceFilter;
+
+  // Fetch data with source filtering
+  const summaryStats = useQuery(api.analytics.summaryStats, { source: sourceArg });
+  const dailyStats = useQuery(api.analytics.dailyStats, { days: 30, source: sourceArg });
+  const modelStats = useQuery(api.analytics.modelStats, { source: sourceArg });
+  const projectStats = useQuery(api.analytics.projectStats, { source: sourceArg });
+  const providerStats = useQuery(api.analytics.providerStats, { source: sourceArg });
   const sessionsData = useQuery(api.analytics.sessionsWithDetails, {
     limit: 100,
     sortBy: sortField,
@@ -97,6 +104,7 @@ export function DashboardPage() {
     filterModel,
     filterProject,
     filterProvider,
+    source: sourceArg,
   });
 
   // Search results
@@ -150,6 +158,13 @@ export function DashboardPage() {
         <Link to="/" className={cn("font-normal text-sm tracking-tight", t.textSecondary)}>
           opensync
         </Link>
+
+        {/* Source filter dropdown */}
+        <SourceDropdown
+          value={sourceFilter}
+          onChange={setSourceFilter}
+          theme={theme}
+        />
 
         {/* View toggles */}
         <div className={cn("flex items-center gap-1 rounded-md p-0.5 border", t.bgToggle, t.border)}>
@@ -1738,6 +1753,48 @@ function FilterDropdown({
           <option key={opt} value={opt}>{opt}</option>
         ))}
       </select>
+    </div>
+  );
+}
+
+// Source dropdown for filtering by plugin source (OpenCode vs Claude Code)
+function SourceDropdown({
+  value,
+  onChange,
+  theme,
+}: {
+  value: SourceFilter;
+  onChange: (v: SourceFilter) => void;
+  theme: "dark" | "tan";
+}) {
+  const t = getThemeClasses(theme);
+  const options: Array<{ value: SourceFilter; label: string }> = [
+    { value: "all", label: "All Sources" },
+    { value: "opencode", label: "OpenCode" },
+    { value: "claude-code", label: "Claude Code" },
+  ];
+
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as SourceFilter)}
+        className={cn(
+          "h-8 pl-3 pr-8 rounded-md border text-xs appearance-none cursor-pointer focus:outline-none transition-colors",
+          t.bgInput,
+          t.border,
+          t.textSecondary,
+          // Highlight when filtering is active
+          value !== "all" && (theme === "dark" ? "border-blue-500/50" : "border-[#EB5601]/50")
+        )}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className={cn("absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none", t.iconMuted)} />
     </div>
   );
 }

@@ -53,8 +53,8 @@ export function SettingsPage() {
   const currentUser = useQuery(api.users.me);
   const stats = useQuery(api.users.stats);
   const dailyStats = useQuery(api.analytics.dailyStats, { days: 30 });
-  const modelStats = useQuery(api.analytics.modelStats);
-  const projectStats = useQuery(api.analytics.projectStats);
+  const modelStats = useQuery(api.analytics.modelStats, {});
+  const projectStats = useQuery(api.analytics.projectStats, {});
 
   const generateApiKey = useMutation(api.users.generateApiKey);
   const revokeApiKey = useMutation(api.users.revokeApiKey);

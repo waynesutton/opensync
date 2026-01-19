@@ -299,6 +299,7 @@ export const upsert = internalMutation({
     projectName: v.optional(v.string()),
     model: v.optional(v.string()),
     provider: v.optional(v.string()),
+    source: v.optional(v.string()), // "opencode" or "claude-code"
     promptTokens: v.optional(v.number()),
     completionTokens: v.optional(v.number()),
     cost: v.optional(v.number()),
@@ -315,6 +316,8 @@ export const upsert = internalMutation({
     const now = Date.now();
     const promptTokens = args.promptTokens ?? 0;
     const completionTokens = args.completionTokens ?? 0;
+    // Default source to "opencode" for backward compatibility
+    const source = args.source || "opencode";
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -323,6 +326,7 @@ export const upsert = internalMutation({
         projectName: args.projectName ?? existing.projectName,
         model: args.model ?? existing.model,
         provider: args.provider ?? existing.provider,
+        source: args.source ?? existing.source ?? "opencode",
         promptTokens: promptTokens || existing.promptTokens,
         completionTokens: completionTokens || existing.completionTokens,
         totalTokens: (promptTokens + completionTokens) || existing.totalTokens,
@@ -342,6 +346,7 @@ export const upsert = internalMutation({
       projectName: args.projectName,
       model: args.model,
       provider: args.provider,
+      source,
       promptTokens,
       completionTokens,
       totalTokens: promptTokens + completionTokens,

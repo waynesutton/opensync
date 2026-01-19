@@ -22,17 +22,17 @@ Backend functions and schema.
 
 | File | Description |
 |------|-------------|
-| `schema.ts` | Database schema: users, sessions, messages, parts, embeddings, apiLogs |
+| `schema.ts` | Database schema: users, sessions (with source field for plugin identification), messages, parts, embeddings, apiLogs |
 | `auth.config.ts` | WorkOS JWT validation configuration |
 | `convex.config.ts` | Convex app configuration |
 | `users.ts` | User queries/mutations: getOrCreate, me, stats, API key management |
-| `sessions.ts` | Session CRUD: list, get, getPublic, setVisibility, remove, getMarkdown, upsert, listExternalIds, exportAllDataCSV |
+| `sessions.ts` | Session CRUD: list, get, getPublic, setVisibility, remove, getMarkdown, upsert (with source param), listExternalIds, exportAllDataCSV |
 | `messages.ts` | Message mutations: upsert with parts |
-| `analytics.ts` | Analytics queries: dailyStats, modelStats, projectStats (extended with messageCount, promptTokens, completionTokens, totalDurationMs), providerStats, summaryStats, sessionsWithDetails |
+| `analytics.ts` | Analytics queries with source filtering: dailyStats, modelStats, projectStats, providerStats, summaryStats, sessionsWithDetails |
 | `search.ts` | Full-text and semantic search: searchSessions, searchMessages, semanticSearch, hybridSearch |
 | `embeddings.ts` | Vector embedding generation for semantic search |
 | `api.ts` | Internal API functions: listSessions, getSession, fullTextSearch, exportSession, getStats, semanticSearch, hybridSearch, getContext |
-| `http.ts` | HTTP endpoints: /sync/* (session, message, batch, sessions/list), /api/*, /health |
+| `http.ts` | HTTP endpoints: /sync/* (session with source param, message, batch, sessions/list), /api/*, /health |
 | `rag.ts` | RAG retrieval functions for context engineering |
 | `README.md` | Convex backend documentation |
 
@@ -52,7 +52,7 @@ React frontend application.
 | File | Description |
 |------|-------------|
 | `Login.tsx` | Login page with WorkOS AuthKit integration, privacy messaging |
-| `Dashboard.tsx` | Main dashboard with three views: Overview (stats, charts), Sessions (filterable list), Analytics (detailed breakdowns) |
+| `Dashboard.tsx` | Main dashboard with source filter dropdown and three views: Overview (stats, charts), Sessions (filterable list), Analytics (detailed breakdowns) |
 | `Settings.tsx` | Tabbed settings: Usage (charts, stats), API Access (keys, endpoints), Profile (account info) |
 | `Docs.tsx` | Interactive API documentation page |
 | `PublicSession.tsx` | Public session viewer for shared sessions (/s/:slug) |

@@ -115,6 +115,7 @@ http.route({
         projectName: body.projectName,
         model: body.model,
         provider: body.provider,
+        source: body.source, // "opencode" or "claude-code"
         promptTokens: body.promptTokens,
         completionTokens: body.completionTokens,
         cost: body.cost,

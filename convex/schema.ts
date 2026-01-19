@@ -20,7 +20,7 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_api_key", ["apiKey"]),
 
-  // OpenCode sessions
+  // Sessions from OpenCode and Claude Code plugins
   sessions: defineTable({
     userId: v.id("users"),
     externalId: v.string(),
@@ -29,6 +29,9 @@ export default defineSchema({
     projectName: v.optional(v.string()),
     model: v.optional(v.string()),
     provider: v.optional(v.string()),
+    
+    // Source identifier: "opencode" or "claude-code"
+    source: v.optional(v.string()),
     
     // Token usage
     promptTokens: v.number(),
@@ -58,6 +61,7 @@ export default defineSchema({
     .index("by_external_id", ["externalId"])
     .index("by_user_external", ["userId", "externalId"])
     .index("by_public_slug", ["publicSlug"])
+    .index("by_user_source", ["userId", "source"])
     .searchIndex("search_sessions", {
       searchField: "searchableText",
       filterFields: ["userId"],

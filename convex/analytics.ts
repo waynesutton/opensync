@@ -1,10 +1,18 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 
+// Helper to filter sessions by source
+function filterBySource(sessions: any[], source?: string) {
+  if (!source) return sessions;
+  // Treat null/undefined source as "opencode" for backward compatibility
+  return sessions.filter((s) => (s.source || "opencode") === source);
+}
+
 // Daily usage breakdown for charts
 export const dailyStats = query({
   args: {
     days: v.optional(v.number()),
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
   },
   returns: v.array(
     v.object({
@@ -17,7 +25,7 @@ export const dailyStats = query({
       durationMs: v.number(),
     })
   ),
-  handler: async (ctx, { days = 30 }) => {
+  handler: async (ctx, { days = 30, source }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
@@ -28,10 +36,13 @@ export const dailyStats = query({
 
     if (!user) return [];
 
-    const sessions = await ctx.db
+    let sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, source);
 
     // Group by date
     const byDate: Record<string, {
@@ -76,7 +87,9 @@ export const dailyStats = query({
 
 // Model usage breakdown
 export const modelStats = query({
-  args: {},
+  args: {
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+  },
   returns: v.array(
     v.object({
       model: v.string(),
@@ -88,7 +101,7 @@ export const modelStats = query({
       avgDurationMs: v.number(),
     })
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, { source }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
@@ -99,10 +112,13 @@ export const modelStats = query({
 
     if (!user) return [];
 
-    const sessions = await ctx.db
+    let sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, source);
 
     // Group by model
     const byModel: Record<string, {
@@ -150,7 +166,9 @@ export const modelStats = query({
 
 // Project usage breakdown with extended metrics
 export const projectStats = query({
-  args: {},
+  args: {
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+  },
   returns: v.array(
     v.object({
       project: v.string(),
@@ -164,7 +182,7 @@ export const projectStats = query({
       lastActive: v.number(),
     })
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, { source }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
@@ -175,10 +193,13 @@ export const projectStats = query({
 
     if (!user) return [];
 
-    const sessions = await ctx.db
+    let sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, source);
 
     // Group by project with extended metrics
     const byProject: Record<string, {
@@ -224,7 +245,9 @@ export const projectStats = query({
 
 // Provider usage breakdown
 export const providerStats = query({
-  args: {},
+  args: {
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+  },
   returns: v.array(
     v.object({
       provider: v.string(),
@@ -233,7 +256,7 @@ export const providerStats = query({
       cost: v.number(),
     })
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, { source }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return [];
 
@@ -244,10 +267,13 @@ export const providerStats = query({
 
     if (!user) return [];
 
-    const sessions = await ctx.db
+    let sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, source);
 
     // Group by provider
     const byProvider: Record<string, {
@@ -291,6 +317,7 @@ export const sessionsWithDetails = query({
     filterModel: v.optional(v.string()),
     filterProject: v.optional(v.string()),
     filterProvider: v.optional(v.string()),
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -307,6 +334,9 @@ export const sessionsWithDetails = query({
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, args.source);
 
     // Apply filters
     if (args.filterModel) {
@@ -345,6 +375,7 @@ export const sessionsWithDetails = query({
         projectName: s.projectName,
         model: s.model,
         provider: s.provider,
+        source: s.source || "opencode", // Default for display
         promptTokens: s.promptTokens,
         completionTokens: s.completionTokens,
         totalTokens: s.totalTokens,
@@ -364,7 +395,9 @@ export const sessionsWithDetails = query({
 
 // Summary stats for dashboard header
 export const summaryStats = query({
-  args: {},
+  args: {
+    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+  },
   returns: v.union(
     v.object({
       totalSessions: v.number(),
@@ -381,7 +414,7 @@ export const summaryStats = query({
     }),
     v.null()
   ),
-  handler: async (ctx) => {
+  handler: async (ctx, { source }) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
@@ -392,10 +425,13 @@ export const summaryStats = query({
 
     if (!user) return null;
 
-    const sessions = await ctx.db
+    let sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
+
+    // Filter by source if specified
+    sessions = filterBySource(sessions, source);
 
     if (sessions.length === 0) {
       return {

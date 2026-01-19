@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Source field added to sessions schema to distinguish OpenCode vs Claude Code sessions
+- Source dropdown filter in dashboard header (All Sources / OpenCode / Claude Code)
+- All analytics queries now support source filtering for multi-plugin support
+- Backend support for claude-code-sync plugin (same API key authentication)
 - ConsumptionBreakdown component with stacked bar chart, credit usage bar, and usage table
 - StackedBarChart component for multi-segment bar visualization with tooltips
 - UsageCreditBar component showing included credit vs on-demand charges

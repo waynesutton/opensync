@@ -71,6 +71,9 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] Session delete confirmation modal (replaces browser confirm())
 - [x] Fixed StackedBarChart height rendering for proper bar display
 - [x] Date range selector in Usage Overview (7/14/30/60/90 days)
+- [x] Source field added to sessions schema (opencode vs claude-code)
+- [x] Source dropdown filter in dashboard header (All Sources / OpenCode / Claude Code)
+- [x] All analytics queries updated to filter by source
 
 ## In Progress
 
@@ -94,14 +97,13 @@ None currently.
   - [ ] CLI commands (login, logout, status, config)
   - [ ] Config file (~/.config/claude-code-sync/config.json)
   - [ ] URL normalization (.cloud to .site)
-- [ ] Add source field to sessions schema (opencode vs claude-code)
+- [x] Add source field to sessions schema (opencode vs claude-code)
 
 ### High Priority (Core)
 
-- [ ] Session delete confirmation modal
 - [ ] Search results highlighting
 - [ ] Pagination for large session lists
-- [ ] Source filtering in session list (OpenCode / Claude Code / All)
+- [x] Source filtering in session list (OpenCode / Claude Code / All)
 
 ### Medium Priority (Sync for Evals)
 
@@ -150,7 +152,7 @@ Deferred. See [PRD-FEATURES.md](docs/PRD-FEATURES.md).
 - [ ] Add test coverage
 - [ ] Add rate limiting to API endpoints
 - [ ] Add request validation middleware
-- [ ] Migration script for source field on existing sessions
+- [x] Migration script for source field on existing sessions (handled via default value in queries)
 
 ## Plugin Repos
 
@@ -166,7 +168,10 @@ Deferred. See [PRD-FEATURES.md](docs/PRD-FEATURES.md).
 - Plugins authenticate with API Keys (`osk_*`), not WorkOS OAuth
 - Web UI continues to use WorkOS AuthKit for browser authentication
 - Plugins accept both `.convex.cloud` and `.convex.site` URLs, normalize to `.site` for API calls
-- Schema will need source field to distinguish session origins (opencode vs claude-code)
+- Source field distinguishes session origins: "opencode" (default) vs "claude-code"
+- Existing sessions without source field are treated as "opencode" for backward compatibility
+- Dashboard source dropdown filters all views (Overview, Sessions, Analytics)
 - Eval export feature targets DeepEval, OpenAI Evals, and Promptfoo frameworks
 - Marketplace payment uses Convex Stripe component (future)
 - See [PLUGIN-AUTH-PRD.md](docs/PLUGIN-AUTH-PRD.md) for full plugin authentication specification
+- See [CLAUDE-CODE-PLUGIN.md](docs/CLAUDE-CODE-PLUGIN.md) for Claude Code plugin documentation
