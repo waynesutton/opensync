@@ -67,6 +67,9 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] Fixed markdown export to include message content (textContent fallback)
 - [x] Privacy messaging on login page ("Private - your data stays in your account")
 - [x] Removed EnvStatus debug component from login footer
+- [x] ConfirmModal component for themed confirmation dialogs
+- [x] Session delete confirmation modal (replaces browser confirm())
+- [x] Fixed StackedBarChart height rendering for proper bar display
 
 ## In Progress
 

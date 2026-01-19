@@ -6,6 +6,7 @@ import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { StatCard, BarChart, DonutChart, FilterPill, ProgressBar, ConsumptionBreakdown } from "../components/Charts";
+import { ConfirmModal } from "../components/ConfirmModal";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
   Search,
@@ -593,6 +594,8 @@ function SessionsView({
   const [copied, setCopied] = useState(false);
   const [sessionsViewMode, setSessionsViewMode] = useState<SessionsViewMode>("list");
   const [isExportingCSV, setIsExportingCSV] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<Id<"sessions"> | null>(null);
 
   // CSV export handler
   const handleExportCSV = () => {
@@ -906,10 +909,9 @@ function SessionsView({
                 </a>
               )}
               <button
-                onClick={async () => {
-                  if (confirm("Delete this session?")) {
-                    await deleteSession({ sessionId: selectedSession.session._id });
-                  }
+                onClick={() => {
+                  setSessionToDelete(selectedSession.session._id);
+                  setShowDeleteModal(true);
                 }}
                 className={cn("p-1.5 rounded transition-colors hover:text-red-400", t.textSubtle, t.bgHover)}
                 title="Delete"
@@ -935,6 +937,26 @@ function SessionsView({
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setSessionToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (sessionToDelete) {
+            await deleteSession({ sessionId: sessionToDelete });
+            setSessionToDelete(null);
+          }
+        }}
+        title="Delete Session"
+        message="Delete this session? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

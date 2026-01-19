@@ -487,13 +487,13 @@ export function StackedBarChart({
       <div className="flex items-end gap-1" style={{ height }}>
         {data.map((item, i) => {
           const total = item.segments.reduce((sum, s) => sum + s.value, 0);
-          const barHeight = (total / maxValue) * 100;
+          const barHeight = Math.max((total / maxValue) * 100, total > 0 ? 5 : 0);
           
           return (
-            <div key={i} className="flex-1 flex flex-col items-center group relative">
+            <div key={i} className="flex-1 h-full flex flex-col justify-end items-center group relative">
               <div
                 className="w-full flex flex-col-reverse rounded-t overflow-hidden"
-                style={{ height: `${barHeight}%`, minHeight: total > 0 ? 2 : 0 }}
+                style={{ height: `${barHeight}%`, minHeight: total > 0 ? 8 : 0 }}
               >
                 {item.segments.map((segment, j) => {
                   const segmentHeight = total > 0 ? (segment.value / total) * 100 : 0;
@@ -504,7 +504,7 @@ export function StackedBarChart({
                       style={{ 
                         height: `${segmentHeight}%`, 
                         backgroundColor: segment.color,
-                        minHeight: segment.value > 0 ? 1 : 0,
+                        minHeight: segment.value > 0 ? 4 : 0,
                       }}
                     />
                   );

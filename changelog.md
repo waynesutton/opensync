@@ -16,6 +16,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Export CSV button in sessions view next to list/timeline toggle
 - Tokens/Cost chart type toggle in Consumption Breakdown
 - Prompt/Completion token breakdown in usage table
+- ConfirmModal component for themed confirmation dialogs (replaces browser confirm())
+- Session delete confirmation modal in sessions view
 - Daily/Weekly/Monthly view toggle for consumption breakdown
 - Cumulative mode toggle for usage visualization
 - Project and model filters in consumption breakdown
@@ -43,6 +45,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added loading state to download button when markdown is being fetched
 - Fixed markdown export to include message content from parts and textContent fallback
 - Fixed Consumption Breakdown filters to actually filter model/project stats
+- Fixed StackedBarChart height rendering with proper flex layout and minHeight values
 
 ### Changed
 

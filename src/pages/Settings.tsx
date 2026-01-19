@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { cn } from "../lib/utils";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { AreaChart, BarChart, ProgressBar, DonutChart } from "../components/Charts";
+import { ConfirmModal } from "../components/ConfirmModal";
 import {
   ArrowLeft,
   Key,
@@ -47,6 +48,7 @@ export function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"usage" | "api" | "profile">("api");
+  const [showRevokeModal, setShowRevokeModal] = useState(false);
 
   const currentUser = useQuery(api.users.me);
   const stats = useQuery(api.users.stats);
@@ -63,12 +65,14 @@ export function SettingsPage() {
     setShowApiKey(true);
   };
 
-  const handleRevokeKey = async () => {
-    if (confirm("Are you sure? This will invalidate any apps using this key.")) {
-      await revokeApiKey();
-      setNewApiKey(null);
-      setShowApiKey(false);
-    }
+  const handleRevokeKey = () => {
+    setShowRevokeModal(true);
+  };
+
+  const confirmRevokeKey = async () => {
+    await revokeApiKey();
+    setNewApiKey(null);
+    setShowApiKey(false);
   };
 
   const handleCopyKey = async () => {
@@ -538,6 +542,18 @@ export function SettingsPage() {
           </div>
         )}
       </main>
+
+      {/* Revoke API Key Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showRevokeModal}
+        onClose={() => setShowRevokeModal(false)}
+        onConfirm={confirmRevokeKey}
+        title="Revoke API Key"
+        message="Are you sure? This will invalidate any apps using this key."
+        confirmText="Revoke Key"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

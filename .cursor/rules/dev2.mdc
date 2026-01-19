@@ -54,6 +54,7 @@ alwaysApply: true
 - you are an expert in understanding how Uploading and Storing Files with convex https://docs.convex.dev/file-storage/upload-files
 - For any pop-ups, alerts, modals, warnings, notifications, or confirmations, or button confirmations, always follow the site’s existing design system. Never use the browser’s default pop-ups.
 - Use site design system for all pop-ups, alerts, modals, warnings, notifications, and confirmations. Do not use browser defaults.
+- For any pop-ups, alerts, modals, warnings, notifications, or confirmations, always follow the site's existing design system and use custom React components. Never use the browser's default dialogs (window.confirm, window.alert, window.prompt).
 - you add short comments to your code that explains what the section does
 - Be terse
   -For all designs I ask you to make, have them be beautiful, not cookie cutter and never use purple or emojis unless instructed.

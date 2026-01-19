@@ -56,6 +56,78 @@ claude-code-sync login
 3. Tests the connection to your backend
 4. Saves credentials to `~/.config/claude-code-sync/config.json`
 
+### setup
+
+Add hooks to Claude Code settings. This configures `~/.claude/settings.json` so Claude Code calls the plugin on session events.
+
+```bash
+claude-code-sync setup
+```
+
+**Options:**
+
+| Flag | Description |
+|------|-------------|
+| `--force` | Overwrite existing hooks configuration |
+
+**What it does:**
+1. Creates `~/.claude` directory if needed
+2. Reads existing `settings.json` if present
+3. Adds the sync hooks configuration
+4. Writes the updated settings
+
+**One-liner alternative:**
+
+If you prefer a single command to copy and paste:
+
+```bash
+mkdir -p ~/.claude && cat > ~/.claude/settings.json << 'EOF'
+{
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "claude-code-sync hook SessionStart" }] }],
+    "SessionEnd": [{ "hooks": [{ "type": "command", "command": "claude-code-sync hook SessionEnd" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "claude-code-sync hook UserPromptSubmit" }] }],
+    "PostToolUse": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "claude-code-sync hook PostToolUse" }] }],
+    "Stop": [{ "matcher": "*", "hooks": [{ "type": "command", "command": "claude-code-sync hook Stop" }] }]
+  }
+}
+EOF
+```
+
+**Note:** The one-liner overwrites existing settings. Use `claude-code-sync setup` to merge with existing configuration.
+
+### verify
+
+Verify that both credentials and Claude Code configuration are set up correctly.
+
+```bash
+claude-code-sync verify
+```
+
+**Output example:**
+
+```
+  OpenSync Setup Verification
+
+Credentials: OK
+   Convex URL: https://your-project.convex.cloud
+   API Key: osk_****...****
+
+Claude Code Config: OK
+   Config file: ~/.claude/settings.json
+   Hooks registered: claude-code-sync
+
+Testing connection...
+Connection: OK
+
+Ready! Start Claude Code and sessions will sync automatically.
+```
+
+**Checks performed:**
+1. Credentials exist in `~/.config/claude-code-sync/config.json`
+2. Hooks are configured in `~/.claude/settings.json`
+3. Connection to Convex backend works
+
 ### logout
 
 Clear stored credentials.
@@ -166,6 +238,26 @@ Display version number.
 claude-code-sync --version
 claude-code-sync -V
 ```
+
+### hook
+
+Handle Claude Code hook events. This command is called internally by Claude Code and reads JSON from stdin.
+
+```bash
+claude-code-sync hook <event>
+```
+
+**Events:**
+
+| Event | Description |
+|-------|-------------|
+| `SessionStart` | Called when a coding session begins |
+| `SessionEnd` | Called when a session terminates |
+| `UserPromptSubmit` | Called when you submit a prompt |
+| `PostToolUse` | Called after each tool execution |
+| `Stop` | Called when Claude finishes responding |
+
+**Note:** You should not call this command directly. It is invoked by Claude Code based on the hooks configuration in `~/.claude/settings.json`.
 
 ## Environment Variables
 
@@ -354,7 +446,9 @@ claude-code-sync login
 | Task | Command |
 |------|---------|
 | Install | `npm install -g claude-code-sync` |
-| Setup | `claude-code-sync login` |
+| Configure credentials | `claude-code-sync login` |
+| Configure Claude Code | `claude-code-sync setup` |
+| Verify everything | `claude-code-sync verify` |
 | Check status | `claude-code-sync status` |
 | View config | `claude-code-sync config` |
 | View config (JSON) | `claude-code-sync config --json` |
@@ -364,7 +458,7 @@ claude-code-sync login
 | Check version | `claude-code-sync --version` |
 | Update | `npm update -g claude-code-sync` |
 | Uninstall | `npm uninstall -g claude-code-sync` |
-| Full reset | `npm uninstall -g claude-code-sync && rm -rf ~/.config/claude-code-sync && npm install -g claude-code-sync` |
+| Full reset | `npm uninstall -g claude-code-sync && rm -rf ~/.config/claude-code-sync ~/.claude/settings.json && npm install -g claude-code-sync` |
 
 ## Links
 

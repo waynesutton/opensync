@@ -65,6 +65,7 @@ React frontend application.
 | `Sidebar.tsx` | Session list sidebar with search results |
 | `SessionViewer.tsx` | Session detail view with messages and actions |
 | `Charts.tsx` | Reusable chart components: BarChart, AreaChart, DonutChart, Sparkline, ProgressBar, StatCard, DataTable, FilterPill, StackedBarChart, UsageCreditBar, ConsumptionBreakdown |
+| `ConfirmModal.tsx` | Custom confirmation modal with theme support, replaces browser confirm() dialogs |
 
 ### src/lib/
 

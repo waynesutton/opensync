@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { cn } from "../lib/utils";
+import { ConfirmModal } from "./ConfirmModal";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -48,6 +49,7 @@ interface SessionViewerProps {
 
 export function SessionViewer({ session, messages }: SessionViewerProps) {
   const [copied, setCopied] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const setVisibility = useMutation(api.sessions.setVisibility);
   const deleteSession = useMutation(api.sessions.remove);
@@ -80,10 +82,12 @@ export function SessionViewer({ session, messages }: SessionViewerProps) {
     });
   };
 
-  const handleDelete = async () => {
-    if (confirm("Delete this session? This cannot be undone.")) {
-      await deleteSession({ sessionId: session._id });
-    }
+  const handleDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    await deleteSession({ sessionId: session._id });
   };
 
   const formatDuration = (ms?: number) => {
@@ -188,6 +192,18 @@ export function SessionViewer({ session, messages }: SessionViewerProps) {
           <MessageBlock key={message._id} message={message} />
         ))}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDelete}
+        title="Delete Session"
+        message="Delete this session? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
