@@ -15,6 +15,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Comprehensive documentation page with Mintlify-style UI
+- Left sidebar navigation with collapsible sections and anchor tags
+- Right table of contents for on-page navigation
+- Copy as Markdown button for each section
+- View as Markdown mode for entire page
+- llms.txt file for AI assistants with project overview and API reference
+- "Use Hosted Version" section as first docs section with features from Login page (Sync, Search, Private, Export, Delete, API)
+- Plugin installation and login instructions for hosted opensync.dev
+- Documentation sections: Use Hosted Version, Requirements, Quick Start, Dashboard Features, OpenCode Plugin, Claude Code Plugin, API Reference, Search Types, Authentication, Hosting, Fork Guide, Troubleshooting, FAQ
+- Mobile responsive design with slide-out sidebar
+- Theme support for both dark and tan modes
+
 - GitHub icon link in Login page footer (bottom left, links to opensync repo)
 
 - Setup banner on Dashboard Overview for new users with no synced data

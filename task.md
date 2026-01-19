@@ -12,7 +12,7 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] Dedicated context search page (/context) system
 - [x] Search results highlighting
 - [x] Pagination for large session lists
-- [ ] update docs
+- [x] update docs
 - [x] Delete user data and profile option
 
 ## Completed
@@ -92,6 +92,18 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 None currently.
 
 ## Recently Completed
+
+- [x] Comprehensive documentation page update (Docs.tsx)
+  - Added "Use Hosted Version" section as first section
+  - Features section with Sync, Search, Private, Export, Delete, API
+  - Plugin installation instructions for hosted opensync.dev
+  - Login and sync walkthrough for both opencode-sync-plugin and claude-code-sync
+  - Left sidebar with collapsible navigation and anchor tags
+  - Right table of contents for on-page navigation
+  - Copy as Markdown button per section and full page
+  - View as Markdown mode for entire documentation
+  - Mobile responsive design with slide-out sidebar
+  - llms.txt file for AI assistants
 
 - [x] Login page mockup updated to match Dashboard features
   - View tabs row (overview/sessions/evals/analytics)

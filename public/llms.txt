@@ -1,0 +1,132 @@
+# OpenSync - AI Coding Session Dashboard
+
+> Sync, search, and share your AI coding sessions from OpenCode and Claude Code.
+
+## Overview
+
+OpenSync is a cloud-based dashboard that syncs, stores, and searches AI coding sessions. Built on Convex (real-time database) and WorkOS (authentication).
+
+## Ecosystem
+
+| Project | Description | Links |
+|---------|-------------|-------|
+| OpenSync | Dashboard for AI coding sessions | [Website](https://www.opensync.dev) / [GitHub](https://github.com/waynesutton/opensync) |
+| opencode-sync-plugin | Sync OpenCode sessions | [GitHub](https://github.com/waynesutton/opencode-sync-plugin) / [npm](https://www.npmjs.com/package/opencode-sync-plugin) |
+| claude-code-sync | Sync Claude Code sessions | [GitHub](https://github.com/waynesutton/claude-code-sync) / [npm](https://www.npmjs.com/package/claude-code-sync) |
+
+## Quick Start
+
+### Install Plugin
+
+For OpenCode:
+```bash
+npm install -g opencode-sync-plugin
+opencode-sync login
+```
+
+For Claude Code:
+```bash
+npm install -g claude-code-sync
+claude-code-sync login
+```
+
+### Self-Host
+
+```bash
+git clone https://github.com/waynesutton/opensync.git
+cd opensync
+npm install
+npx convex dev
+```
+
+## Features
+
+- Auto sync: Sessions sync in real-time as you work
+- Full-text search: Search by keywords across all sessions
+- Semantic search: Search by meaning using vector embeddings
+- Hybrid search: Combines full-text and semantic for best results
+- Public sharing: Share sessions with a single click
+- Markdown export: Download sessions as Markdown files
+- API access: Secure API for external integrations
+- Usage stats: Track tokens, cost, time per session
+- RAG support: Built-in retrieval for context engineering
+- Eval export: Export datasets for DeepEval, OpenAI Evals
+
+## API Endpoints
+
+All endpoints require Bearer token authentication (API key starting with `osk_` or JWT).
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/sessions | GET | List all sessions |
+| /api/sessions/get | GET | Get session with messages |
+| /api/search | GET | Search sessions (fulltext/semantic/hybrid) |
+| /api/context | GET | Get relevant context for LLM |
+| /api/export | GET | Export session (json/markdown/jsonl) |
+| /api/stats | GET | Get usage statistics |
+| /health | GET | Health check (no auth) |
+
+### Search Types
+
+- `?type=fulltext` - Keyword matching, fast and exact
+- `?type=semantic` - Meaning-based search using embeddings
+- `?type=hybrid` - Combines both using Reciprocal Rank Fusion
+
+## Authentication
+
+### Web Dashboard
+Uses WorkOS AuthKit with SSO, magic link, and OAuth support.
+
+### Plugins and API
+Use API keys (osk_*) generated in Dashboard Settings. No browser required.
+
+## Data Schema
+
+### Sessions
+- userId, externalId, title, projectPath, projectName
+- model, provider, source (opencode/claude-code)
+- promptTokens, completionTokens, totalTokens, cost
+- durationMs, isPublic, publicSlug
+- evalReady, evalNotes, evalTags
+
+### Messages
+- sessionId, externalId, role (user/assistant/system)
+- textContent, model, promptTokens, completionTokens
+- durationMs, parts (tool calls, code blocks)
+
+## Tech Stack
+
+- Backend: Convex (real-time database, serverless functions, vector search)
+- Auth: WorkOS AuthKit (SSO, magic link, OAuth)
+- Frontend: React + Vite + Tailwind CSS
+- Embeddings: OpenAI text-embedding-3-small
+- Hosting: Netlify (frontend), Convex Cloud (backend)
+
+## Environment Variables
+
+### Frontend (Vite)
+- VITE_CONVEX_URL - Convex deployment URL
+- VITE_WORKOS_CLIENT_ID - WorkOS client ID
+
+### Backend (Convex)
+- OPENAI_API_KEY - For semantic search embeddings
+- WORKOS_API_KEY - For user management
+
+## Privacy
+
+- All data goes to YOUR Convex deployment
+- Sensitive fields (passwords, tokens, keys) are redacted before sync
+- Full file contents are not synced, only paths and lengths
+- Thinking traces are off by default
+- You control what gets synced via configuration
+
+## Resources
+
+- Convex Docs: https://docs.convex.dev
+- WorkOS Docs: https://workos.com/docs
+- Convex + WorkOS: https://docs.convex.dev/auth/authkit
+- Convex Vector Search: https://docs.convex.dev/search/vector-search
+
+## License
+
+MIT
