@@ -8,6 +8,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed provider display showing "unknown" for antigravity-oauth and anthropic-oauth sessions (fixes #2)
+- Added inferProvider helper to derive provider from model name when provider field is missing
+- Applied provider inference consistently in providerStats, sessionsWithDetails query, and filter logic
 - Fixed auth session persistence: users no longer need to sign in again on page refresh (fixes #1)
 - Added dedicated CallbackHandler component for OAuth callback processing with 10s timeout
 - Added return-to URL preservation so users are redirected to their intended route after sign-in
@@ -27,7 +30,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Fixed tan mode prose styling in Context search slide-over panel (uses prose-zinc for proper text colors)
+- Fixed tan mode text contrast in Context search slide-over panel (explicit dark text colors for readability)
 - Escape key and backdrop click to close slide-over panel
 - Watch the demo link on Login page CTA section (links to X demo video)
 - 100% local deployment instructions in OPENSYNC-SETUP.md docs (Convex local backend with Docker)

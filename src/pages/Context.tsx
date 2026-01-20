@@ -1038,7 +1038,9 @@ function SlideOverMessageBlock({
           {showFallback ? (
             <div className={cn(
               "prose prose-sm max-w-none",
-              theme === "dark" ? "prose-invert" : "prose-zinc"
+              theme === "dark" 
+                ? "prose-invert" 
+                : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]"
             )}>
               <ReactMarkdown
                 components={{
@@ -1119,7 +1121,9 @@ function SlideOverPartRenderer({
     return (
       <div className={cn(
         "prose prose-sm max-w-none",
-        theme === "dark" ? "prose-invert" : "prose-zinc"
+        theme === "dark" 
+          ? "prose-invert" 
+          : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]"
       )}>
         <ReactMarkdown
           components={{

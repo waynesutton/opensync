@@ -91,6 +91,15 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 None currently.
 
+## Recently Completed (Provider Display Fix)
+
+- [x] Fixed provider display showing "unknown" for antigravity-oauth and anthropic-oauth sessions (GitHub #2)
+  - Added inferProvider helper function to convex/analytics.ts
+  - Infers provider from model name when provider field is missing (anthropic, openai, google, mistral, cohere, meta, deepseek, groq)
+  - Applied consistently in providerStats query, sessionsWithDetails filtering, and session list return values
+  - Filter dropdown and provider chart now show correct provider names
+  - Backward compatible: preserves existing provider values, only infers when missing
+
 ## Recently Completed (Auth Session Persistence)
 
 - [x] Fixed auth session persistence issue (GitHub #1)

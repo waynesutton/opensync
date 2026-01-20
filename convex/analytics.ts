@@ -8,6 +8,41 @@ function filterBySource(sessions: any[], source?: string) {
   return sessions.filter((s) => (s.source || "opencode") === source);
 }
 
+// Helper to infer provider from model name when provider field is missing
+// This fixes GitHub issue #2: antigravity-oauth and anthropic-oauth showing as "unknown"
+function inferProvider(session: { model?: string; provider?: string }): string {
+  // Return existing provider if set
+  if (session.provider) return session.provider;
+
+  const model = (session.model || "").toLowerCase();
+
+  // Anthropic/Claude models
+  if (model.includes("claude") || model.includes("anthropic")) return "anthropic";
+
+  // OpenAI models
+  if (model.includes("gpt") || model.includes("o1") || model.includes("o3") || model.includes("davinci") || model.includes("curie") || model.includes("text-embedding")) return "openai";
+
+  // Google models
+  if (model.includes("gemini") || model.includes("palm") || model.includes("bard")) return "google";
+
+  // Mistral models
+  if (model.includes("mistral") || model.includes("mixtral")) return "mistral";
+
+  // Cohere models
+  if (model.includes("command") || model.includes("cohere")) return "cohere";
+
+  // Meta/Llama models
+  if (model.includes("llama") || model.includes("meta")) return "meta";
+
+  // DeepSeek models
+  if (model.includes("deepseek")) return "deepseek";
+
+  // Groq models
+  if (model.includes("groq")) return "groq";
+
+  return "unknown";
+}
+
 // Daily usage breakdown for charts
 export const dailyStats = query({
   args: {
@@ -283,7 +318,8 @@ export const providerStats = query({
     }> = {};
 
     for (const session of sessions) {
-      const provider = session.provider || "unknown";
+      // Use inferred provider for consistent display (fixes GitHub issue #2)
+      const provider = inferProvider(session);
       if (!byProvider[provider]) {
         byProvider[provider] = {
           sessions: 0,
@@ -348,7 +384,8 @@ export const sessionsWithDetails = query({
       );
     }
     if (args.filterProvider) {
-      sessions = sessions.filter((s) => s.provider === args.filterProvider);
+      // Use inferred provider for consistent filtering (fixes GitHub issue #2)
+      sessions = sessions.filter((s) => inferProvider(s) === args.filterProvider);
     }
 
     const total = sessions.length;
@@ -374,7 +411,8 @@ export const sessionsWithDetails = query({
         projectPath: s.projectPath,
         projectName: s.projectName,
         model: s.model,
-        provider: s.provider,
+        // Use inferred provider for consistent display (fixes GitHub issue #2)
+        provider: inferProvider(s),
         source: s.source || "opencode", // Default for display
         promptTokens: s.promptTokens,
         completionTokens: s.completionTokens,
