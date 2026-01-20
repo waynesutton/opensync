@@ -1,6 +1,6 @@
 # OpenSync
 
-Dashboards for OpenCode and Claude coding sessions.
+Dashboards for OpenCode, Claude Code, and Factory Droid coding sessions.
 
 Cloud-synced dashboards that track session activity, tool usage, and token spend. Build eval datasets across projects.
 
@@ -56,6 +56,15 @@ claude-code-sync login
 
 [Claude Code plugin docs](https://www.opensync.dev/docs#claude-plugin)
 
+**For Factory Droid:**
+
+```bash
+npm install -g droid-sync
+droid-sync login
+```
+
+[Factory Droid plugin docs](./docs/FACTORY-DROID-PLUGIN.md)
+
 ## Self hosting
 
 Clone and deploy your own instance:
@@ -106,6 +115,7 @@ All endpoints require authentication. Generate an API key in Settings.
 | OpenSync | Dashboards for AI coding sessions | [Website](https://www.opensync.dev/) / [GitHub](https://github.com/waynesutton/opensync) |
 | opencode-sync-plugin | Sync OpenCode sessions | [GitHub](https://github.com/waynesutton/opencode-sync-plugin) / [npm](https://www.npmjs.com/package/opencode-sync-plugin) |
 | claude-code-sync | Sync Claude Code sessions | [GitHub](https://github.com/waynesutton/claude-code-sync) / [npm](https://www.npmjs.com/package/claude-code-sync) |
+| droid-sync | Sync Factory Droid sessions | [GitHub](https://github.com/waynesutton/droid-sync-plugin) / [npm](https://www.npmjs.com/package/droid-sync) |
 
 ## Tech stack
 
