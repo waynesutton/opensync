@@ -227,6 +227,27 @@ export function SettingsPage() {
                       (GitHub)
                     </a>
                   </p>
+                  <p>
+                    <a
+                      href="https://www.npmjs.com/package/droid-sync"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn("inline-flex items-center gap-1 font-medium", theme === "dark" ? "text-blue-400 hover:text-blue-300" : "text-[#EB5601] hover:text-[#d14a01]")}
+                    >
+                      droid-sync
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                    {" "}<span className={t.textDim}>Sync your Factory Droid sessions</span>
+                    {" "}
+                    <a
+                      href="https://github.com/yemyat/droid-sync-plugin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn("text-xs", t.textDim, "hover:underline")}
+                    >
+                      (GitHub)
+                    </a>
+                  </p>
                 </div>
 
                 {/* Convex URL */}
@@ -288,6 +309,9 @@ export function SettingsPage() {
                     <p className={cn("mt-2", t.textDim)}># For Claude Code</p>
                     <p>npm install -g claude-code-sync</p>
                     <p>claude-code-sync login</p>
+                    <p className={cn("mt-2", t.textDim)}># For Factory Droid</p>
+                    <p>npm install -g droid-sync</p>
+                    <p>droid-sync login</p>
                   </div>
                 </div>
               </div>
@@ -304,7 +328,7 @@ export function SettingsPage() {
                   Generate an API key to access your sessions from external applications.
                 </p>
                 <p className={cn("text-xs mb-4", t.textDim)}>
-                  Use the same API key with both opencode-sync-plugin and claude-code-sync.
+                  Use the same API key with opencode-sync-plugin, claude-code-sync, and droid-sync.
                 </p>
 
                 {currentUser?.hasApiKey || newApiKey ? (

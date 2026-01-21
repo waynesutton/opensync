@@ -446,6 +446,31 @@ export function LoginPage() {
                       npm
                     </span>
                   </a>
+
+                  {/* Droid Sync Plugin */}
+                  <a
+                    href="https://www.npmjs.com/package/droid-sync"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-colors ${
+                      isDark 
+                        ? "border-zinc-800 bg-[#0E0E0E] hover:border-zinc-700" 
+                        : "border-[#e6e4e1] bg-[#faf8f5] hover:border-[#8b7355]"
+                    }`}
+                  >
+                    <span className={`font-mono text-xs ${
+                      isDark 
+                        ? "text-zinc-100 group-hover:text-zinc-300" 
+                        : "text-[#6b6b6b] group-hover:text-[#1a1a1a]"
+                    }`}>
+                      droid-sync
+                    </span>
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] ${
+                      isDark ? "bg-zinc-800 text-zinc-600" : "bg-[#ebe9e6] text-[#8b7355]"
+                    }`}>
+                      npm
+                    </span>
+                  </a>
                 </div>
               </div>
             </div>
