@@ -115,7 +115,7 @@ All endpoints require authentication. Generate an API key in Settings.
 | OpenSync | Dashboards for AI coding sessions | [Website](https://www.opensync.dev/) / [GitHub](https://github.com/waynesutton/opensync) |
 | opencode-sync-plugin | Sync OpenCode sessions | [GitHub](https://github.com/waynesutton/opencode-sync-plugin) / [npm](https://www.npmjs.com/package/opencode-sync-plugin) |
 | claude-code-sync | Sync Claude Code sessions | [GitHub](https://github.com/waynesutton/claude-code-sync) / [npm](https://www.npmjs.com/package/claude-code-sync) |
-| droid-sync | Sync Factory Droid sessions | [GitHub](https://github.com/waynesutton/droid-sync-plugin) / [npm](https://www.npmjs.com/package/droid-sync) |
+| droid-sync | Sync Factory Droid sessions | [GitHub](https://github.com/yemyat/droid-sync-plugin) / [npm](https://www.npmjs.com/package/droid-sync) |
 
 ## Tech stack
 
