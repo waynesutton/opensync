@@ -14,7 +14,7 @@ export const upsert = internalMutation({
     promptTokens: v.optional(v.number()),
     completionTokens: v.optional(v.number()),
     durationMs: v.optional(v.number()),
-    // Source identifier passed from plugin ("opencode" or "claude-code")
+    // Source identifier passed from plugin ("opencode", "claude-code", or "factory-droid")
     source: v.optional(v.string()),
     parts: v.optional(
       v.array(

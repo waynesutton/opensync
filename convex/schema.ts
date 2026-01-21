@@ -30,7 +30,7 @@ export default defineSchema({
     model: v.optional(v.string()),
     provider: v.optional(v.string()),
     
-    // Source identifier: "opencode" or "claude-code"
+    // Source identifier: "opencode", "claude-code", or "factory-droid"
     source: v.optional(v.string()),
     
     // Token usage

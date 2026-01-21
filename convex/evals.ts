@@ -156,6 +156,7 @@ export const listEvalSessions = query({
       bySource: v.object({
         opencode: v.number(),
         claudeCode: v.number(),
+        factoryDroid: v.number(),
       }),
       totalTestCases: v.number(),
     }),
@@ -163,7 +164,7 @@ export const listEvalSessions = query({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0 }, totalTestCases: 0 } };
+      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0, factoryDroid: 0 }, totalTestCases: 0 } };
     }
 
     const user = await ctx.db
@@ -171,7 +172,7 @@ export const listEvalSessions = query({
       .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
       .first();
     if (!user) {
-      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0 }, totalTestCases: 0 } };
+      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0, factoryDroid: 0 }, totalTestCases: 0 } };
     }
 
     // Query eval-ready sessions using index
@@ -196,6 +197,7 @@ export const listEvalSessions = query({
     // Calculate stats
     const opencodeCount = sessions.filter((s) => s.source === "opencode" || !s.source).length;
     const claudeCodeCount = sessions.filter((s) => s.source === "claude-code").length;
+    const factoryDroidCount = sessions.filter((s) => s.source === "factory-droid").length;
     const totalTestCases = sessions.reduce((sum, s) => sum + s.messageCount, 0);
 
     // Apply limit
@@ -226,6 +228,7 @@ export const listEvalSessions = query({
         bySource: {
           opencode: opencodeCount,
           claudeCode: claudeCodeCount,
+          factoryDroid: factoryDroidCount,
         },
         totalTestCases,
       },

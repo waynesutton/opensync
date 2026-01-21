@@ -47,7 +47,7 @@ function inferProvider(session: { model?: string; provider?: string }): string {
 export const dailyStats = query({
   args: {
     days: v.optional(v.number()),
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   returns: v.array(
     v.object({
@@ -123,7 +123,7 @@ export const dailyStats = query({
 // Model usage breakdown
 export const modelStats = query({
   args: {
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   returns: v.array(
     v.object({
@@ -202,7 +202,7 @@ export const modelStats = query({
 // Project usage breakdown with extended metrics
 export const projectStats = query({
   args: {
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   returns: v.array(
     v.object({
@@ -281,7 +281,7 @@ export const projectStats = query({
 // Provider usage breakdown
 export const providerStats = query({
   args: {
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   returns: v.array(
     v.object({
@@ -353,7 +353,7 @@ export const sessionsWithDetails = query({
     filterModel: v.optional(v.string()),
     filterProject: v.optional(v.string()),
     filterProvider: v.optional(v.string()),
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -489,7 +489,7 @@ export const sourceStats = query({
 // Summary stats for dashboard header
 export const summaryStats = query({
   args: {
-    source: v.optional(v.string()), // "opencode" | "claude-code" | undefined (all)
+    source: v.optional(v.string()), // "opencode" | "claude-code" | "factory-droid" | undefined (all)
   },
   returns: v.union(
     v.object({

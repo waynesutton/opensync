@@ -299,7 +299,7 @@ export const upsert = internalMutation({
     projectName: v.optional(v.string()),
     model: v.optional(v.string()),
     provider: v.optional(v.string()),
-    source: v.optional(v.string()), // "opencode" or "claude-code"
+    source: v.optional(v.string()), // "opencode", "claude-code", or "factory-droid"
     promptTokens: v.optional(v.number()),
     completionTokens: v.optional(v.number()),
     cost: v.optional(v.number()),
