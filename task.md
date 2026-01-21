@@ -91,6 +91,13 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 None currently.
 
+## Recently Completed (Footer Icons)
+
+- [x] Added Discord and Support icons to Login page footer
+  - Discord icon links to convex.dev/community
+  - Support icon (MessageCircleQuestion) links to GitHub issues page
+  - Icons placed next to existing GitHub icon in bottom left footer
+
 ## Recently Completed (Provider Display Fix)
 
 - [x] Fixed provider display showing "unknown" for antigravity-oauth and anthropic-oauth sessions (GitHub #2)

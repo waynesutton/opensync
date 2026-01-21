@@ -6,6 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Discord community icon in Login page footer (links to convex.dev/community)
+- Support icon in Login page footer (links to GitHub issues page)
+
 ### Fixed
 
 - Fixed provider display showing "unknown" for antigravity-oauth and anthropic-oauth sessions (fixes #2)
