@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
+import { getSourceLabel, getSourceColorClass } from "../lib/source";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import type { Id } from "../../convex/_generated/dataModel";
 import ReactMarkdown from "react-markdown";
@@ -483,7 +484,8 @@ function SessionResultCard({
 }) {
   const t = getThemeClasses(theme);
   const source = session.source || "opencode";
-  const isClaudeCode = source === "claude-code";
+  const sourceLabel = getSourceLabel(source);
+  const sourceColor = getSourceColorClass(source, { themed: false });
 
   return (
     <button
@@ -501,13 +503,8 @@ function SessionResultCard({
               {session.title || "Untitled Session"}
             </h3>
             {/* Source badge */}
-            <span className={cn(
-              "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide",
-              isClaudeCode
-                ? "bg-amber-500/15 text-amber-500"
-                : "bg-blue-500/15 text-blue-400"
-            )}>
-              {isClaudeCode ? "Claude Code" : "OpenCode"}
+            <span className={cn("shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide", sourceColor)}>
+              {sourceLabel}
             </span>
             {session.isPublic && (
               <Globe className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
@@ -811,7 +808,8 @@ function SessionSlideOver({
   };
 
   const source = session?.source || "opencode";
-  const isClaudeCode = source === "claude-code";
+  const sourceLabel = getSourceLabel(source);
+  const sourceColor = getSourceColorClass(source, { themed: false });
 
   return (
     <>
@@ -851,13 +849,8 @@ function SessionSlideOver({
                       {session.title || "Untitled Session"}
                     </h2>
                     {/* Source badge */}
-                    <span className={cn(
-                      "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide",
-                      isClaudeCode
-                        ? "bg-amber-500/15 text-amber-500"
-                        : "bg-blue-500/15 text-blue-400"
-                    )}>
-                      {isClaudeCode ? "Claude Code" : "OpenCode"}
+                    <span className={cn("shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide", sourceColor)}>
+                      {sourceLabel}
                     </span>
                     {session.isPublic && (
                       <Globe className="h-4 w-4 text-emerald-500 shrink-0" />

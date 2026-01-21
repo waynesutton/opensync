@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
+import { getSourceLabel, getSourceColorClass } from "../lib/source";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { StatCard, BarChart, DonutChart, FilterPill, ProgressBar, ConsumptionBreakdown } from "../components/Charts";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -51,7 +52,7 @@ type ViewMode = "overview" | "sessions" | "evals" | "analytics";
 type SortField = "updatedAt" | "createdAt" | "totalTokens" | "cost" | "durationMs";
 type SortOrder = "asc" | "desc";
 // Source filter type for filtering by plugin source
-type SourceFilter = "all" | "opencode" | "claude-code";
+type SourceFilter = "all" | "opencode" | "claude-code" | "factory-droid";
 
 export function DashboardPage() {
   const { user, signOut } = useAuth();
@@ -494,6 +495,55 @@ function SetupBanner({ theme, onDismiss }: { theme: "dark" | "tan"; onDismiss: (
                   className={cn(
                     "flex items-center gap-1 text-[10px] transition-colors",
                     isDark ? "text-amber-400 hover:text-amber-300" : "text-[#EB5601] hover:opacity-80"
+                  )}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  npm
+                </a>
+              </div>
+            </div>
+            
+            {/* Factory Droid Plugin */}
+            <div className={cn(
+              "rounded-lg border p-3",
+              isDark ? "bg-zinc-900/50 border-zinc-700" : "bg-white border-[#e5e0d8]"
+            )}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 rounded bg-orange-500/15 flex items-center justify-center">
+                  <span className="text-[10px] font-medium text-orange-400">FD</span>
+                </div>
+                <span className={cn("text-xs font-medium", t.textSecondary)}>droid-sync</span>
+              </div>
+              <p className={cn("text-[11px] mb-2", t.textDim)}>
+                Sync your Factory Droid sessions to the dashboard.
+              </p>
+              <div className={cn(
+                "rounded px-2 py-1.5 text-[11px] font-mono mb-2",
+                isDark ? "bg-zinc-800" : "bg-[#f5f3f0]",
+                t.textMuted
+              )}>
+                npm install -g droid-sync
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://github.com/yemyat/droid-sync-plugin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1 text-[10px] transition-colors",
+                    isDark ? "text-orange-400 hover:text-orange-300" : "text-[#EB5601] hover:opacity-80"
+                  )}
+                >
+                  <Github className="h-3 w-3" />
+                  GitHub
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/droid-sync"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1 text-[10px] transition-colors",
+                    isDark ? "text-orange-400 hover:text-orange-300" : "text-[#EB5601] hover:opacity-80"
                   )}
                 >
                   <ExternalLink className="h-3 w-3" />
@@ -1067,15 +1117,15 @@ function SessionsView({
                   {/* Source badge in detail header */}
                   {(() => {
                     const detailSource = selectedSession.session.source || "opencode";
-                    const isClaudeCodeDetail = detailSource === "claude-code";
+                    const label = detailSource === "claude-code" ? "Claude Code" : detailSource === "factory-droid" ? "Factory Droid" : "OpenCode";
+                    const colorClass = detailSource === "claude-code"
+                      ? "bg-amber-500/15 text-amber-500"
+                      : detailSource === "factory-droid"
+                      ? "bg-orange-500/15 text-orange-400"
+                      : "bg-blue-500/15 text-blue-400";
                     return (
-                      <span className={cn(
-                        "shrink-0 px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide",
-                        isClaudeCodeDetail
-                          ? "bg-amber-500/15 text-amber-500"
-                          : "bg-blue-500/15 text-blue-400"
-                      )}>
-                        {isClaudeCodeDetail ? "Claude Code" : "OpenCode"}
+                      <span className={cn("shrink-0 px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide", colorClass)}>
+                        {label}
                       </span>
                     );
                   })()}
@@ -1493,21 +1543,11 @@ function EvalsView({ theme }: { theme: "dark" | "tan" }) {
   };
 
   // Source badge inline component
-  const SourceBadge = ({ source }: { source?: string }) => {
-    const isClaudeCode = source === "claude-code";
-    return (
-      <span
-        className={cn(
-          "inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded",
-          isClaudeCode
-            ? isDark ? "bg-orange-500/20 text-orange-400" : "bg-orange-100 text-orange-700"
-            : isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-100 text-blue-700"
-        )}
-      >
-        {isClaudeCode ? "CC" : "OC"}
-      </span>
-    );
-  };
+  const SourceBadge = ({ source }: { source?: string }) => (
+    <span className={cn("inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded", getSourceColorClass(source, { theme }))}>
+      {getSourceLabel(source, true)}
+    </span>
+  );
 
   // Tag badge inline component
   const TagBadge = ({ tag }: { tag: string }) => (
@@ -2295,9 +2335,9 @@ function SessionRow({ session, isSelected, onClick, theme }: { session: any; isS
 
 function SessionTableRow({ session, isSelected, onClick, theme }: { session: any; isSelected: boolean; onClick: () => void; theme: "dark" | "tan" }) {
   const t = getThemeClasses(theme);
-  // Determine source badge styling
   const source = session.source || "opencode";
-  const isClaudeCode = source === "claude-code";
+  const badgeLabel = getSourceLabel(source, true);
+  const badgeColor = getSourceColorClass(source, { themed: false });
   
   return (
     <>
@@ -2315,14 +2355,9 @@ function SessionTableRow({ session, isSelected, onClick, theme }: { session: any
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
-              {/* Source badge - shows CC for Claude Code, OC for OpenCode */}
-              <span className={cn(
-                "shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide",
-                isClaudeCode
-                  ? "bg-amber-500/15 text-amber-500"
-                  : "bg-blue-500/15 text-blue-400"
-              )}>
-                {isClaudeCode ? "CC" : "OC"}
+              {/* Source badge - shows CC for Claude Code, FD for Factory Droid, OC for OpenCode */}
+              <span className={cn("shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase tracking-wide", badgeColor)}>
+                {badgeLabel}
               </span>
             </div>
             <p className={cn("text-[10px] truncate", t.textDim)}>
@@ -2358,11 +2393,8 @@ function SessionTableRow({ session, isSelected, onClick, theme }: { session: any
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
-              <span className={cn(
-                "shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase",
-                isClaudeCode ? "bg-amber-500/15 text-amber-500" : "bg-blue-500/15 text-blue-400"
-              )}>
-                {isClaudeCode ? "CC" : "OC"}
+              <span className={cn("shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase", badgeColor)}>
+                {badgeLabel}
               </span>
               {session.isPublic && <Globe className="h-3 w-3 text-emerald-500 shrink-0" />}
             </div>
@@ -2502,6 +2534,7 @@ function SourceDropdown({
     { value: "all", label: "All Sources" },
     { value: "opencode", label: "OpenCode" },
     { value: "claude-code", label: "Claude Code" },
+    { value: "factory-droid", label: "Factory Droid" },
   ];
 
   return (

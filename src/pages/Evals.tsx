@@ -4,6 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { cn } from "../lib/utils";
+import { getSourceLabel, getSourceColorClass } from "../lib/source";
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { StatCard } from "../components/Charts";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -26,23 +27,9 @@ import {
 
 // Source badge component (matches Dashboard)
 function SourceBadge({ source, theme }: { source?: string; theme: "dark" | "tan" }) {
-  const isDark = theme === "dark";
-  const isClaudeCode = source === "claude-code";
-  
   return (
-    <span
-      className={cn(
-        "inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded",
-        isClaudeCode
-          ? isDark
-            ? "bg-orange-500/20 text-orange-400"
-            : "bg-orange-100 text-orange-700"
-          : isDark
-            ? "bg-blue-500/20 text-blue-400"
-            : "bg-blue-100 text-blue-700"
-      )}
-    >
-      {isClaudeCode ? "CC" : "OC"}
+    <span className={cn("inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded", getSourceColorClass(source, { theme }))}>
+      {getSourceLabel(source, true)}
     </span>
   );
 }
@@ -95,7 +82,7 @@ export function EvalsPage() {
 
   // Computed
   const sessions = evalData?.sessions || [];
-  const stats = evalData?.stats || { total: 0, bySource: { opencode: 0, claudeCode: 0 }, totalTestCases: 0 };
+  const stats = evalData?.stats || { total: 0, bySource: { opencode: 0, claudeCode: 0, factoryDroid: 0 }, totalTestCases: 0 };
   const hasActiveFilters = sourceFilter || tagFilter;
 
   // Handlers
@@ -252,6 +239,11 @@ export function EvalsPage() {
               value={stats.bySource.claudeCode}
               theme={theme}
             />
+            <StatCard
+              label="Factory Droid"
+              value={stats.bySource.factoryDroid}
+              theme={theme}
+            />
           </div>
 
           {/* Filters and actions bar */}
@@ -269,6 +261,7 @@ export function EvalsPage() {
                 <option value="">All Sources</option>
                 <option value="opencode">OpenCode</option>
                 <option value="claude-code">Claude Code</option>
+                <option value="factory-droid">Factory Droid</option>
               </select>
 
               {/* Tag filter */}
