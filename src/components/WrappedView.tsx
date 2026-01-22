@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { WrappedTemplate, TEMPLATE_COUNT } from "./WrappedTemplates";
+import { WrappedTemplate } from "./WrappedTemplates";
+// import { TEMPLATE_COUNT } from "./WrappedTemplates"; // Uncomment when re-enabling rotate button
 import { useTheme, getThemeClasses } from "../lib/theme";
 import { cn } from "../lib/utils";
 import {
   Download,
-  RotateCcw,
+  // RotateCcw, // Uncomment when re-enabling rotate design button
   Clock,
   Loader2,
 } from "lucide-react";
@@ -42,7 +43,7 @@ export function WrappedView() {
   const t = getThemeClasses(theme);
   const exportRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [testDesignIndex, setTestDesignIndex] = useState<number | null>(null);
+  const [testDesignIndex] = useState<number | null>(null); // setTestDesignIndex commented out - uncomment when re-enabling rotate button
 
   // Fetch wrapped data and stats
   const todayWrapped = useQuery(api.wrapped.getTodayWrapped);
@@ -59,10 +60,10 @@ export function WrappedView() {
   const nextGenTime = todayWrapped?.nextGenerationAt || countdownInfo?.nextGenerationAt || Date.now() + 24 * 60 * 60 * 1000;
   const countdown = useCountdown(nextGenTime);
 
-  // Rotate design for testing
-  const handleRotate = useCallback(() => {
-    setTestDesignIndex((prev) => ((prev ?? designIndex) + 1) % TEMPLATE_COUNT);
-  }, [designIndex]);
+  // Rotate design for testing - uncomment when re-enabling rotate button
+  // const handleRotate = useCallback(() => {
+  //   setTestDesignIndex((prev) => ((prev ?? designIndex) + 1) % TEMPLATE_COUNT);
+  // }, [designIndex]);
 
   // Download as PNG using html2canvas (9:16 portrait: 675x1200)
   const handleDownload = useCallback(async () => {
@@ -196,11 +197,12 @@ export function WrappedView() {
           )}
         </div>
 
-        {/* Design info */}
+        {/* Design info - hidden for production
         <div className={cn("mt-4 text-xs", t.textSubtle)}>
           Design {designIndex + 1} of {TEMPLATE_COUNT}
           {testDesignIndex !== null && " (testing)"}
         </div>
+        */}
       </div>
 
       {/* Controls */}
@@ -236,9 +238,9 @@ export function WrappedView() {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className={t.textMuted}>Cost</span>
-              <span className="font-semibold text-green-600">
-                ${stats.cost.toFixed(2)}
+              <span className={t.textMuted}>Sessions</span>
+              <span className={cn("font-semibold", t.textPrimary)}>
+                {(stats as { sessionCount?: number }).sessionCount ?? 0}
               </span>
             </div>
           </div>
@@ -306,11 +308,8 @@ export function WrappedView() {
           </button>
 
           {/* 
-            TEST BUTTON - REMOVE LATER
-            This button rotates through all 10 design templates for testing purposes.
-            Click to cycle through designs and preview how each one looks with your data.
-            Once we finalize the designs, remove this button and the testDesignIndex state.
-          */}
+            ROTATE DESIGN BUTTON - Commented out for production
+            Uncomment to test all 10 design templates during development.
           <button
             onClick={handleRotate}
             className={cn(
@@ -323,6 +322,7 @@ export function WrappedView() {
             <RotateCcw className="w-5 h-5" />
             Rotate Design ({(testDesignIndex ?? designIndex) + 1}/{TEMPLATE_COUNT})
           </button>
+          */}
         </div>
 
         {/* Info */}

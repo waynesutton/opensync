@@ -12,6 +12,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Increased font sizes across all 10 wrapped templates for better readability
 - Removed Twitter/X and LinkedIn share buttons from Wrapped view (download only)
 - Updated wrapped templates with vertical portrait layouts and large typography
+- Commented out Rotate Design button and design info for production (code preserved for testing)
 
 ### Fixed
 

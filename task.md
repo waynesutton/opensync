@@ -45,6 +45,11 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
   - Sessions count is more shareable and shows engagement
   - Added sessionCount to wrappedStatsValidator (optional for backward compatibility)
   - Updated get24HourStats and getWrappedStats to return recentSessions.length
+- [x] Commented out Rotate Design button and design info for production
+  - Removed "Design X of 10" text from wrapped view
+  - Removed Rotate Design button from action buttons
+  - Code preserved with comments for easy re-enabling during testing
+  - Current wrapped image still displays based on date-based design index
 
 ## Recently Completed (Daily Sync Wrapped - v1.2.0)
 
