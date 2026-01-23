@@ -18,6 +18,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Added Codex CLI Plugin documentation section with installation, configuration, and commands
   - Updated analytics provider inference to recognize Codex models
 - Created docs/ADD-NEW-PLUGIN-TEMPLATE.md: reusable prompt template for adding future plugins
+- Docs page updates for codex-sync plugin:
+  - Added codex-sync npm link to sidebar
+  - Added Codex CLI card to hosted version "Install Plugins" section
+  - Added codex-sync login to "Login and Sync" section
+  - Added Codex CLI card to Quick Start "Install a Plugin" section
+  - Updated Sessions View description to include CX badge
+  - Updated markdown export content with codex-sync commands
 
 ### Fixed
 

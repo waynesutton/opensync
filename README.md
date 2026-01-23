@@ -6,7 +6,7 @@ Cloud-synced dashboards that track session activity, tool usage, and token spend
 
 [Website](https://www.opensync.dev/) | [Docs](https://www.opensync.dev/docs) | [Dashboard](https://www.opensync.dev/)
 
-## Ecosystem
+## Opensync Ecosystem
 
 | Project              | Description                             | Links                                                                                                                     |
 | -------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -14,7 +14,7 @@ Cloud-synced dashboards that track session activity, tool usage, and token spend
 | opencode-sync-plugin | Sync OpenCode sessions                  | [GitHub](https://github.com/waynesutton/opencode-sync-plugin) / [npm](https://www.npmjs.com/package/opencode-sync-plugin) |
 | claude-code-sync     | Sync Claude Code sessions               | [GitHub](https://github.com/waynesutton/claude-code-sync) / [npm](https://www.npmjs.com/package/claude-code-sync)         |
 | droid-sync           | Sync Factory Droid sessions (community) | [GitHub](https://github.com/yemyat/droid-sync-plugin) / [npm](https://www.npmjs.com/package/droid-sync)                   |
-| codex-sync           | Sync Codex CLI sessions                 | [GitHub](https://github.com/waynesutton/codex-sync) / [npm](https://www.npmjs.com/package/codex-sync)                     |
+| codex-sync           | Sync Codex CLI sessions                 | [GitHub](https://github.com/waynesutton/codex-sync-plugin) / [npm](https://www.npmjs.com/package/codex-sync)                     |
 
 ## Features
 

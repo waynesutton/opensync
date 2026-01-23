@@ -1429,6 +1429,11 @@ For Claude Code:
 npm install -g claude-code-sync
 \`\`\`
 
+For Codex CLI:
+\`\`\`bash
+npm install -g codex-sync
+\`\`\`
+
 ### Login and Sync
 
 1. Sign in at https://www.opensync.dev
@@ -1439,6 +1444,8 @@ npm install -g claude-code-sync
 opencode-sync login
 # or
 claude-code-sync login
+# or
+codex-sync login
 \`\`\`
 
 4. Enter the Convex URL and API key when prompted
@@ -1538,13 +1545,19 @@ npm install -g claude-code-sync
 claude-code-sync login
 \`\`\`
 
+For Codex CLI:
+\`\`\`bash
+npm install -g codex-sync
+codex-sync login
+\`\`\`
+
 ## Dashboard Features
 
 ### Overview
 The Overview tab shows key metrics: total sessions, tokens, cost, duration, models, and projects. Charts display usage trends over 30 days.
 
 ### Sessions View
-Browse all synced sessions with sorting, filtering, and source badges (OC for OpenCode, CC for Claude Code). Click a session to view full conversation history.
+Browse all synced sessions with sorting, filtering, and source badges (OC for OpenCode, CC for Claude Code, CX for Codex CLI). Click a session to view full conversation history.
 
 ### Evals Export
 Mark sessions as eval-ready for export. Supports DeepEval JSON, OpenAI JSONL, and Filesystem formats for training and evaluation.
@@ -1992,6 +2005,20 @@ npm install
                   claude-code-sync
                 </a>
                 <a
+                  href="https://www.npmjs.com/package/codex-sync"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors",
+                    t.border,
+                    t.textSubtle,
+                    t.bgHover,
+                  )}
+                >
+                  <Package className="h-3.5 w-3.5" />
+                  codex-sync
+                </a>
+                <a
                   href="https://www.opensync.dev"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -2016,7 +2043,7 @@ npm install
                 onCopyMarkdown={() =>
                   copySectionMarkdown(
                     "hosted",
-                    `## Use the Hosted Version\n\nStart syncing sessions in under 2 minutes with https://www.opensync.dev/\n\n### Install Plugins\n\`\`\`bash\nnpm install -g opencode-sync-plugin\nnpm install -g claude-code-sync\n\`\`\`\n\n### Login and Sync\n1. Sign in at opensync.dev\n2. Generate an API key in Settings\n3. Run \`opencode-sync login\` or \`claude-code-sync login\`\n4. Start coding, sessions sync automatically`,
+                    `## Use the Hosted Version\n\nStart syncing sessions in under 2 minutes with https://www.opensync.dev/\n\n### Install Plugins\n\`\`\`bash\nnpm install -g opencode-sync-plugin\nnpm install -g claude-code-sync\nnpm install -g codex-sync\n\`\`\`\n\n### Login and Sync\n1. Sign in at opensync.dev\n2. Generate an API key in Settings\n3. Run \`opencode-sync login\` or \`claude-code-sync login\` or \`codex-sync login\`\n4. Start coding, sessions sync automatically`,
                   )
                 }
               />
@@ -2247,6 +2274,37 @@ npm install
                       </div>
                       <CodeBlock code="npm install -g claude-code-sync" />
                     </div>
+
+                    {/* Codex CLI */}
+                    <div
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        t.bgCard,
+                        t.border,
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded bg-purple-500/15 flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-purple-400">
+                            CX
+                          </span>
+                        </div>
+                        <span
+                          className={cn("text-sm font-medium", t.textSecondary)}
+                        >
+                          Codex CLI
+                        </span>
+                        <a
+                          href="https://www.npmjs.com/package/codex-sync"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn("ml-auto text-[10px]", t.textDim)}
+                        >
+                          npm
+                        </a>
+                      </div>
+                      <CodeBlock code="npm install -g codex-sync" />
+                    </div>
                   </div>
                 </div>
 
@@ -2293,6 +2351,10 @@ npm install
                             or
                           </p>
                           <CodeBlock code="claude-code-sync login" />
+                          <p className={cn("text-xs text-center", t.textDim)}>
+                            or
+                          </p>
+                          <CodeBlock code="codex-sync login" />
                         </div>
                       </li>
                       <li>
@@ -2773,6 +2835,35 @@ npx convex dev`}
                         </code>
                       </p>
                     </div>
+
+                    {/* Codex CLI */}
+                    <div
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        t.bgCard,
+                        t.border,
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded bg-purple-500/15 flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-purple-400">
+                            CX
+                          </span>
+                        </div>
+                        <span
+                          className={cn("text-sm font-medium", t.textSecondary)}
+                        >
+                          Codex CLI
+                        </span>
+                      </div>
+                      <CodeBlock code="npm install -g codex-sync" />
+                      <p className={cn("mt-2 text-xs", t.textDim)}>
+                        Then run{" "}
+                        <code className={cn("px-1 rounded", t.bgCode)}>
+                          codex-sync login
+                        </code>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2805,7 +2896,7 @@ npx convex dev`}
                   />
                   <p className={cn("mt-2 text-sm", t.textMuted)}>
                     Browse all synced sessions with sorting and filtering.
-                    Source badges show OC (OpenCode) or CC (Claude Code) origin.
+                    Source badges show OC (OpenCode), CC (Claude Code), or CX (Codex CLI) origin.
                     List view shows token count, cost, and duration. Timeline
                     view displays sessions chronologically grouped by project.
                   </p>

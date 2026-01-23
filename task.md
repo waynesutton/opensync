@@ -8,6 +8,18 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Docs Page codex-sync Updates)
+
+- [x] Updated Docs.tsx with codex-sync plugin documentation
+  - Added codex-sync npm link to sidebar alongside opencode-sync-plugin and claude-code-sync
+  - Added Codex CLI card (purple CX badge) to hosted version "Install Plugins" section
+  - Added codex-sync login command to "Login and Sync" section
+  - Added Codex CLI card to Quick Start "Install a Plugin" section
+  - Updated Sessions View description to include CX (Codex CLI) badge
+  - Updated markdown content with codex-sync install and login commands
+  - Updated markdown export string to include codex-sync
+  - Build passes netlify build check
+
 ## Recently Completed (Codex CLI Plugin Integration)
 
 - [x] codex-sync plugin integration for syncing OpenAI Codex CLI sessions
