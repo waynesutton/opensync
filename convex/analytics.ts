@@ -635,23 +635,21 @@ export const summaryStats = query({
 });
 
 // TEMP: Public message count for milestone display on stats page
-// Sums messageCount from sessions table (limit 5000 to prevent timeout)
+// Sums messageCount from sessions table (fewer docs, avoids 16MB read limit)
 export const publicMessageCount = query({
   args: {},
   returns: v.number(),
   handler: async (ctx) => {
-    // Limit to 5000 sessions to prevent query timeout
-    const sessions = await ctx.db.query("sessions").take(5000);
     let total = 0;
-    for (const session of sessions) {
+    for await (const session of ctx.db.query("sessions")) {
       total += session.messageCount || 0;
     }
     return total;
   },
 });
 
-// TEMP: Public message growth data for chart on stats page
-// Groups by session createdAt date and sums messageCount (limit 5000 to prevent timeout)
+// TEMP: Public message growth data for animated chart on stats page
+// Groups by session createdAt date and sums messageCount (avoids 16MB read limit)
 export const publicMessageGrowth = query({
   args: {},
   returns: v.array(
@@ -662,13 +660,10 @@ export const publicMessageGrowth = query({
     })
   ),
   handler: async (ctx) => {
-    // Limit to 5000 sessions to prevent query timeout
-    const sessions = await ctx.db.query("sessions").take(5000);
-
     // Group sessions by date and sum their messageCount
     const byDate: Record<string, number> = {};
 
-    for (const session of sessions) {
+    for await (const session of ctx.db.query("sessions")) {
       if (!session.createdAt || typeof session.createdAt !== "number") continue;
       try {
         const dateObj = new Date(session.createdAt);
