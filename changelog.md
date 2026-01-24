@@ -21,22 +21,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Temporary message milestone counter on Login page (real-time document count from messages table)
+- New public /stats page with platform statistics (isolated from homepage)
+  - Message milestone counter with real-time document count
   - Dynamic milestone targets (500k, 600k, etc.) that auto-update as counts grow
   - Progress bar showing percentage towards next milestone
-  - Raw number display with comma formatting for exact count
-  - Abbreviated format for milestone target (e.g., 500k)
-  - Marked with TODO comments for future removal
-- Temporary animated growth chart on Login page
-  - SVG-based line chart showing cumulative message growth over days
+  - Animated growth chart with SVG line showing cumulative message growth
   - Play/Reset animation controls (no auto-play)
   - Dynamic Y-axis scaling based on actual data
   - X-axis date labels (first, middle, last dates)
-  - Gradient fill under line for visual appeal
-  - Marked with TODO comments for future removal
+  - Dark/tan theme support with theme toggle
+  - Back link to homepage
 - New Convex queries in analytics.ts:
   - publicMessageCount: total message documents count (no auth required)
   - publicMessageGrowth: daily message counts with cumulative totals (no auth required)
+
+### Changed
+
+- Moved stats components from Login page to dedicated /stats page
+  - Prevents potential rendering issues from impacting homepage
+  - Stats accessible via /stats route (public, no auth required)
 - codex-sync plugin integration: sync OpenAI Codex CLI sessions to OpenSync
   - Added codex-sync to README Ecosystem table and Quick Start section
   - Added Codex CLI to AI Coding Agents in Settings (status: supported)

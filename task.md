@@ -21,26 +21,22 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
   - Added `-webkit-overflow-scrolling: touch` for smooth iOS scrolling
   - No changes to desktop UI or features
 
-## Recently Completed (Temporary Login Page Stats)
+## Recently Completed (Stats Page)
 
-- [x] Added temporary message milestone counter on Login page
-  - Real-time message document count from Convex messages table
-  - Dynamic milestone calculation (500k, 600k, 700k, etc.)
-  - Progress bar with percentage towards next milestone
-  - Raw number with commas (e.g., 468,234) and abbreviated target (e.g., 500k)
-  - Matches both dark and tan themes
-  - Marked with TODO comments for future removal
-- [x] Added temporary animated growth chart on Login page
-  - SVG-based cumulative line chart showing message growth over days
-  - Play button to animate line drawing (3s duration)
-  - Reset button to restart animation
-  - Dynamic Y-axis scaling based on actual data (not hardcoded)
-  - X-axis date labels showing first, middle, and last dates
-  - Gradient fill under line for visual appeal
-  - Marked with TODO comments for future removal
+- [x] Created new public /stats page with platform statistics
+  - Moved MessageMilestoneCounter and AnimatedGrowthChart from Login page
+  - Isolated stats components to prevent homepage rendering issues
+  - Real-time message document count with dynamic milestone targets
+  - Animated SVG growth chart with play/reset controls
+  - Dynamic Y-axis scaling based on actual data
+  - X-axis date labels (first, middle, last dates)
+  - Dark/tan theme support with toggle
+  - Back link to homepage
+  - No auth required (public page)
 - [x] Added new Convex queries in analytics.ts
   - publicMessageCount: returns total message documents (no auth)
   - publicMessageGrowth: returns daily counts with cumulative totals (no auth)
+  - Added safety checks for invalid dates in publicMessageGrowth
 
 ## Recently Completed (Docs Page codex-sync Updates)
 

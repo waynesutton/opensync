@@ -11,6 +11,7 @@ import { PublicSessionPage } from "./pages/PublicSession";
 import { SettingsPage } from "./pages/Settings";
 import { EvalsPage } from "./pages/Evals";
 import { ContextPage } from "./pages/Context";
+import { StatsPage } from "./pages/Stats";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 // Storage key for preserving intended route across auth flow
@@ -167,6 +168,7 @@ export default function App() {
       <Route path="/callback" element={<CallbackHandler />} />
       <Route path="/s/:slug" element={<PublicSessionPage />} />
       <Route path="/docs" element={<DocsPage />} />
+      <Route path="/stats" element={<StatsPage />} />
       <Route
         path="/settings"
         element={
