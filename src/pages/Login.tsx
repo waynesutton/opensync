@@ -402,8 +402,8 @@ export function LoginPage() {
               <p
                 className={`mt-3 text-sm sm:text-base leading-relaxed ${isDark ? "text-zinc-300" : "text-[#1a1a1a]"}`}
               >
-                Cloud-synced dashboards that track session activity, tool usage,
-                and token spend. Build eval datasets across projects.
+                Cloud dashboards that sync session activity, tool usage, and
+                token spend. Build and export eval datasets across projects.
               </p>
 
               {/* Feature list - colors from VSCode TypeScript theme */}

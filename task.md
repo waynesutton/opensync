@@ -7,6 +7,12 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 ## Active Tasks
 
 - [ ] (add next task here)
+- [ ] fix write conflics
+- [ ] add cursor cli plugin
+- [ ] add one click deploy
+- [ ] update dashboard udpates
+- [ ] add export evales
+- [ ] worksos domain
 
 ## Recently Completed (Stats Page Disabled)
 
@@ -121,7 +127,7 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
   - Updated preview container with correct aspect ratio (9/16)
 - [x] Increased font sizes across all 10 wrapped templates
   - Headlines: text-5xl to text-8xl
-  - Stats numbers: text-4xl to text-7xl  
+  - Stats numbers: text-4xl to text-7xl
   - Labels: text-lg to text-2xl
   - All templates redesigned for vertical portrait layout
 - [x] Removed share buttons from Wrapped view
@@ -276,7 +282,7 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 - [x] README and documentation
 - [x] opencode-sync-plugin published to npm ([npmjs.com/package/opencode-sync-plugin](https://www.npmjs.com/package/opencode-sync-plugin))
 - [x] Fixed Netlify build errors (vite-env.d.ts, @types/node, tsconfig types)
-- [x] Fixed Netlify SPA routing 404 errors (_redirects, netlify.toml)
+- [x] Fixed Netlify SPA routing 404 errors (\_redirects, netlify.toml)
 - [x] Added 404 catch-all route and WorkOS auth sync detection
 - [x] GET /sync/sessions/list endpoint for listing session external IDs (used by sync CLI --all)
 - [x] Dashboard redesign with Overview, Sessions, Analytics views
@@ -524,7 +530,6 @@ None currently.
 
 ### High Priority (Core)
 
-
 - [x] Source filtering in session list (OpenCode / Claude Code / All)
 
 ### Medium Priority (Sync for Evals)
@@ -583,11 +588,11 @@ Deferred. See [PRD-FEATURES.md](docs/PRD-FEATURES.md).
 
 ## Plugin Repos
 
-| Repo | Purpose | Language | Auth | Status |
-|------|---------|----------|------|--------|
-| [opencode-sync-plugin](https://www.npmjs.com/package/opencode-sync-plugin) | npm package for OpenCode CLI | TypeScript | API Key (osk_*) | Published |
-| [claude-code-sync](https://www.npmjs.com/package/claude-code-sync) | npm package for Claude Code | TypeScript | API Key (osk_*) | Published |
-| [codex-sync](https://www.npmjs.com/package/codex-sync) | npm package for Codex CLI | TypeScript | API Key (osk_*) | Published |
+| Repo                                                                       | Purpose                      | Language   | Auth              | Status    |
+| -------------------------------------------------------------------------- | ---------------------------- | ---------- | ----------------- | --------- |
+| [opencode-sync-plugin](https://www.npmjs.com/package/opencode-sync-plugin) | npm package for OpenCode CLI | TypeScript | API Key (osk\_\*) | Published |
+| [claude-code-sync](https://www.npmjs.com/package/claude-code-sync)         | npm package for Claude Code  | TypeScript | API Key (osk\_\*) | Published |
+| [codex-sync](https://www.npmjs.com/package/codex-sync)                     | npm package for Codex CLI    | TypeScript | API Key (osk\_\*) | Published |
 
 ## Notes
 
