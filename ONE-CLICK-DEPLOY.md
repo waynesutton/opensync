@@ -57,9 +57,20 @@ Replace with your actual deployed URL from Vercel or Netlify.
 
 4. Copy your **Client ID** (`client_xxxxx`) from API Keys
 
+5. **Configure CORS (Required for production):**
+   - In the WorkOS Dashboard, go to **Authentication** page
+   - Click **"Configure CORS"** or find **"Allowed web origins"** section
+   - Add your deployed URL:
+   ```
+   https://your-deployed-url.vercel.app
+   https://your-deployed-url.netlify.app
+   ```
+   - This prevents CORS errors when the app authenticates users
+
 - [ ] WorkOS project created
 - [ ] Email + Password auth enabled
 - [ ] Redirect URI added for your deployed URL
+- [ ] **CORS origins configured (important!)**
 - [ ] Note your Client ID: `client_____________`
 
 ### 3. Set up OpenAI (for semantic search)
@@ -168,11 +179,24 @@ The app detected missing environment variables. Check that:
 - `VITE_WORKOS_CLIENT_ID` is set in Vercel/Netlify
 - You redeployed after setting the variables
 
+### CORS error: "Access-Control-Allow-Origin" header missing
+
+This happens when WorkOS CORS is not configured:
+
+1. Go to WorkOS Dashboard > **Authentication** page
+2. Click **"Configure CORS"** button
+3. Add your deployed URL to allowed origins:
+   ```
+   https://your-deployed-url.vercel.app
+   ```
+4. Save and try logging in again
+
 ### Login redirects but user stays on login page
 
 1. Check WorkOS redirect URI matches your deployed URL exactly
 2. Check `WORKOS_CLIENT_ID` is set in Convex environment variables
-3. Run `npx convex deploy` to sync changes
+3. Verify CORS is configured (see above)
+4. Run `npx convex deploy` to sync changes
 
 ### "Invalid token" errors
 
