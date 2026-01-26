@@ -6,6 +6,90 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Sessions pagination: loads 40 sessions initially with "Load more" button for 20 at a time
+- Eval selection mode in Sessions view with checkbox toggle icon next to list view
+  - Select individual sessions or "Select All" for bulk operations
+  - "Mark" button to batch set eval-ready status on selected sessions
+- cursor-opensync-plugin integration: sync Cursor IDE sessions to OpenSync
+- Evals export now properly handles cursor-sync sessions
+  - Added cursor-sync source filtering in listEvalSessions and previewExport stats
+  - Added cursor-sync to filesystem export manifest sources
+  - Export logic skips tool messages when finding user-assistant pairs for test cases
+  - All four export formats (DeepEval, OpenAI, Promptfoo, Filesystem) work with Cursor sessions
+
+### Fixed
+
+- Fixed all dropdown filters and selects to use custom themed components matching dark/tan modes
+  - Dashboard EvalsView: source and tag filters now use CompactDropdown
+  - Dashboard AnalyticsView: min sessions and min tokens filters now use CompactDropdown
+  - Charts ConsumptionBreakdown (Usage Overview): date range, project, and model filters now use ChartDropdown
+  - All dropdowns have consistent styling with proper hover states, click-outside-to-close, and chevron rotation
+- Added "tool" to message role validator to support tool call messages from cursor-sync-plugin
+  - Added cursor-sync to SourceType union with "CR" badge label
+  - Added cursor-sync to AI Coding Agents in Settings (status: supported)
+  - Added cursor-sync-plugin to Plugin Setup and Quick Setup sections
+  - Added Cursor to homepage "Syncs with" section (removed "coming soon" badge)
+  - Added cursor-sync-plugin to homepage "Getting started" section
+  - Added CR source badge with violet theme color
+  - Added Cursor Plugin documentation section with installation, configuration, and commands
+  - Added cursor-sync-plugin to README ecosystem table and install section
+  - Added cursor-sync to AI_AGENTS_MAP in Evals.tsx for source filter display
+
+### Changed
+
+- Redesigned Evals UI for CRM-style list view (both standalone page and Dashboard tab)
+  - Hidden scrollbars for cleaner look
+  - Flex layout instead of table (no horizontal scrolling)
+  - Truncated session names (35-40 chars) and model names (28 chars)
+  - Shows 50 items initially with "Load more" button for pagination
+  - Responsive columns (model hidden on mobile)
+  - Compact filters bar with inline controls
+  - Wider Model column (w-44) for better readability
+
+### Added
+
+- Comprehensive Plugin Development Guide (docs/PLUGIN-DEVELOPMENT-GUIDE.md)
+  - API endpoints reference with request/response examples
+  - Database schema documentation (sessions, messages, parts tables)
+  - CLI commands reference with all standard commands
+  - TypeScript code examples (API client, session parser, cost calculation, CLI implementation)
+  - README and package.json templates for new plugins
+  - Testing checklist for plugin verification
+  - Architecture diagrams and data flow documentation
+
+- Enhanced Eval Export Features per PRD
+  - New Promptfoo JSONL export format for Promptfoo evaluations
+  - Multi-turn export modes: per_turn (default), full conversation, final turn only
+  - Export preview modal showing session/test case counts and validation warnings
+  - Enhanced filtering: date range, model, eval status, minimum tokens
+  - Annotation system with eval status (golden/correct/incorrect/needs_review)
+  - Bulk status updates for selected sessions
+  - New API endpoint GET /api/export/evals with all filter params
+  - Code blocks only filter option
+  - Enhanced DeepEval format with full PRD-compliant metadata
+- New schema fields for eval annotations
+  - evalStatus: golden, correct, incorrect, needs_review
+  - expectedOutput: ground truth for comparison
+  - detectedLanguage: auto-detected programming language
+  - New index: by_user_eval_status
+
+- New public Updates page (/updates) showing GitHub activity from opensync repository
+  - Two-column layout: open issues (left), discussions (right)
+  - Client-side GitHub API fetching (no auth required, 60 req/hour limit)
+  - Shows issue labels, author avatars, timestamps, comment counts
+  - Fallback card for discussions linking to GitHub (REST API requires auth)
+  - Refresh button to manually refetch data
+  - Dark/tan theme support
+  - No login required (public page like /docs)
+- Updates navigation link in Dashboard header (Bell icon)
+  - Desktop: text link between Context and Docs
+  - Mobile: icon button in right nav
+- Updates link added to Docs page header and sidebar (Resources section)
+- Updates link added to Login page footer (next to Terms/Privacy)
+- Removed duplicate search from Docs sidebar (main header search only)
+
 ### Changed
 
 - Updated README tagline to "Dashboards for OpenCode, Claude Code, Codex, Factory Droid and more"
@@ -422,6 +506,7 @@ Initial release.
 ### Added
 
 #### Backend (Convex)
+
 - Database schema with tables: users, sessions, messages, parts, sessionEmbeddings, apiLogs
 - WorkOS JWT authentication configuration
 - Session sync endpoints: POST /sync/session, POST /sync/message, POST /sync/batch
@@ -432,10 +517,11 @@ Initial release.
 - Hybrid search combining full-text and semantic results with RRF scoring
 - Session export in JSON, JSONL, and Markdown formats
 - RAG context retrieval endpoint for LLM integration
-- API key generation and authentication (osk_ prefix)
+- API key generation and authentication (osk\_ prefix)
 - API access logging
 
 #### Frontend (React)
+
 - WorkOS AuthKit integration for login/logout
 - Protected routes with auth guards
 - Dashboard page with session list and search
@@ -450,6 +536,7 @@ Initial release.
 - Copy share link functionality
 
 #### Documentation
+
 - README with quick start guide
 - SETUP.md with full deployment instructions
 - API.md with endpoint reference and SDK examples
@@ -473,17 +560,20 @@ Initial release.
 See [PRD-FEATURES.md](docs/PRD-FEATURES.md), [SYNC-FOR-EVALS-PRD.md](docs/SYNC-FOR-EVALS-PRD.md), and [PLUGIN-AUTH-PRD.md](docs/PLUGIN-AUTH-PRD.md) for specifications.
 
 ### Plugins
+
 - opencode-sync-plugin: **Published** at [npmjs.com/package/opencode-sync-plugin](https://www.npmjs.com/package/opencode-sync-plugin)
 - claude-code-sync: **Published** at [npmjs.com/package/claude-code-sync](https://www.npmjs.com/package/claude-code-sync)
 - Both plugins use simple CLI login with Convex URL and API Key
 
 ### Sync for Evals
+
 - Mark sessions as eval-ready with notes and tags
 - Export to DeepEval JSON, OpenAI Evals JSONL, Filesystem formats
 - Copy-paste commands for running evals locally
 - Support for Promptfoo model comparison
 
 ### Future Features
+
 - RAG Context Library: Dedicated context search UI with saved searches
 - Model Comparison Dashboard: Analytics comparing model performance
 - Training Data Marketplace: Sell anonymized session data (deferred)

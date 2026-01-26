@@ -3,7 +3,8 @@ export type SourceType =
   | "claude-code"
   | "factory-droid"
   | "opencode"
-  | "codex-cli";
+  | "codex-cli"
+  | "cursor-sync";
 
 /**
  * Get display label for a source
@@ -22,7 +23,9 @@ export function getSourceLabel(
         ? "FD"
         : s === "codex-cli"
           ? "CX"
-          : "OC";
+          : s === "cursor-sync"
+            ? "CR"
+            : "OC";
   }
   return s === "claude-code"
     ? "Claude Code"
@@ -30,7 +33,9 @@ export function getSourceLabel(
       ? "Factory Droid"
       : s === "codex-cli"
         ? "Codex CLI"
-        : "OpenCode";
+        : s === "cursor-sync"
+          ? "Cursor"
+          : "OpenCode";
 }
 
 /**
@@ -62,6 +67,11 @@ export function getSourceColorClass(
         ? "bg-purple-500/20 text-purple-400"
         : "bg-purple-100 text-purple-700";
     }
+    if (s === "cursor-sync") {
+      return isDark
+        ? "bg-violet-500/20 text-violet-400"
+        : "bg-violet-100 text-violet-700";
+    }
     return isDark
       ? "bg-blue-500/20 text-blue-400"
       : "bg-blue-100 text-blue-700";
@@ -71,5 +81,6 @@ export function getSourceColorClass(
   if (s === "claude-code") return "bg-amber-500/15 text-amber-500";
   if (s === "factory-droid") return "bg-orange-500/15 text-orange-400";
   if (s === "codex-cli") return "bg-purple-500/15 text-purple-400";
+  if (s === "cursor-sync") return "bg-violet-500/15 text-violet-400";
   return "bg-blue-500/15 text-blue-400";
 }

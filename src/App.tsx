@@ -12,6 +12,7 @@ import { SettingsPage } from "./pages/Settings";
 import { EvalsPage } from "./pages/Evals";
 import { ContextPage } from "./pages/Context";
 import { StatsPage } from "./pages/Stats";
+import { UpdatesPage } from "./pages/Updates";
 import { Loader2, ArrowLeft } from "lucide-react";
 
 // Storage key for preserving intended route across auth flow
@@ -169,6 +170,7 @@ export default function App() {
       <Route path="/s/:slug" element={<PublicSessionPage />} />
       <Route path="/docs" element={<DocsPage />} />
       <Route path="/stats" element={<StatsPage />} />
+      <Route path="/updates" element={<UpdatesPage />} />
       <Route
         path="/settings"
         element={

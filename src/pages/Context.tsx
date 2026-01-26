@@ -50,17 +50,19 @@ export function ContextPage() {
   const { theme, toggleTheme } = useTheme();
   const t = getThemeClasses(theme);
   const navigate = useNavigate();
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchMode, setSearchMode] = useState<SearchMode>("sessions");
   const [cursor, setCursor] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Slide-over panel state
-  const [selectedSessionId, setSelectedSessionId] = useState<Id<"sessions"> | null>(null);
-  const [selectedMessageId, setSelectedMessageId] = useState<Id<"messages"> | null>(null);
+  const [selectedSessionId, setSelectedSessionId] =
+    useState<Id<"sessions"> | null>(null);
+  const [selectedMessageId, setSelectedMessageId] =
+    useState<Id<"messages"> | null>(null);
 
   // Debounce search query (300ms delay)
   useEffect(() => {
@@ -78,7 +80,10 @@ export function ContextPage() {
       searchInputRef.current?.focus();
     }
     // Escape to clear search
-    if (e.key === "Escape" && document.activeElement === searchInputRef.current) {
+    if (
+      e.key === "Escape" &&
+      document.activeElement === searchInputRef.current
+    ) {
       setSearchQuery("");
     }
   }, []);
@@ -93,21 +98,22 @@ export function ContextPage() {
     api.search.searchSessionsPaginated,
     searchMode === "sessions"
       ? { query: debouncedQuery, limit: RESULTS_PER_PAGE, cursor }
-      : "skip"
+      : "skip",
   );
 
   const messageResults = useQuery(
     api.search.searchMessagesPaginated,
     searchMode === "messages" && debouncedQuery.trim()
       ? { query: debouncedQuery, limit: RESULTS_PER_PAGE, cursor }
-      : "skip"
+      : "skip",
   );
 
   // Pagination handlers
   const handleNextPage = () => {
-    const nextCursor = searchMode === "sessions" 
-      ? sessionResults?.nextCursor 
-      : messageResults?.nextCursor;
+    const nextCursor =
+      searchMode === "sessions"
+        ? sessionResults?.nextCursor
+        : messageResults?.nextCursor;
     if (nextCursor !== null && nextCursor !== undefined) {
       setCursor(nextCursor);
     }
@@ -119,32 +125,39 @@ export function ContextPage() {
     }
   };
 
-  const hasNextPage = searchMode === "sessions"
-    ? sessionResults?.nextCursor !== null
-    : messageResults?.nextCursor !== null;
+  const hasNextPage =
+    searchMode === "sessions"
+      ? sessionResults?.nextCursor !== null
+      : messageResults?.nextCursor !== null;
 
   const hasPrevPage = cursor > 0;
 
-  const currentResults = searchMode === "sessions" 
-    ? sessionResults?.sessions || [] 
-    : messageResults?.messages || [];
+  const currentResults =
+    searchMode === "sessions"
+      ? sessionResults?.sessions || []
+      : messageResults?.messages || [];
 
-  const totalResults = searchMode === "sessions"
-    ? sessionResults?.total || 0
-    : messageResults?.total || 0;
+  const totalResults =
+    searchMode === "sessions"
+      ? sessionResults?.total || 0
+      : messageResults?.total || 0;
 
-  const isLoading = searchMode === "sessions"
-    ? sessionResults === undefined && debouncedQuery !== ""
-    : messageResults === undefined && debouncedQuery !== "";
+  const isLoading =
+    searchMode === "sessions"
+      ? sessionResults === undefined && debouncedQuery !== ""
+      : messageResults === undefined && debouncedQuery !== "";
 
   // Fetch full session details for slide-over panel
   const selectedSession = useQuery(
     api.sessions.get,
-    selectedSessionId ? { sessionId: selectedSessionId } : "skip"
+    selectedSessionId ? { sessionId: selectedSessionId } : "skip",
   );
 
   // Handle opening session in slide-over
-  const handleOpenSession = (sessionId: Id<"sessions">, messageId?: Id<"messages">) => {
+  const handleOpenSession = (
+    sessionId: Id<"sessions">,
+    messageId?: Id<"messages">,
+  ) => {
     setSelectedSessionId(sessionId);
     setSelectedMessageId(messageId || null);
   };
@@ -169,15 +182,30 @@ export function ContextPage() {
   return (
     <div className={cn("min-h-screen flex flex-col", t.bgPrimary)}>
       {/* Header */}
-      <header className={cn("h-12 border-b flex items-center px-4 gap-4", t.border, t.bgPrimary)}>
-        <Link to="/" className={cn("flex items-center gap-2 transition-colors", t.textSubtle, "hover:opacity-80")}>
+      <header
+        className={cn(
+          "h-12 border-b flex items-center px-4 gap-4",
+          t.border,
+          t.bgPrimary,
+        )}
+      >
+        <Link
+          to="/"
+          className={cn(
+            "flex items-center gap-2 transition-colors",
+            t.textSubtle,
+            "hover:opacity-80",
+          )}
+        >
           <ArrowLeft className="h-4 w-4" />
           <span className="text-sm">Back</span>
         </Link>
 
         <div className={cn("h-4 w-px", t.border)} />
 
-        <span className={cn("font-normal text-sm tracking-tight", t.textSecondary)}>
+        <span
+          className={cn("font-normal text-sm tracking-tight", t.textSecondary)}
+        >
           Context Search
         </span>
 
@@ -186,15 +214,29 @@ export function ContextPage() {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className={cn("p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
-          title={theme === "dark" ? "Switch to tan mode" : "Switch to dark mode"}
+          className={cn(
+            "p-1.5 rounded transition-colors",
+            t.textSubtle,
+            t.bgHover,
+          )}
+          title={
+            theme === "dark" ? "Switch to tan mode" : "Switch to dark mode"
+          }
         >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {theme === "dark" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
         </button>
 
         <Link
           to="/docs"
-          className={cn("p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+          className={cn(
+            "p-1.5 rounded transition-colors",
+            t.textSubtle,
+            t.bgHover,
+          )}
           title="Documentation"
         >
           <FileText className="h-4 w-4" />
@@ -202,7 +244,11 @@ export function ContextPage() {
 
         <Link
           to="/settings"
-          className={cn("p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+          className={cn(
+            "p-1.5 rounded transition-colors",
+            t.textSubtle,
+            t.bgHover,
+          )}
           title="Settings"
         >
           <Settings className="h-4 w-4" />
@@ -210,26 +256,58 @@ export function ContextPage() {
 
         {/* User menu */}
         <div className="relative group">
-          <button className={cn("flex items-center gap-2 p-1 rounded transition-colors", t.bgHover)}>
+          <button
+            className={cn(
+              "flex items-center gap-2 p-1 rounded transition-colors",
+              t.bgHover,
+            )}
+          >
             {user?.profilePictureUrl ? (
-              <img src={user.profilePictureUrl} alt="" className="h-6 w-6 rounded-full" />
+              <img
+                src={user.profilePictureUrl}
+                alt=""
+                className="h-6 w-6 rounded-full"
+              />
             ) : (
-              <div className={cn("h-6 w-6 rounded-full flex items-center justify-center", t.bgSecondary)}>
+              <div
+                className={cn(
+                  "h-6 w-6 rounded-full flex items-center justify-center",
+                  t.bgSecondary,
+                )}
+              >
                 <User className={cn("h-3 w-3", t.textSubtle)} />
               </div>
             )}
           </button>
-          <div className={cn("absolute right-0 top-full mt-1 w-48 py-1 border rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50", t.bgDropdown, t.border)}>
+          <div
+            className={cn(
+              "absolute right-0 top-full mt-1 w-48 py-1 border rounded-md shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50",
+              t.bgDropdown,
+              t.border,
+            )}
+          >
             <div className={cn("px-3 py-2 border-b", t.border)}>
-              <p className={cn("text-sm font-normal", t.textSecondary)}>{user?.firstName} {user?.lastName}</p>
+              <p className={cn("text-sm font-normal", t.textSecondary)}>
+                {user?.firstName} {user?.lastName}
+              </p>
             </div>
-            <Link to="/settings" className={cn("flex items-center gap-2 px-3 py-2 text-sm transition-colors", t.textMuted, t.bgHover)}>
+            <Link
+              to="/settings"
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 text-sm transition-colors",
+                t.textMuted,
+                t.bgHover,
+              )}
+            >
               <Settings className="h-3.5 w-3.5" />
               Settings
             </Link>
             <button
               onClick={signOut}
-              className={cn("flex items-center gap-2 px-3 py-2 text-sm w-full text-left text-red-400/80 transition-colors", t.bgHover)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 text-sm w-full text-left text-red-400/80 transition-colors",
+                t.bgHover,
+              )}
             >
               <LogOut className="h-3.5 w-3.5" />
               Sign out
@@ -254,27 +332,49 @@ export function ContextPage() {
           {/* Search input */}
           <div className="max-w-2xl mx-auto mb-6">
             <div className="relative">
-              <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5", t.iconMuted)} />
+              <Search
+                className={cn(
+                  "absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5",
+                  t.iconMuted,
+                )}
+              />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={searchMode === "sessions" ? "Search sessions by title, content..." : "Search messages by content..."}
+                placeholder={
+                  searchMode === "sessions"
+                    ? "Search sessions by title, content..."
+                    : "Search messages by content..."
+                }
                 className={cn(
                   "w-full h-12 pl-12 pr-20 rounded-lg border text-base focus:outline-none transition-colors",
-                  t.bgInput, t.borderInput, t.textSecondary, t.textPlaceholder, t.borderFocus
+                  t.bgInput,
+                  t.borderInput,
+                  t.textSecondary,
+                  t.textPlaceholder,
+                  t.borderFocus,
                 )}
                 autoFocus
               />
-              <div className={cn("absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none", t.iconMuted)}>
+              <div
+                className={cn(
+                  "absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none",
+                  t.iconMuted,
+                )}
+              >
                 <Command className="h-4 w-4" />
                 <span className="text-xs">K</span>
               </div>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className={cn("absolute right-14 top-1/2 -translate-y-1/2 p-1 rounded transition-colors", t.textSubtle, t.bgHover)}
+                  className={cn(
+                    "absolute right-14 top-1/2 -translate-y-1/2 p-1 rounded transition-colors",
+                    t.textSubtle,
+                    t.bgHover,
+                  )}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -284,26 +384,38 @@ export function ContextPage() {
 
           {/* Search mode toggle */}
           <div className="flex justify-center mb-6">
-            <div className={cn("flex items-center gap-1 rounded-lg p-1 border", t.bgToggle, t.border)}>
+            <div
+              className={cn(
+                "flex items-center gap-1 rounded-lg p-1 border",
+                t.bgToggle,
+                t.border,
+              )}
+            >
               <button
-                onClick={() => { setSearchMode("sessions"); setCursor(0); }}
+                onClick={() => {
+                  setSearchMode("sessions");
+                  setCursor(0);
+                }}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
                   searchMode === "sessions"
                     ? cn(t.bgToggleActive, t.textPrimary)
-                    : cn(t.textSubtle, "hover:opacity-80")
+                    : cn(t.textSubtle, "hover:opacity-80"),
                 )}
               >
                 <Folder className="h-4 w-4" />
                 Sessions
               </button>
               <button
-                onClick={() => { setSearchMode("messages"); setCursor(0); }}
+                onClick={() => {
+                  setSearchMode("messages");
+                  setCursor(0);
+                }}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
                   searchMode === "messages"
                     ? cn(t.bgToggleActive, t.textPrimary)
-                    : cn(t.textSubtle, "hover:opacity-80")
+                    : cn(t.textSubtle, "hover:opacity-80"),
                 )}
               >
                 <MessageSquare className="h-4 w-4" />
@@ -313,16 +425,23 @@ export function ContextPage() {
           </div>
 
           {/* Results info */}
-          {(debouncedQuery || searchMode === "sessions") && currentResults.length > 0 && (
-            <div className={cn("flex items-center justify-between mb-4 text-sm", t.textMuted)}>
-              <span>
-                Showing {cursor + 1} - {cursor + currentResults.length} of {totalResults} results
-              </span>
-              <span className={cn("text-xs", t.textDim)}>
-                Full-text search (no API key required)
-              </span>
-            </div>
-          )}
+          {(debouncedQuery || searchMode === "sessions") &&
+            currentResults.length > 0 && (
+              <div
+                className={cn(
+                  "flex items-center justify-between mb-4 text-sm",
+                  t.textMuted,
+                )}
+              >
+                <span>
+                  Showing {cursor + 1} - {cursor + currentResults.length} of{" "}
+                  {totalResults} results
+                </span>
+                <span className={cn("text-xs", t.textDim)}>
+                  Full-text search (no API key required)
+                </span>
+              </div>
+            )}
 
           {/* Loading state */}
           {isLoading && (
@@ -334,58 +453,86 @@ export function ContextPage() {
           {/* Results */}
           {!isLoading && (
             <div className="space-y-3">
-              {searchMode === "sessions" ? (
-                // Session results
-                (sessionResults?.sessions || []).map((session) => (
-                  <SessionResultCard
-                    key={session._id}
-                    session={session}
-                    theme={theme}
-                    onClick={() => handleOpenSession(session._id)}
-                  />
-                ))
-              ) : (
-                // Message results
-                (messageResults?.messages || []).map((message) => (
-                  <MessageResultCard
-                    key={message._id}
-                    message={message}
-                    theme={theme}
-                    searchQuery={debouncedQuery}
-                    onClick={() => handleOpenSession(message.sessionId, message._id)}
-                  />
-                ))
-              )}
+              {searchMode === "sessions"
+                ? // Session results
+                  (sessionResults?.sessions || []).map((session) => (
+                    <SessionResultCard
+                      key={session._id}
+                      session={session}
+                      theme={theme}
+                      onClick={() => handleOpenSession(session._id)}
+                    />
+                  ))
+                : // Message results
+                  (messageResults?.messages || []).map((message) => (
+                    <MessageResultCard
+                      key={message._id}
+                      message={message}
+                      theme={theme}
+                      searchQuery={debouncedQuery}
+                      onClick={() =>
+                        handleOpenSession(message.sessionId, message._id)
+                      }
+                    />
+                  ))}
 
               {/* Empty state */}
               {currentResults.length === 0 && !isLoading && (
-                <div className={cn("text-center py-16 rounded-lg border", t.bgCard, t.border)}>
+                <div
+                  className={cn(
+                    "text-center py-16 rounded-lg border",
+                    t.bgCard,
+                    t.border,
+                  )}
+                >
                   <Search className={cn("h-12 w-12 mx-auto mb-4", t.textDim)} />
                   {searchMode === "messages" && !debouncedQuery.trim() ? (
                     <>
-                      <h3 className={cn("text-lg font-medium mb-2", t.textPrimary)}>
+                      <h3
+                        className={cn(
+                          "text-lg font-medium mb-2",
+                          t.textPrimary,
+                        )}
+                      >
                         Enter a search query
                       </h3>
-                      <p className={cn("text-sm max-w-md mx-auto", t.textMuted)}>
+                      <p
+                        className={cn("text-sm max-w-md mx-auto", t.textMuted)}
+                      >
                         Type something to search through your messages
                       </p>
                     </>
                   ) : debouncedQuery.trim() ? (
                     <>
-                      <h3 className={cn("text-lg font-medium mb-2", t.textPrimary)}>
+                      <h3
+                        className={cn(
+                          "text-lg font-medium mb-2",
+                          t.textPrimary,
+                        )}
+                      >
                         No results found
                       </h3>
-                      <p className={cn("text-sm max-w-md mx-auto", t.textMuted)}>
+                      <p
+                        className={cn("text-sm max-w-md mx-auto", t.textMuted)}
+                      >
                         Try a different search term or check your spelling
                       </p>
                     </>
                   ) : (
                     <>
-                      <h3 className={cn("text-lg font-medium mb-2", t.textPrimary)}>
+                      <h3
+                        className={cn(
+                          "text-lg font-medium mb-2",
+                          t.textPrimary,
+                        )}
+                      >
                         No sessions yet
                       </h3>
-                      <p className={cn("text-sm max-w-md mx-auto", t.textMuted)}>
-                        Start syncing sessions from Claude Code or OpenCode to see them here
+                      <p
+                        className={cn("text-sm max-w-md mx-auto", t.textMuted)}
+                      >
+                        Start syncing sessions from Claude Code or OpenCode to
+                        see them here
                       </p>
                     </>
                   )}
@@ -404,7 +551,7 @@ export function ContextPage() {
                   "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors",
                   hasPrevPage
                     ? cn(t.border, t.textSecondary, t.bgHover)
-                    : cn(t.border, t.textDim, "opacity-50 cursor-not-allowed")
+                    : cn(t.border, t.textDim, "opacity-50 cursor-not-allowed"),
                 )}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -422,7 +569,7 @@ export function ContextPage() {
                   "flex items-center gap-2 px-4 py-2 rounded-lg border text-sm transition-colors",
                   hasNextPage
                     ? cn(t.border, t.textSecondary, t.bgHover)
-                    : cn(t.border, t.textDim, "opacity-50 cursor-not-allowed")
+                    : cn(t.border, t.textDim, "opacity-50 cursor-not-allowed"),
                 )}
               >
                 Next
@@ -434,7 +581,13 @@ export function ContextPage() {
       </main>
 
       {/* Footer */}
-      <footer className={cn("h-10 border-t flex items-center justify-center px-4", t.border, t.bgPrimary)}>
+      <footer
+        className={cn(
+          "h-10 border-t flex items-center justify-center px-4",
+          t.border,
+          t.bgPrimary,
+        )}
+      >
         <span className={cn("text-xs", t.textDim)}>
           Powered by Convex Full-Text Search
         </span>
@@ -492,7 +645,9 @@ function SessionResultCard({
       onClick={onClick}
       className={cn(
         "w-full p-4 rounded-lg border text-left transition-colors",
-        t.bgCard, t.border, t.bgHover
+        t.bgCard,
+        t.border,
+        t.bgHover,
       )}
     >
       <div className="flex items-start justify-between gap-4">
@@ -503,14 +658,19 @@ function SessionResultCard({
               {session.title || "Untitled Session"}
             </h3>
             {/* Source badge */}
-            <span className={cn("shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide", sourceColor)}>
+            <span
+              className={cn(
+                "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide",
+                sourceColor,
+              )}
+            >
               {sourceLabel}
             </span>
             {session.isPublic && (
               <Globe className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
             )}
           </div>
-          
+
           {session.projectPath && (
             <p className={cn("text-xs mb-2 truncate", t.textDim)}>
               {session.projectName || session.projectPath}
@@ -561,7 +721,7 @@ function MessageResultCard({
   message: {
     _id: Id<"messages">;
     sessionId: Id<"sessions">;
-    role: "user" | "assistant" | "system" | "unknown";
+    role: "user" | "assistant" | "system" | "tool" | "unknown";
     textContent?: string;
     model?: string;
     createdAt: number;
@@ -586,15 +746,19 @@ function MessageResultCard({
       onClick={onClick}
       className={cn(
         "w-full p-4 rounded-lg border text-left transition-colors",
-        t.bgCard, t.border, t.bgHover
+        t.bgCard,
+        t.border,
+        t.bgHover,
       )}
     >
       <div className="flex items-start gap-3">
         {/* Role icon */}
-        <div className={cn(
-          "shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-          isUser ? t.bgUserBubble : t.bgAssistantBubble
-        )}>
+        <div
+          className={cn(
+            "shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
+            isUser ? t.bgUserBubble : t.bgAssistantBubble,
+          )}
+        >
           {isUser ? (
             <User className={cn("h-4 w-4", t.textMuted)} />
           ) : (
@@ -621,7 +785,9 @@ function MessageResultCard({
           />
 
           {/* Metadata */}
-          <div className={cn("flex items-center gap-3 mt-2 text-xs", t.textDim)}>
+          <div
+            className={cn("flex items-center gap-3 mt-2 text-xs", t.textDim)}
+          >
             {message.projectName || message.projectPath ? (
               <span className="flex items-center gap-1">
                 <Folder className="h-3 w-3" />
@@ -648,7 +814,11 @@ function MessageResultCard({
 }
 
 // Highlight matching text helper
-function highlightMatch(text: string, query: string, maxLength: number): string {
+function highlightMatch(
+  text: string,
+  query: string,
+  maxLength: number,
+): string {
   if (!query.trim() || !text) return truncateText(text, maxLength);
 
   const lowerText = text.toLowerCase();
@@ -667,7 +837,7 @@ function highlightMatch(text: string, query: string, maxLength: number): string 
   // Extract context around the match
   let startIndex = 0;
   let displayText = text;
-  
+
   if (firstMatchIndex !== -1 && firstMatchIndex > 50) {
     startIndex = Math.max(0, firstMatchIndex - 50);
     displayText = "..." + text.slice(startIndex);
@@ -685,7 +855,7 @@ function highlightMatch(text: string, query: string, maxLength: number): string 
       const regex = new RegExp(`(${escapeRegex(word)})`, "gi");
       highlighted = highlighted.replace(
         regex,
-        '<mark class="bg-yellow-500/30 text-inherit rounded px-0.5">$1</mark>'
+        '<mark class="bg-yellow-500/30 text-inherit rounded px-0.5">$1</mark>',
       );
     }
   }
@@ -751,7 +921,7 @@ function SessionSlideOver({
   };
   messages: Array<{
     _id: Id<"messages">;
-    role: "user" | "assistant" | "system" | "unknown";
+    role: "user" | "assistant" | "system" | "tool" | "unknown";
     textContent?: string;
     createdAt: number;
     parts: Array<{ type: string; content: any }>;
@@ -769,7 +939,10 @@ function SessionSlideOver({
   useEffect(() => {
     if (isOpen && highlightMessageId && highlightedMessageRef.current) {
       setTimeout(() => {
-        highlightedMessageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        highlightedMessageRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }, 100);
     }
   }, [isOpen, highlightMessageId]);
@@ -777,7 +950,7 @@ function SessionSlideOver({
   // Get markdown for copy
   const markdown = useQuery(
     api.sessions.getMarkdown,
-    session?._id ? { sessionId: session._id } : "skip"
+    session?._id ? { sessionId: session._id } : "skip",
   );
 
   const handleCopy = async () => {
@@ -817,7 +990,7 @@ function SessionSlideOver({
       <div
         className={cn(
           "fixed inset-0 bg-black/50 transition-opacity z-40",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={onClose}
       />
@@ -827,7 +1000,7 @@ function SessionSlideOver({
         className={cn(
           "fixed inset-y-0 right-0 w-full max-w-2xl shadow-2xl transition-transform duration-300 ease-out z-50 flex flex-col",
           t.bgPrimary,
-          isOpen ? "translate-x-0" : "translate-x-full"
+          isOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
         {/* Loading state */}
@@ -845,11 +1018,21 @@ function SessionSlideOver({
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h2 className={cn("text-lg font-medium truncate", t.textPrimary)}>
+                    <h2
+                      className={cn(
+                        "text-lg font-medium truncate",
+                        t.textPrimary,
+                      )}
+                    >
                       {session.title || "Untitled Session"}
                     </h2>
                     {/* Source badge */}
-                    <span className={cn("shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide", sourceColor)}>
+                    <span
+                      className={cn(
+                        "shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide",
+                        sourceColor,
+                      )}
+                    >
                       {sourceLabel}
                     </span>
                     {session.isPublic && (
@@ -857,7 +1040,12 @@ function SessionSlideOver({
                     )}
                   </div>
 
-                  <div className={cn("flex flex-wrap items-center gap-3 text-sm", t.textMuted)}>
+                  <div
+                    className={cn(
+                      "flex flex-wrap items-center gap-3 text-sm",
+                      t.textMuted,
+                    )}
+                  >
                     {session.projectPath && (
                       <span className="flex items-center gap-1">
                         <Folder className="h-3 w-3" />
@@ -875,8 +1063,7 @@ function SessionSlideOver({
                       {session.totalTokens.toLocaleString()} tokens
                     </span>
                     <span className="flex items-center gap-1">
-                      <Coins className="h-3 w-3" />
-                      ${session.cost.toFixed(4)}
+                      <Coins className="h-3 w-3" />${session.cost.toFixed(4)}
                     </span>
                     {session.durationMs && (
                       <span className="flex items-center gap-1">
@@ -890,7 +1077,11 @@ function SessionSlideOver({
                 {/* Close button */}
                 <button
                   onClick={onClose}
-                  className={cn("p-2 rounded-md transition-colors", t.textSubtle, t.bgHover)}
+                  className={cn(
+                    "p-2 rounded-md transition-colors",
+                    t.textSubtle,
+                    t.bgHover,
+                  )}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -900,15 +1091,29 @@ function SessionSlideOver({
               <div className="flex items-center gap-1 mt-3">
                 <button
                   onClick={handleCopy}
-                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors", t.textMuted, t.bgHover)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                    t.textMuted,
+                    t.bgHover,
+                  )}
                   title="Copy as Markdown"
                 >
-                  {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                  <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+                  {copied ? (
+                    <Check className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copied ? "Copied" : "Copy"}
+                  </span>
                 </button>
                 <button
                   onClick={handleDownload}
-                  className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors", t.textMuted, t.bgHover)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                    t.textMuted,
+                    t.bgHover,
+                  )}
                   title="Download"
                 >
                   <Download className="h-4 w-4" />
@@ -919,7 +1124,11 @@ function SessionSlideOver({
                     href={`/s/${session.publicSlug}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors", t.textMuted, t.bgHover)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
+                      t.textMuted,
+                      t.bgHover,
+                    )}
                     title="Open Public Link"
                   >
                     <ExternalLink className="h-4 w-4" />
@@ -931,7 +1140,9 @@ function SessionSlideOver({
                   onClick={onOpenInDashboard}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors",
-                    theme === "dark" ? "bg-zinc-800 text-zinc-200 hover:bg-zinc-700" : "bg-[#ebe9e6] text-[#1a1a1a] hover:bg-[#e0ded9]"
+                    theme === "dark"
+                      ? "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                      : "bg-[#ebe9e6] text-[#1a1a1a] hover:bg-[#e0ded9]",
                   )}
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -944,17 +1155,24 @@ function SessionSlideOver({
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className={cn("text-center py-12", t.textMuted)}>
-                  <MessageSquare className={cn("h-12 w-12 mx-auto mb-4", t.textDim)} />
+                  <MessageSquare
+                    className={cn("h-12 w-12 mx-auto mb-4", t.textDim)}
+                  />
                   <p>No messages in this session</p>
                 </div>
               ) : (
                 messages.map((message) => (
                   <div
                     key={message._id}
-                    ref={message._id === highlightMessageId ? highlightedMessageRef : undefined}
+                    ref={
+                      message._id === highlightMessageId
+                        ? highlightedMessageRef
+                        : undefined
+                    }
                     className={cn(
                       "transition-colors rounded-lg",
-                      message._id === highlightMessageId && "ring-2 ring-yellow-500/50"
+                      message._id === highlightMessageId &&
+                        "ring-2 ring-yellow-500/50",
                     )}
                   >
                     <SlideOverMessageBlock message={message} theme={theme} />
@@ -977,7 +1195,7 @@ function SlideOverMessageBlock({
 }: {
   message: {
     _id: Id<"messages">;
-    role: "user" | "assistant" | "system" | "unknown";
+    role: "user" | "assistant" | "system" | "tool" | "unknown";
     textContent?: string;
     createdAt: number;
     parts: Array<{ type: string; content: any }>;
@@ -1000,7 +1218,8 @@ function SlideOverMessageBlock({
     }
     if (part.type === "tool-result") {
       // Check if tool-result has extractable result
-      const result = part.content?.result || part.content?.output || part.content;
+      const result =
+        part.content?.result || part.content?.output || part.content;
       return result !== null && result !== undefined;
     }
     return false;
@@ -1017,8 +1236,8 @@ function SlideOverMessageBlock({
           isUser
             ? t.bgUserBubble
             : isSystem
-            ? "bg-yellow-500/20"
-            : t.bgAssistantBubble
+              ? "bg-yellow-500/20"
+              : t.bgAssistantBubble,
         )}
       >
         {isUser ? (
@@ -1030,20 +1249,24 @@ function SlideOverMessageBlock({
         )}
       </div>
 
-      <div className={cn("flex-1 max-w-full", isUser && "flex flex-col items-end")}>
+      <div
+        className={cn("flex-1 max-w-full", isUser && "flex flex-col items-end")}
+      >
         <div
           className={cn(
             "rounded-lg p-3",
-            isUser ? t.bgUserBubble : cn(t.bgCard, "border", t.border)
+            isUser ? t.bgUserBubble : cn(t.bgCard, "border", t.border),
           )}
         >
           {showFallback ? (
-            <div className={cn(
-              "prose prose-sm max-w-none",
-              theme === "dark" 
-                ? "prose-invert" 
-                : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]"
-            )}>
+            <div
+              className={cn(
+                "prose prose-sm max-w-none",
+                theme === "dark"
+                  ? "prose-invert"
+                  : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]",
+              )}
+            >
               <ReactMarkdown
                 components={{
                   code({ node, inline, className, children, ...props }: any) {
@@ -1121,12 +1344,14 @@ function SlideOverPartRenderer({
     if (!textContent) return null;
 
     return (
-      <div className={cn(
-        "prose prose-sm max-w-none",
-        theme === "dark" 
-          ? "prose-invert" 
-          : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]"
-      )}>
+      <div
+        className={cn(
+          "prose prose-sm max-w-none",
+          theme === "dark"
+            ? "prose-invert"
+            : "text-[#1a1a1a] prose-headings:text-[#1a1a1a] prose-p:text-[#1a1a1a] prose-strong:text-[#1a1a1a] prose-li:text-[#1a1a1a]",
+        )}
+      >
         <ReactMarkdown
           components={{
             code({ node, inline, className, children, ...props }: any) {
@@ -1158,7 +1383,12 @@ function SlideOverPartRenderer({
     const { name, args } = getToolCallDetails(part.content);
     return (
       <div className={cn("my-2 p-3 rounded border", t.bgSecondary, t.border)}>
-        <div className={cn("flex items-center gap-2 text-sm font-medium", t.textPrimary)}>
+        <div
+          className={cn(
+            "flex items-center gap-2 text-sm font-medium",
+            t.textPrimary,
+          )}
+        >
           <Wrench className="h-4 w-4" />
           {name}
         </div>

@@ -17,6 +17,9 @@ dist/
 .vscode/
 *.swp
 
+# Cursor plans
+.cursor/plans/
+
 # OS
 .DS_Store
 

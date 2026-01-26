@@ -216,7 +216,7 @@ export const searchMessages = query({
       _creationTime: v.number(),
       sessionId: v.id("sessions"),
       externalId: v.string(),
-      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
       textContent: v.optional(v.string()),
       model: v.optional(v.string()),
       promptTokens: v.optional(v.number()),
@@ -298,7 +298,7 @@ export const searchMessagesPaginated = query({
         _creationTime: v.number(),
         sessionId: v.id("sessions"),
         externalId: v.string(),
-        role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+        role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
         textContent: v.optional(v.string()),
         model: v.optional(v.string()),
         promptTokens: v.optional(v.number()),
@@ -605,7 +605,7 @@ type MessageSearchResult = {
   _id: Id<"messages">;
   sessionId: Id<"sessions">;
   externalId: string;
-  role: "user" | "assistant" | "system" | "unknown";
+  role: "user" | "assistant" | "system" | "tool" | "unknown";
   textContent?: string;
   model?: string;
   createdAt: number;
@@ -626,7 +626,7 @@ export const semanticSearchMessages = action({
       _id: v.id("messages"),
       sessionId: v.id("sessions"),
       externalId: v.string(),
-      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
       textContent: v.optional(v.string()),
       model: v.optional(v.string()),
       createdAt: v.number(),
@@ -685,7 +685,7 @@ export const loadMessagesFromEmbeddings = internalQuery({
       _id: v.id("messages"),
       sessionId: v.id("sessions"),
       externalId: v.string(),
-      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
       textContent: v.optional(v.string()),
       model: v.optional(v.string()),
       createdAt: v.number(),
@@ -699,7 +699,7 @@ export const loadMessagesFromEmbeddings = internalQuery({
       _id: Id<"messages">;
       sessionId: Id<"sessions">;
       externalId: string;
-      role: "user" | "assistant" | "system" | "unknown";
+      role: "user" | "assistant" | "system" | "tool" | "unknown";
       textContent?: string;
       model?: string;
       createdAt: number;
@@ -752,7 +752,7 @@ export const hybridSearchMessages = action({
       _creationTime: v.number(),
       sessionId: v.id("sessions"),
       externalId: v.string(),
-      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+      role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
       textContent: v.optional(v.string()),
       model: v.optional(v.string()),
       promptTokens: v.optional(v.number()),

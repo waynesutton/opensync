@@ -8,10 +8,10 @@ Fill in these values before starting:
 
 | Field                             | Value | Example                                                   |
 | --------------------------------- | ----- | --------------------------------------------------------- |
-| Package name (npm)                |       | `codex-sync`                                              |
+| Package name (npm)                |       | `codex-sync-plugin`                                       |
 | GitHub URL                        |       | `https://github.com/waynesutton/codex-sync-plugin-plugin` |
-| Source ID (lowercase, hyphenated) |       | `codex-cli`                                               |
-| Display name                      |       | `Codex CLI`                                               |
+| Source ID (lowercase, hyphenated) |       | `codex-cli-plugin`                                        |
+| Display name                      |       | `Codex CLI plugin`                                        |
 | Short label (2 chars)             |       | `CX`                                                      |
 | Status                            |       | `supported` / `community` / `planned`                     |
 | Badge color                       |       | `blue` / `amber` / `orange` / `purple` / `green`          |

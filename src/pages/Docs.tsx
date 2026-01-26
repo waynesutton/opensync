@@ -24,6 +24,7 @@ import {
   Package,
   BarChart3,
   Command,
+  Bell,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useTheme, getThemeClasses } from "../lib/theme";
@@ -358,6 +359,36 @@ const searchIndex: SearchEntry[] = [
     section: "Codex CLI Plugin",
     keywords: ["commands", "login", "setup", "verify", "sync", "codex-sync"],
     snippet: "login, setup, verify, sync commands",
+  },
+
+  // Cursor Plugin
+  {
+    id: "cursor-plugin",
+    title: "Cursor Plugin",
+    section: "Plugins",
+    keywords: ["cursor", "cursor-sync", "cursor-sync-plugin", "ide"],
+    snippet: "Cursor sync plugin documentation",
+  },
+  {
+    id: "cursor-install",
+    title: "Installation",
+    section: "Cursor Plugin",
+    keywords: ["install", "npm install", "cursor-sync-plugin", "global", "-g"],
+    snippet: "npm install -g cursor-sync-plugin",
+  },
+  {
+    id: "cursor-config",
+    title: "Configuration",
+    section: "Cursor Plugin",
+    keywords: ["config", "login", "setup", "hooks", "hooks.json"],
+    snippet: "cursor-sync login and setup configuration",
+  },
+  {
+    id: "cursor-commands",
+    title: "Commands",
+    section: "Cursor Plugin",
+    keywords: ["commands", "login", "setup", "verify", "synctest", "logout", "status"],
+    snippet: "cursor-sync CLI commands",
   },
 
   // API Reference
@@ -914,6 +945,16 @@ const docSections: DocSection[] = [
     ],
   },
   {
+    id: "cursor-plugin",
+    title: "Cursor Plugin",
+    icon: <Package className="h-4 w-4" />,
+    subsections: [
+      { id: "cursor-install", title: "Installation" },
+      { id: "cursor-config", title: "Configuration" },
+      { id: "cursor-commands", title: "Commands" },
+    ],
+  },
+  {
     id: "api",
     title: "API Reference",
     icon: <Code className="h-4 w-4" />,
@@ -1137,11 +1178,6 @@ function DocsSidebar({
         </div>
       )}
 
-      {/* Search in sidebar */}
-      <div className={cn("px-3 py-3", isMobile ? "" : "border-b", t.border)}>
-        <DocSearch onClose={onClose} />
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto scrollbar-hide py-4 px-3 space-y-1">
         {docSections.map((section) => {
@@ -1243,6 +1279,17 @@ function DocsSidebar({
           npm
           <ExternalLink className="h-3 w-3 ml-auto" />
         </a>
+        <Link
+          to="/updates"
+          className={cn(
+            "flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors",
+            t.textSubtle,
+            t.bgHover,
+          )}
+        >
+          <Bell className="h-3.5 w-3.5" />
+          Updates
+        </Link>
       </div>
     </div>
   );
@@ -1434,6 +1481,11 @@ For Codex CLI:
 npm install -g codex-sync
 \`\`\`
 
+For Cursor:
+\`\`\`bash
+npm install -g cursor-sync-plugin
+\`\`\`
+
 ### Login and Sync
 
 1. Sign in at https://www.opensync.dev
@@ -1446,6 +1498,8 @@ opencode-sync login
 claude-code-sync login
 # or
 codex-sync login
+# or
+cursor-sync login
 \`\`\`
 
 4. Enter the Convex URL and API key when prompted
@@ -1551,13 +1605,19 @@ npm install -g codex-sync
 codex-sync login
 \`\`\`
 
+For Cursor:
+\`\`\`bash
+npm install -g cursor-sync-plugin
+cursor-sync login
+\`\`\`
+
 ## Dashboard Features
 
 ### Overview
 The Overview tab shows key metrics: total sessions, tokens, cost, duration, models, and projects. Charts display usage trends over 30 days.
 
 ### Sessions View
-Browse all synced sessions with sorting, filtering, and source badges (OC for OpenCode, CC for Claude Code, CX for Codex CLI). Click a session to view full conversation history.
+Browse all synced sessions with sorting, filtering, and source badges (OC for OpenCode, CC for Claude Code, CX for Codex CLI, CR for Cursor). Click a session to view full conversation history.
 
 ### Evals Export
 Mark sessions as eval-ready for export. Supports DeepEval JSON, OpenAI JSONL, and Filesystem formats for training and evaluation.
@@ -1695,6 +1755,7 @@ npm install
 - OpenCode Plugin: https://www.npmjs.com/package/opencode-sync-plugin
 - Claude Code Plugin: https://www.npmjs.com/package/claude-code-sync
 - Codex CLI Plugin: https://www.npmjs.com/package/codex-sync
+- Cursor Plugin: https://www.npmjs.com/package/cursor-sync-plugin
 - Convex Docs: https://docs.convex.dev
 - WorkOS Docs: https://workos.com/docs
 `;
@@ -1902,6 +1963,20 @@ npm install
                 Copy Markdown
               </button>
 
+              {/* Updates link */}
+              <Link
+                to="/updates"
+                className={cn(
+                  "flex items-center gap-1.5 px-2 py-1 rounded text-xs transition-colors",
+                  t.textSubtle,
+                  t.bgHover,
+                )}
+                title="GitHub Updates"
+              >
+                <Bell className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Updates</span>
+              </Link>
+
               {/* Theme toggle */}
               <button
                 onClick={toggleTheme}
@@ -2017,6 +2092,20 @@ npm install
                 >
                   <Package className="h-3.5 w-3.5" />
                   codex-sync
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/cursor-sync-plugin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition-colors",
+                    t.border,
+                    t.textSubtle,
+                    t.bgHover,
+                  )}
+                >
+                  <Package className="h-3.5 w-3.5" />
+                  cursor-sync-plugin
                 </a>
                 <a
                   href="https://www.opensync.dev"
@@ -2305,6 +2394,37 @@ npm install
                       </div>
                       <CodeBlock code="npm install -g codex-sync" />
                     </div>
+
+                    {/* Cursor */}
+                    <div
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        t.bgCard,
+                        t.border,
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded bg-violet-500/15 flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-violet-400">
+                            CR
+                          </span>
+                        </div>
+                        <span
+                          className={cn("text-sm font-medium", t.textSecondary)}
+                        >
+                          Cursor
+                        </span>
+                        <a
+                          href="https://www.npmjs.com/package/cursor-sync-plugin"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn("ml-auto text-[10px]", t.textDim)}
+                        >
+                          npm
+                        </a>
+                      </div>
+                      <CodeBlock code="npm install -g cursor-sync-plugin" />
+                    </div>
                   </div>
                 </div>
 
@@ -2355,6 +2475,10 @@ npm install
                             or
                           </p>
                           <CodeBlock code="codex-sync login" />
+                          <p className={cn("text-xs text-center", t.textDim)}>
+                            or
+                          </p>
+                          <CodeBlock code="cursor-sync login" />
                         </div>
                       </li>
                       <li>
@@ -2864,6 +2988,35 @@ npx convex dev`}
                         </code>
                       </p>
                     </div>
+
+                    {/* Cursor */}
+                    <div
+                      className={cn(
+                        "p-4 rounded-lg border",
+                        t.bgCard,
+                        t.border,
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-6 h-6 rounded bg-violet-500/15 flex items-center justify-center">
+                          <span className="text-[10px] font-medium text-violet-400">
+                            CR
+                          </span>
+                        </div>
+                        <span
+                          className={cn("text-sm font-medium", t.textSecondary)}
+                        >
+                          Cursor
+                        </span>
+                      </div>
+                      <CodeBlock code="npm install -g cursor-sync-plugin" />
+                      <p className={cn("mt-2 text-xs", t.textDim)}>
+                        Then run{" "}
+                        <code className={cn("px-1 rounded", t.bgCode)}>
+                          cursor-sync login
+                        </code>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2896,8 +3049,8 @@ npx convex dev`}
                   />
                   <p className={cn("mt-2 text-sm", t.textMuted)}>
                     Browse all synced sessions with sorting and filtering.
-                    Source badges show OC (OpenCode), CC (Claude Code), or CX
-                    (Codex CLI) origin. List view shows token count, cost, and
+                    Source badges show OC (OpenCode), CC (Claude Code), CX
+                    (Codex CLI), or CR (Cursor) origin. List view shows token count, cost, and
                     duration. Timeline view displays sessions chronologically
                     grouped by project.
                   </p>
@@ -3433,6 +3586,206 @@ npx convex dev`}
                             </code>
                           </td>
                           <td className="px-3 py-2">Manual sync</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Cursor Plugin */}
+            <section id="cursor-plugin" data-section className="mb-12">
+              <SectionHeader id="cursor-plugin" title="Cursor Plugin" />
+              <p className={cn("mt-2 text-sm", t.textMuted)}>
+                Sync your{" "}
+                <a
+                  href="https://cursor.sh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn("underline", t.interactive)}
+                >
+                  Cursor IDE
+                </a>{" "}
+                sessions to the same OpenSync dashboard.
+              </p>
+
+              <div className="mt-6 space-y-6">
+                <div id="cursor-install" data-section>
+                  <SectionHeader
+                    id="cursor-install"
+                    title="Installation"
+                    level={3}
+                  />
+                  <div className="mt-3">
+                    <CodeBlock code="npm install -g cursor-sync-plugin" />
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href="https://github.com/waynesutton/cursor-cli-sync-plugin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center gap-1 text-xs",
+                        t.interactive,
+                      )}
+                    >
+                      <Github className="h-3 w-3" />
+                      GitHub
+                    </a>
+                    <a
+                      href="https://www.npmjs.com/package/cursor-sync-plugin"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center gap-1 text-xs",
+                        t.interactive,
+                      )}
+                    >
+                      <Package className="h-3 w-3" />
+                      npm
+                    </a>
+                  </div>
+                </div>
+
+                <div id="cursor-config" data-section>
+                  <SectionHeader
+                    id="cursor-config"
+                    title="Configuration"
+                    level={3}
+                  />
+                  <div className="mt-3 space-y-3">
+                    <CodeBlock code="cursor-sync login" title="Authenticate" />
+                    <CodeBlock
+                      code="cursor-sync setup"
+                      title="Configure Cursor hooks"
+                    />
+                    <CodeBlock
+                      code="cursor-sync verify"
+                      title="Verify connection"
+                    />
+                    <p className={cn("text-xs", t.textSubtle)}>
+                      Or create a config file manually:
+                    </p>
+                    <CodeBlock
+                      code={`{
+  "convexUrl": "${convexCloudUrl}",
+  "apiKey": "osk_your_api_key",
+  "autoSync": true,
+  "syncToolCalls": true,
+  "syncThinking": false,
+  "debug": false
+}`}
+                      title="~/.config/cursor-sync/config.json"
+                    />
+                    <p className={cn("text-xs", t.textSubtle)}>
+                      The setup command configures Cursor hooks in:
+                    </p>
+                    <CodeBlock
+                      code={`{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [{ "command": "cursor-sync hook beforeSubmitPrompt" }],
+    "beforeShellExecution": [{ "command": "cursor-sync hook beforeShellExecution" }],
+    "beforeMCPExecution": [{ "command": "cursor-sync hook beforeMCPExecution" }],
+    "afterFileEdit": [{ "command": "cursor-sync hook afterFileEdit" }],
+    "stop": [{ "command": "cursor-sync hook stop" }]
+  }
+}`}
+                      title="~/.cursor/hooks.json"
+                    />
+                  </div>
+                </div>
+
+                <div id="cursor-commands" data-section>
+                  <SectionHeader
+                    id="cursor-commands"
+                    title="Commands"
+                    level={3}
+                  />
+                  <div
+                    className={cn(
+                      "mt-3 rounded-lg border overflow-hidden",
+                      t.border,
+                    )}
+                  >
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className={cn("border-b", t.border, t.bgCard)}>
+                          <th
+                            className={cn(
+                              "px-3 py-2 text-left font-medium",
+                              t.textMuted,
+                            )}
+                          >
+                            Command
+                          </th>
+                          <th
+                            className={cn(
+                              "px-3 py-2 text-left font-medium",
+                              t.textMuted,
+                            )}
+                          >
+                            Description
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className={t.textSubtle}>
+                        <tr className={cn("border-b", t.borderLight)}>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync login
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">
+                            Authenticate with the backend
+                          </td>
+                        </tr>
+                        <tr className={cn("border-b", t.borderLight)}>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync setup
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">
+                            Configure Cursor hooks
+                          </td>
+                        </tr>
+                        <tr className={cn("border-b", t.borderLight)}>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync verify
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">
+                            Verify connection and hooks
+                          </td>
+                        </tr>
+                        <tr className={cn("border-b", t.borderLight)}>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync synctest
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">
+                            Test connectivity with a test session
+                          </td>
+                        </tr>
+                        <tr className={cn("border-b", t.borderLight)}>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync status
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">Check connection status</td>
+                        </tr>
+                        <tr>
+                          <td className="px-3 py-2">
+                            <code className={cn("px-1 rounded", t.bgCode)}>
+                              cursor-sync logout
+                            </code>
+                          </td>
+                          <td className="px-3 py-2">Clear stored credentials</td>
                         </tr>
                       </tbody>
                     </table>

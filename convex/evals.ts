@@ -2,6 +2,17 @@ import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 
 // ============================================================================
+// EVAL STATUS TYPE (shared validator)
+// ============================================================================
+
+const evalStatusValidator = v.union(
+  v.literal("golden"),
+  v.literal("correct"),
+  v.literal("incorrect"),
+  v.literal("needs_review"),
+);
+
+// ============================================================================
 // EVAL SESSION MANAGEMENT
 // ============================================================================
 
@@ -33,7 +44,11 @@ export const setEvalReady = mutation({
     }
 
     // Idempotent: early return if already in desired state
-    if (session.evalReady === args.evalReady && !args.evalNotes && !args.evalTags) {
+    if (
+      session.evalReady === args.evalReady &&
+      !args.evalNotes &&
+      !args.evalTags
+    ) {
       return null;
     }
 
@@ -116,17 +131,200 @@ export const updateEvalTags = mutation({
   },
 });
 
+/**
+ * Update eval status (golden/correct/incorrect/needs_review)
+ */
+export const updateEvalStatus = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    evalStatus: v.optional(evalStatusValidator),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.userId !== user._id) {
+      throw new Error("Session not found");
+    }
+
+    // Idempotent: early return if already in desired state
+    if (session.evalStatus === args.evalStatus) {
+      return null;
+    }
+
+    await ctx.db.patch(args.sessionId, {
+      evalStatus: args.evalStatus,
+      reviewedAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Update expected output (ground truth) for a session
+ */
+export const updateExpectedOutput = mutation({
+  args: {
+    sessionId: v.id("sessions"),
+    expectedOutput: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    const session = await ctx.db.get(args.sessionId);
+    if (!session || session.userId !== user._id) {
+      throw new Error("Session not found");
+    }
+
+    await ctx.db.patch(args.sessionId, {
+      expectedOutput: args.expectedOutput,
+      updatedAt: Date.now(),
+    });
+
+    return null;
+  },
+});
+
+/**
+ * Bulk update eval status for multiple sessions
+ */
+export const bulkUpdateEvalStatus = mutation({
+  args: {
+    sessionIds: v.array(v.id("sessions")),
+    evalStatus: v.optional(evalStatusValidator),
+  },
+  returns: v.object({
+    updated: v.number(),
+    failed: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    let updated = 0;
+    let failed = 0;
+    const now = Date.now();
+
+    // Process in parallel
+    await Promise.all(
+      args.sessionIds.map(async (sessionId) => {
+        try {
+          const session = await ctx.db.get(sessionId);
+          if (!session || session.userId !== user._id) {
+            failed++;
+            return;
+          }
+          await ctx.db.patch(sessionId, {
+            evalStatus: args.evalStatus,
+            reviewedAt: now,
+            updatedAt: now,
+          });
+          updated++;
+        } catch {
+          failed++;
+        }
+      }),
+    );
+
+    return { updated, failed };
+  },
+});
+
+/**
+ * Bulk add tags to multiple sessions
+ */
+export const bulkAddTags = mutation({
+  args: {
+    sessionIds: v.array(v.id("sessions")),
+    tags: v.array(v.string()),
+  },
+  returns: v.object({
+    updated: v.number(),
+    failed: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) throw new Error("User not found");
+
+    let updated = 0;
+    let failed = 0;
+    const now = Date.now();
+
+    await Promise.all(
+      args.sessionIds.map(async (sessionId) => {
+        try {
+          const session = await ctx.db.get(sessionId);
+          if (!session || session.userId !== user._id) {
+            failed++;
+            return;
+          }
+          // Merge existing tags with new tags (no duplicates)
+          const existingTags = session.evalTags || [];
+          const mergedTags = [...new Set([...existingTags, ...args.tags])];
+          await ctx.db.patch(sessionId, {
+            evalTags: mergedTags,
+            updatedAt: now,
+          });
+          updated++;
+        } catch {
+          failed++;
+        }
+      }),
+    );
+
+    return { updated, failed };
+  },
+});
+
 // ============================================================================
 // EVAL QUERIES
 // ============================================================================
 
 /**
- * List all eval-ready sessions for the current user
+ * List all eval-ready sessions with enhanced filtering
  */
 export const listEvalSessions = query({
   args: {
+    // Basic filters
     source: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    // Enhanced filters per PRD
+    model: v.optional(v.string()),
+    dateFrom: v.optional(v.number()),
+    dateTo: v.optional(v.number()),
+    minTokens: v.optional(v.number()),
+    project: v.optional(v.string()),
+    evalStatus: v.optional(evalStatusValidator),
     limit: v.optional(v.number()),
   },
   returns: v.object({
@@ -147,9 +345,12 @@ export const listEvalSessions = query({
         reviewedAt: v.optional(v.number()),
         evalNotes: v.optional(v.string()),
         evalTags: v.optional(v.array(v.string())),
+        evalStatus: v.optional(evalStatusValidator),
+        expectedOutput: v.optional(v.string()),
+        detectedLanguage: v.optional(v.string()),
         createdAt: v.number(),
         updatedAt: v.number(),
-      })
+      }),
     ),
     stats: v.object({
       total: v.number(),
@@ -157,51 +358,120 @@ export const listEvalSessions = query({
         opencode: v.number(),
         claudeCode: v.number(),
         factoryDroid: v.number(),
+        codexCli: v.number(),
+        cursor: v.number(),
+      }),
+      byStatus: v.object({
+        golden: v.number(),
+        correct: v.number(),
+        incorrect: v.number(),
+        needsReview: v.number(),
+        unset: v.number(),
       }),
       totalTestCases: v.number(),
     }),
   }),
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0, factoryDroid: 0 }, totalTestCases: 0 } };
-    }
+    const emptyResult = {
+      sessions: [],
+      stats: {
+        total: 0,
+        bySource: {
+          opencode: 0,
+          claudeCode: 0,
+          factoryDroid: 0,
+          codexCli: 0,
+          cursor: 0,
+        },
+        byStatus: {
+          golden: 0,
+          correct: 0,
+          incorrect: 0,
+          needsReview: 0,
+          unset: 0,
+        },
+        totalTestCases: 0,
+      },
+    };
+
+    if (!identity) return emptyResult;
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
       .first();
-    if (!user) {
-      return { sessions: [], stats: { total: 0, bySource: { opencode: 0, claudeCode: 0, factoryDroid: 0 }, totalTestCases: 0 } };
-    }
+    if (!user) return emptyResult;
 
     // Query eval-ready sessions using index
     let sessions = await ctx.db
       .query("sessions")
-      .withIndex("by_user_eval_ready", (q) => q.eq("userId", user._id).eq("evalReady", true))
+      .withIndex("by_user_eval_ready", (q) =>
+        q.eq("userId", user._id).eq("evalReady", true),
+      )
       .order("desc")
       .collect();
 
-    // Filter by source if provided
+    // Apply filters in memory (index only covers userId + evalReady)
     if (args.source) {
       sessions = sessions.filter((s) => s.source === args.source);
     }
-
-    // Filter by tags if provided
     if (args.tags && args.tags.length > 0) {
-      sessions = sessions.filter((s) => 
-        s.evalTags && args.tags!.some((tag) => s.evalTags!.includes(tag))
+      sessions = sessions.filter(
+        (s) =>
+          s.evalTags && args.tags!.some((tag) => s.evalTags!.includes(tag)),
       );
     }
+    if (args.model) {
+      sessions = sessions.filter((s) => s.model === args.model);
+    }
+    if (args.dateFrom) {
+      sessions = sessions.filter((s) => s.createdAt >= args.dateFrom!);
+    }
+    if (args.dateTo) {
+      sessions = sessions.filter((s) => s.createdAt <= args.dateTo!);
+    }
+    if (args.minTokens) {
+      sessions = sessions.filter((s) => s.totalTokens >= args.minTokens!);
+    }
+    if (args.project) {
+      sessions = sessions.filter(
+        (s) =>
+          s.projectName?.toLowerCase().includes(args.project!.toLowerCase()) ||
+          s.projectPath?.toLowerCase().includes(args.project!.toLowerCase()),
+      );
+    }
+    if (args.evalStatus) {
+      sessions = sessions.filter((s) => s.evalStatus === args.evalStatus);
+    }
 
-    // Calculate stats
-    const opencodeCount = sessions.filter((s) => s.source === "opencode" || !s.source).length;
-    const claudeCodeCount = sessions.filter((s) => s.source === "claude-code").length;
-    const factoryDroidCount = sessions.filter((s) => s.source === "factory-droid").length;
+    // Calculate stats from filtered sessions
+    const bySource = {
+      opencode: sessions.filter((s) => s.source === "opencode" || !s.source)
+        .length,
+      claudeCode: sessions.filter((s) => s.source === "claude-code").length,
+      factoryDroid: sessions.filter((s) => s.source === "factory-droid").length,
+      codexCli: sessions.filter((s) => s.source === "codex-cli").length,
+      cursor: sessions.filter(
+        (s) => s.source === "cursor-sync" || s.source === "cursor",
+      ).length,
+    };
+
+    const byStatus = {
+      golden: sessions.filter((s) => s.evalStatus === "golden").length,
+      correct: sessions.filter((s) => s.evalStatus === "correct").length,
+      incorrect: sessions.filter((s) => s.evalStatus === "incorrect").length,
+      needsReview: sessions.filter((s) => s.evalStatus === "needs_review")
+        .length,
+      unset: sessions.filter((s) => !s.evalStatus).length,
+    };
+
     const totalTestCases = sessions.reduce((sum, s) => sum + s.messageCount, 0);
 
     // Apply limit
-    const limitedSessions = args.limit ? sessions.slice(0, args.limit) : sessions;
+    const limitedSessions = args.limit
+      ? sessions.slice(0, args.limit)
+      : sessions;
 
     return {
       sessions: limitedSessions.map((s) => ({
@@ -220,16 +490,16 @@ export const listEvalSessions = query({
         reviewedAt: s.reviewedAt,
         evalNotes: s.evalNotes,
         evalTags: s.evalTags,
+        evalStatus: s.evalStatus,
+        expectedOutput: s.expectedOutput,
+        detectedLanguage: s.detectedLanguage,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
       })),
       stats: {
         total: sessions.length,
-        bySource: {
-          opencode: opencodeCount,
-          claudeCode: claudeCodeCount,
-          factoryDroid: factoryDroidCount,
-        },
+        bySource,
+        byStatus,
         totalTestCases,
       },
     };
@@ -266,6 +536,219 @@ export const getEvalTags = query({
   },
 });
 
+/**
+ * Get all unique models used in eval sessions
+ */
+export const getEvalModels = query({
+  args: {},
+  returns: v.array(v.string()),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) return [];
+
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user_eval_ready", (q) =>
+        q.eq("userId", user._id).eq("evalReady", true),
+      )
+      .collect();
+
+    const models = new Set<string>();
+    sessions.forEach((s) => {
+      if (s.model) models.add(s.model);
+    });
+
+    return Array.from(models).sort();
+  },
+});
+
+/**
+ * Preview export before downloading (stats + validation)
+ */
+export const previewExport = query({
+  args: {
+    sessionIds: v.union(v.array(v.id("sessions")), v.literal("all")),
+    source: v.optional(v.string()),
+    model: v.optional(v.string()),
+    dateFrom: v.optional(v.number()),
+    dateTo: v.optional(v.number()),
+    minTokens: v.optional(v.number()),
+    evalStatus: v.optional(evalStatusValidator),
+  },
+  returns: v.object({
+    sessionCount: v.number(),
+    testCaseCount: v.number(),
+    bySource: v.object({
+      opencode: v.number(),
+      claudeCode: v.number(),
+      factoryDroid: v.number(),
+      codexCli: v.number(),
+      cursor: v.number(),
+    }),
+    byModel: v.array(v.object({ model: v.string(), count: v.number() })),
+    byStatus: v.object({
+      golden: v.number(),
+      correct: v.number(),
+      incorrect: v.number(),
+      needsReview: v.number(),
+      unset: v.number(),
+    }),
+    sampleSessions: v.array(
+      v.object({
+        _id: v.id("sessions"),
+        title: v.optional(v.string()),
+        model: v.optional(v.string()),
+        messageCount: v.number(),
+      }),
+    ),
+    warnings: v.array(v.string()),
+  }),
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const emptyResult = {
+      sessionCount: 0,
+      testCaseCount: 0,
+      bySource: {
+        opencode: 0,
+        claudeCode: 0,
+        factoryDroid: 0,
+        codexCli: 0,
+        cursor: 0,
+      },
+      byModel: [],
+      byStatus: {
+        golden: 0,
+        correct: 0,
+        incorrect: 0,
+        needsReview: 0,
+        unset: 0,
+      },
+      sampleSessions: [],
+      warnings: [],
+    };
+
+    if (!identity) return emptyResult;
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+    if (!user) return emptyResult;
+
+    // Get sessions based on selection
+    let sessions;
+    if (args.sessionIds === "all") {
+      sessions = await ctx.db
+        .query("sessions")
+        .withIndex("by_user_eval_ready", (q) =>
+          q.eq("userId", user._id).eq("evalReady", true),
+        )
+        .collect();
+    } else {
+      const fetched = await Promise.all(
+        args.sessionIds.map((id) => ctx.db.get(id)),
+      );
+      sessions = fetched.filter(
+        (s) => s && s.userId === user._id && s.evalReady,
+      ) as NonNullable<(typeof fetched)[number]>[];
+    }
+
+    // Apply additional filters
+    if (args.source) {
+      sessions = sessions.filter((s) => s.source === args.source);
+    }
+    if (args.model) {
+      sessions = sessions.filter((s) => s.model === args.model);
+    }
+    if (args.dateFrom) {
+      sessions = sessions.filter((s) => s.createdAt >= args.dateFrom!);
+    }
+    if (args.dateTo) {
+      sessions = sessions.filter((s) => s.createdAt <= args.dateTo!);
+    }
+    if (args.minTokens) {
+      sessions = sessions.filter((s) => s.totalTokens >= args.minTokens!);
+    }
+    if (args.evalStatus) {
+      sessions = sessions.filter((s) => s.evalStatus === args.evalStatus);
+    }
+
+    // Calculate stats
+    const bySource = {
+      opencode: sessions.filter((s) => s.source === "opencode" || !s.source)
+        .length,
+      claudeCode: sessions.filter((s) => s.source === "claude-code").length,
+      factoryDroid: sessions.filter((s) => s.source === "factory-droid").length,
+      codexCli: sessions.filter((s) => s.source === "codex-cli").length,
+      cursor: sessions.filter(
+        (s) => s.source === "cursor-sync" || s.source === "cursor",
+      ).length,
+    };
+
+    const byStatus = {
+      golden: sessions.filter((s) => s.evalStatus === "golden").length,
+      correct: sessions.filter((s) => s.evalStatus === "correct").length,
+      incorrect: sessions.filter((s) => s.evalStatus === "incorrect").length,
+      needsReview: sessions.filter((s) => s.evalStatus === "needs_review")
+        .length,
+      unset: sessions.filter((s) => !s.evalStatus).length,
+    };
+
+    // Group by model
+    const modelCounts: Record<string, number> = {};
+    sessions.forEach((s) => {
+      const model = s.model || "unknown";
+      modelCounts[model] = (modelCounts[model] || 0) + 1;
+    });
+    const byModel = Object.entries(modelCounts)
+      .map(([model, count]) => ({ model, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const testCaseCount = sessions.reduce((sum, s) => sum + s.messageCount, 0);
+
+    // Generate validation warnings
+    const warnings: Array<string> = [];
+    const emptyMessageSessions = sessions.filter((s) => s.messageCount === 0);
+    if (emptyMessageSessions.length > 0) {
+      warnings.push(
+        `${emptyMessageSessions.length} session(s) have no messages and will be skipped`,
+      );
+    }
+    const noModelSessions = sessions.filter((s) => !s.model);
+    if (noModelSessions.length > 0) {
+      warnings.push(
+        `${noModelSessions.length} session(s) have no model specified`,
+      );
+    }
+    if (sessions.length > 1000) {
+      warnings.push(
+        "Large export (1000+ sessions) may take longer to generate",
+      );
+    }
+
+    return {
+      sessionCount: sessions.length,
+      testCaseCount,
+      bySource,
+      byModel,
+      byStatus,
+      sampleSessions: sessions.slice(0, 3).map((s) => ({
+        _id: s._id,
+        title: s.title,
+        model: s.model,
+        messageCount: s.messageCount,
+      })),
+      warnings,
+    };
+  },
+});
+
 // ============================================================================
 // EVAL EXPORT
 // ============================================================================
@@ -274,14 +757,21 @@ export const getEvalTags = query({
 type DeepEvalTestCase = {
   input: string;
   actual_output: string;
-  expected_output: string;
+  expected_output: string | null;
   context: string[];
+  retrieval_context: string[] | null;
   metadata: {
     session_id: string;
     model: string;
-    source: string;
-    tokens: number;
+    model_version?: string;
+    tool: string;
     timestamp: string;
+    tokens_input: number;
+    tokens_output: number;
+    latency_ms?: number;
+    project?: string;
+    tags: string[];
+    eval_status?: string;
   };
 };
 
@@ -295,6 +785,18 @@ type OpenAIEvalCase = {
   };
 };
 
+type PromptfooTestCase = {
+  vars: {
+    input: string;
+    language?: string;
+    task_type?: string;
+  };
+  assert?: Array<{
+    type: string;
+    value: string;
+  }>;
+};
+
 // Types for export data
 type ExportSession = {
   _id: string;
@@ -302,9 +804,17 @@ type ExportSession = {
   title?: string;
   model?: string;
   source?: string;
+  projectName?: string;
+  projectPath?: string;
   totalTokens: number;
+  promptTokens: number;
+  completionTokens: number;
+  durationMs?: number;
   createdAt: number;
   evalTags?: string[];
+  evalStatus?: string;
+  expectedOutput?: string;
+  detectedLanguage?: string;
 };
 
 type ExportMessage = {
@@ -313,7 +823,15 @@ type ExportMessage = {
   createdAt: number;
   promptTokens?: number;
   completionTokens?: number;
+  durationMs?: number;
 };
+
+// Turn mode validator
+const turnModeValidator = v.union(
+  v.literal("full"),
+  v.literal("per_turn"),
+  v.literal("final_only"),
+);
 
 /**
  * Generate eval export data in the specified format
@@ -321,11 +839,20 @@ type ExportMessage = {
 export const generateEvalExport = action({
   args: {
     sessionIds: v.union(v.array(v.id("sessions")), v.literal("all")),
-    format: v.union(v.literal("deepeval"), v.literal("openai"), v.literal("filesystem")),
+    format: v.union(
+      v.literal("deepeval"),
+      v.literal("openai"),
+      v.literal("promptfoo"),
+      v.literal("filesystem"),
+    ),
     options: v.object({
       includeSystemPrompts: v.boolean(),
       includeToolCalls: v.boolean(),
       anonymizePaths: v.boolean(),
+      // New options per PRD
+      turnMode: v.optional(turnModeValidator),
+      codeBlocksOnly: v.optional(v.boolean()),
+      minMessageLength: v.optional(v.number()),
     }),
   },
   returns: v.object({
@@ -334,6 +861,11 @@ export const generateEvalExport = action({
     stats: v.object({
       sessions: v.number(),
       testCases: v.number(),
+      skipped: v.number(),
+    }),
+    validation: v.object({
+      errors: v.array(v.string()),
+      warnings: v.array(v.string()),
     }),
   }),
   handler: async (ctx, args) => {
@@ -342,12 +874,12 @@ export const generateEvalExport = action({
 
     // Get sessions and messages via internal query
     const exportData = await ctx.runQuery(
-      // @ts-expect-error - internal query
+      // @ts-expect-error internal query reference
       "evals:getExportData",
       {
         sessionIds: args.sessionIds,
         workosId: identity.subject,
-      }
+      },
     );
 
     if (!exportData || exportData.sessions.length === 0) {
@@ -355,79 +887,245 @@ export const generateEvalExport = action({
     }
 
     const sessions: ExportSession[] = exportData.sessions;
-    const messagesBySession: Record<string, ExportMessage[]> = exportData.messagesBySession;
+    const messagesBySession: Record<string, ExportMessage[]> =
+      exportData.messagesBySession;
     let testCaseCount = 0;
+    let skippedCount = 0;
     const timestamp = new Date().toISOString();
+    const errors: Array<string> = [];
+    const warnings: Array<string> = [];
+
+    // Default turn mode to per_turn
+    const turnMode = args.options.turnMode || "per_turn";
 
     // Helper to anonymize paths
     const anonymize = (text: string): string => {
       if (!args.options.anonymizePaths) return text;
-      return text.replace(/\/Users\/[^\/]+/g, "/Users/user")
-                 .replace(/\/home\/[^\/]+/g, "/home/user")
-                 .replace(/C:\\Users\\[^\\]+/g, "C:\\Users\\user");
+      return text
+        .replace(/\/Users\/[^\/\s]+/g, "/Users/user")
+        .replace(/\/home\/[^\/\s]+/g, "/home/user")
+        .replace(/C:\\Users\\[^\\]+/g, "C:\\Users\\user");
     };
 
+    // Helper to check if message contains code
+    const hasCodeBlock = (text: string): boolean => {
+      return /```[\s\S]*?```/.test(text);
+    };
+
+    // Helper to filter messages
+    const filterMessages = (messages: ExportMessage[]): ExportMessage[] => {
+      let filtered = [...messages];
+
+      if (!args.options.includeSystemPrompts) {
+        filtered = filtered.filter((m) => m.role !== "system");
+      }
+
+      if (args.options.codeBlocksOnly) {
+        filtered = filtered.filter((m) => hasCodeBlock(m.textContent || ""));
+      }
+
+      if (args.options.minMessageLength) {
+        filtered = filtered.filter(
+          (m) => (m.textContent?.length || 0) >= args.options.minMessageLength!,
+        );
+      }
+
+      return filtered;
+    };
+
+    // Format: DeepEval JSON
     if (args.format === "deepeval") {
-      // DeepEval JSON format
       const testCases: DeepEvalTestCase[] = [];
 
       for (const session of sessions) {
-        const messages = messagesBySession[session._id] || [];
-        
-        for (let i = 0; i < messages.length; i++) {
-          const msg = messages[i];
-          if (msg.role === "user" && i + 1 < messages.length) {
-            const response = messages[i + 1];
-            if (response.role === "assistant") {
+        const rawMessages = messagesBySession[session._id] || [];
+        const messages = filterMessages(rawMessages);
+
+        if (messages.length === 0) {
+          skippedCount++;
+          warnings.push(
+            `Session ${session.externalId.slice(0, 8)}: No messages after filtering`,
+          );
+          continue;
+        }
+
+        // Handle different turn modes
+        if (turnMode === "full") {
+          // Export entire conversation as one test case
+          const userMessages = messages.filter((m) => m.role === "user");
+          const assistantMessages = messages.filter(
+            (m) => m.role === "assistant",
+          );
+
+          if (userMessages.length > 0 && assistantMessages.length > 0) {
+            testCases.push({
+              input: anonymize(
+                userMessages.map((m) => m.textContent || "").join("\n\n"),
+              ),
+              actual_output: anonymize(
+                assistantMessages.map((m) => m.textContent || "").join("\n\n"),
+              ),
+              expected_output: session.expectedOutput
+                ? anonymize(session.expectedOutput)
+                : null,
+              context: [],
+              retrieval_context: null,
+              metadata: {
+                session_id: session.externalId,
+                model: session.model || "unknown",
+                tool: session.source || "opencode",
+                timestamp: new Date(session.createdAt).toISOString(),
+                tokens_input: session.promptTokens,
+                tokens_output: session.completionTokens,
+                latency_ms: session.durationMs,
+                project: session.projectName || session.projectPath,
+                tags: session.evalTags || [],
+                eval_status: session.evalStatus,
+              },
+            });
+            testCaseCount++;
+          }
+        } else if (turnMode === "final_only") {
+          // Export only the last user->assistant exchange
+          const lastUserIdx = messages
+            .map((m, i) => ({ m, i }))
+            .filter(({ m }) => m.role === "user")
+            .pop()?.i;
+
+          if (lastUserIdx !== undefined && lastUserIdx + 1 < messages.length) {
+            const userMsg = messages[lastUserIdx];
+            const assistantMsg = messages[lastUserIdx + 1];
+
+            if (assistantMsg.role === "assistant") {
               testCases.push({
-                input: anonymize(msg.textContent || ""),
-                actual_output: anonymize(response.textContent || ""),
-                expected_output: anonymize(response.textContent || ""),
-                context: args.options.includeToolCalls 
-                  ? messages.slice(0, i).map((m: ExportMessage) => anonymize(m.textContent || ""))
-                  : [],
+                input: anonymize(userMsg.textContent || ""),
+                actual_output: anonymize(assistantMsg.textContent || ""),
+                expected_output: session.expectedOutput
+                  ? anonymize(session.expectedOutput)
+                  : null,
+                context: messages
+                  .slice(0, lastUserIdx)
+                  .map((m) => anonymize(m.textContent || "")),
+                retrieval_context: null,
                 metadata: {
                   session_id: session.externalId,
                   model: session.model || "unknown",
-                  source: session.source || "opencode",
-                  tokens: (msg.promptTokens || 0) + (response.completionTokens || 0),
+                  tool: session.source || "opencode",
                   timestamp: new Date(session.createdAt).toISOString(),
+                  tokens_input: userMsg.promptTokens || 0,
+                  tokens_output: assistantMsg.completionTokens || 0,
+                  latency_ms: assistantMsg.durationMs,
+                  project: session.projectName || session.projectPath,
+                  tags: session.evalTags || [],
+                  eval_status: session.evalStatus,
                 },
               });
               testCaseCount++;
+            }
+          }
+        } else {
+          // per_turn: Each user->assistant pair as separate test case
+          // Skip tool messages when finding user->assistant pairs
+          for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            if (msg.role === "user") {
+              // Find next assistant response (skip tool messages)
+              let nextAssistantIdx = -1;
+              for (let j = i + 1; j < messages.length; j++) {
+                if (messages[j].role === "assistant") {
+                  nextAssistantIdx = j;
+                  break;
+                }
+                // Stop if we hit another user message
+                if (messages[j].role === "user") break;
+              }
+
+              if (nextAssistantIdx !== -1) {
+                const response = messages[nextAssistantIdx];
+                testCases.push({
+                  input: anonymize(msg.textContent || ""),
+                  actual_output: anonymize(response.textContent || ""),
+                  expected_output: session.expectedOutput
+                    ? anonymize(session.expectedOutput)
+                    : null,
+                  context: args.options.includeToolCalls
+                    ? messages
+                        .slice(0, i)
+                        .map((m) => anonymize(m.textContent || ""))
+                    : [],
+                  retrieval_context: null,
+                  metadata: {
+                    session_id: session.externalId,
+                    model: session.model || "unknown",
+                    tool: session.source || "opencode",
+                    timestamp: new Date(session.createdAt).toISOString(),
+                    tokens_input: msg.promptTokens || 0,
+                    tokens_output: response.completionTokens || 0,
+                    latency_ms: response.durationMs,
+                    project: session.projectName || session.projectPath,
+                    tags: session.evalTags || [],
+                    eval_status: session.evalStatus,
+                  },
+                });
+                testCaseCount++;
+              }
             }
           }
         }
       }
 
       return {
-        data: JSON.stringify({ test_cases: testCases }, null, 2),
-        filename: `eval-export-deepeval-${timestamp.split("T")[0]}.json`,
-        stats: { sessions: sessions.length, testCases: testCaseCount },
+        data: JSON.stringify(testCases, null, 2),
+        filename: `opensync-deepeval-${timestamp.split("T")[0]}.json`,
+        stats: {
+          sessions: sessions.length,
+          testCases: testCaseCount,
+          skipped: skippedCount,
+        },
+        validation: { errors, warnings },
       };
     }
 
+    // Format: OpenAI Evals JSONL
     if (args.format === "openai") {
-      // OpenAI Evals JSONL format
       const lines: string[] = [];
 
       for (const session of sessions) {
-        const messages = messagesBySession[session._id] || [];
+        const rawMessages = messagesBySession[session._id] || [];
+        const messages = filterMessages(rawMessages);
+
+        if (messages.length === 0) {
+          skippedCount++;
+          continue;
+        }
+
         const context: Array<{ role: string; content: string }> = [];
 
         for (let i = 0; i < messages.length; i++) {
           const msg = messages[i];
-          
-          if (msg.role === "system" && !args.options.includeSystemPrompts) continue;
-          
-          context.push({ role: msg.role, content: anonymize(msg.textContent || "") });
+          context.push({
+            role: msg.role,
+            content: anonymize(msg.textContent || ""),
+          });
 
-          if (msg.role === "user" && i + 1 < messages.length) {
-            const response = messages[i + 1];
-            if (response.role === "assistant") {
+          if (msg.role === "user") {
+            // Find next assistant response (skip tool messages)
+            let nextAssistantIdx = -1;
+            for (let j = i + 1; j < messages.length; j++) {
+              if (messages[j].role === "assistant") {
+                nextAssistantIdx = j;
+                break;
+              }
+              if (messages[j].role === "user") break;
+            }
+
+            if (nextAssistantIdx !== -1) {
+              const response = messages[nextAssistantIdx];
               const evalCase: OpenAIEvalCase = {
                 input: [...context],
-                ideal: anonymize(response.textContent || ""),
+                ideal: anonymize(
+                  session.expectedOutput || response.textContent || "",
+                ),
                 metadata: {
                   session_id: session.externalId,
                   model: session.model || "unknown",
@@ -443,17 +1141,135 @@ export const generateEvalExport = action({
 
       return {
         data: lines.join("\n"),
-        filename: `eval-export-openai-${timestamp.split("T")[0]}.jsonl`,
-        stats: { sessions: sessions.length, testCases: testCaseCount },
+        filename: `opensync-openai-${timestamp.split("T")[0]}.jsonl`,
+        stats: {
+          sessions: sessions.length,
+          testCases: testCaseCount,
+          skipped: skippedCount,
+        },
+        validation: { errors, warnings },
       };
     }
 
-    // Filesystem format (plain text)
+    // Format: Promptfoo JSONL
+    if (args.format === "promptfoo") {
+      const lines: string[] = [];
+
+      for (const session of sessions) {
+        const rawMessages = messagesBySession[session._id] || [];
+        const messages = filterMessages(rawMessages);
+
+        if (messages.length === 0) {
+          skippedCount++;
+          continue;
+        }
+
+        for (let i = 0; i < messages.length; i++) {
+          const msg = messages[i];
+          if (msg.role === "user") {
+            // Find next assistant response (skip tool messages)
+            let nextAssistantIdx = -1;
+            for (let j = i + 1; j < messages.length; j++) {
+              if (messages[j].role === "assistant") {
+                nextAssistantIdx = j;
+                break;
+              }
+              if (messages[j].role === "user") break;
+            }
+
+            if (nextAssistantIdx !== -1) {
+              const response = messages[nextAssistantIdx];
+              // Detect language from code blocks in response
+              const codeMatch = (response.textContent || "").match(/```(\w+)?/);
+              const detectedLang = codeMatch?.[1] || session.detectedLanguage;
+
+              // Infer task type from content
+              let taskType = "general";
+              const content = (msg.textContent || "").toLowerCase();
+              if (
+                content.includes("fix") ||
+                content.includes("bug") ||
+                content.includes("error")
+              ) {
+                taskType = "bug_fix";
+              } else if (
+                content.includes("write") ||
+                content.includes("create") ||
+                content.includes("implement")
+              ) {
+                taskType = "code_generation";
+              } else if (
+                content.includes("explain") ||
+                content.includes("what")
+              ) {
+                taskType = "explanation";
+              } else if (
+                content.includes("refactor") ||
+                content.includes("improve")
+              ) {
+                taskType = "refactoring";
+              }
+
+              const testCase: PromptfooTestCase = {
+                vars: {
+                  input: anonymize(msg.textContent || ""),
+                  language: detectedLang,
+                  task_type: taskType,
+                },
+              };
+
+              // Add assertions if we have expected output
+              if (session.expectedOutput) {
+                testCase.assert = [
+                  {
+                    type: "llm-rubric",
+                    value: `Response should match: ${session.expectedOutput}`,
+                  },
+                ];
+              } else if (
+                session.evalStatus === "golden" ||
+                session.evalStatus === "correct"
+              ) {
+                testCase.assert = [
+                  {
+                    type: "llm-rubric",
+                    value: "Response should be helpful and accurate",
+                  },
+                ];
+              }
+
+              lines.push(JSON.stringify(testCase));
+              testCaseCount++;
+            }
+          }
+        }
+      }
+
+      return {
+        data: lines.join("\n"),
+        filename: `opensync-promptfoo-${timestamp.split("T")[0]}.jsonl`,
+        stats: {
+          sessions: sessions.length,
+          testCases: testCaseCount,
+          skipped: skippedCount,
+        },
+        validation: { errors, warnings },
+      };
+    }
+
+    // Format: Filesystem (plain text)
     const files: Array<{ name: string; content: string }> = [];
     const fileList: string[] = [];
 
     for (const session of sessions) {
-      const messages = messagesBySession[session._id] || [];
+      const rawMessages = messagesBySession[session._id] || [];
+      const messages = filterMessages(rawMessages);
+
+      if (messages.length === 0) {
+        skippedCount++;
+        continue;
+      }
+
       const lines: string[] = [];
 
       // Header
@@ -463,19 +1279,25 @@ export const generateEvalExport = action({
       lines.push(`MODEL: ${session.model || "unknown"}`);
       lines.push(`DATE: ${new Date(session.createdAt).toISOString()}`);
       lines.push(`TOKENS: ${session.totalTokens}`);
+      if (session.evalStatus) {
+        lines.push(`STATUS: ${session.evalStatus}`);
+      }
       if (session.evalTags?.length) {
         lines.push(`TAGS: ${session.evalTags.join(", ")}`);
+      }
+      if (session.projectName) {
+        lines.push(
+          `PROJECT: ${args.options.anonymizePaths ? "project" : session.projectName}`,
+        );
       }
       lines.push("=".repeat(80));
       lines.push("");
 
       // Messages
       for (const msg of messages) {
-        if (msg.role === "system" && !args.options.includeSystemPrompts) continue;
-
-        const timestamp = new Date(msg.createdAt).toISOString();
+        const ts = new Date(msg.createdAt).toISOString();
         const role = msg.role.toUpperCase();
-        lines.push(`[${timestamp}] ${role}:`);
+        lines.push(`[${ts}] ${role}:`);
         lines.push(anonymize(msg.textContent || "(empty)"));
         lines.push("");
       }
@@ -487,32 +1309,52 @@ export const generateEvalExport = action({
       const filename = `session-${session.externalId.slice(0, 8)}.txt`;
       files.push({ name: filename, content: lines.join("\n") });
       fileList.push(filename);
-      testCaseCount += messages.filter((m: ExportMessage) => m.role === "user").length;
+      testCaseCount += messages.filter((m) => m.role === "user").length;
     }
 
     // Create manifest
     const manifest = {
-      export_date: timestamp,
-      total_sessions: sessions.length,
-      sources: {
-        opencode: sessions.filter((s: ExportSession) => s.source === "opencode" || !s.source).length,
-        "claude-code": sessions.filter((s: ExportSession) => s.source === "claude-code").length,
+      opensync_metadata: {
+        export_version: "1.0",
+        export_date: timestamp,
+        total_sessions: sessions.length - skippedCount,
+        total_test_cases: testCaseCount,
+        skipped_sessions: skippedCount,
       },
-      models: [...new Set(sessions.map((s: ExportSession) => s.model).filter(Boolean))],
+      sources: {
+        opencode: sessions.filter((s) => s.source === "opencode" || !s.source)
+          .length,
+        "claude-code": sessions.filter((s) => s.source === "claude-code")
+          .length,
+        "factory-droid": sessions.filter((s) => s.source === "factory-droid")
+          .length,
+        "codex-cli": sessions.filter((s) => s.source === "codex-cli").length,
+        "cursor-sync": sessions.filter(
+          (s) => s.source === "cursor-sync" || s.source === "cursor",
+        ).length,
+      },
+      models: [...new Set(sessions.map((s) => s.model).filter(Boolean))],
       files: fileList,
     };
 
-    // Combine all files into a single export (JSON with file contents)
     const exportBundle = {
       manifest,
-      files: files.reduce((acc, f) => ({ ...acc, [f.name]: f.content }), {} as Record<string, string>),
-      readme: generateReadme(sessions.length, testCaseCount),
+      files: files.reduce(
+        (acc, f) => ({ ...acc, [f.name]: f.content }),
+        {} as Record<string, string>,
+      ),
+      readme: generateReadme(sessions.length - skippedCount, testCaseCount),
     };
 
     return {
       data: JSON.stringify(exportBundle, null, 2),
-      filename: `eval-export-filesystem-${timestamp.split("T")[0]}.json`,
-      stats: { sessions: sessions.length, testCases: testCaseCount },
+      filename: `opensync-filesystem-${timestamp.split("T")[0]}.json`,
+      stats: {
+        sessions: sessions.length,
+        testCases: testCaseCount,
+        skipped: skippedCount,
+      },
+      validation: { errors, warnings },
     };
   },
 });
@@ -530,7 +1372,7 @@ export const getExportData = query({
     v.object({
       sessions: v.array(v.any()),
       messagesBySession: v.any(),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -543,26 +1385,31 @@ export const getExportData = query({
     if (args.sessionIds === "all") {
       sessions = await ctx.db
         .query("sessions")
-        .withIndex("by_user_eval_ready", (q) => q.eq("userId", user._id).eq("evalReady", true))
+        .withIndex("by_user_eval_ready", (q) =>
+          q.eq("userId", user._id).eq("evalReady", true),
+        )
         .collect();
     } else {
-      sessions = await Promise.all(
-        args.sessionIds.map((id) => ctx.db.get(id))
+      const fetched = await Promise.all(
+        args.sessionIds.map((id) => ctx.db.get(id)),
       );
-      // Filter to only user's sessions
-      sessions = sessions.filter((s) => s && s.userId === user._id);
+      sessions = fetched.filter((s) => s && s.userId === user._id);
     }
 
-    // Get messages for each session
+    // Get messages for each session in parallel
     const messagesBySession: Record<string, any[]> = {};
-    for (const session of sessions) {
-      if (!session) continue;
-      const messages = await ctx.db
-        .query("messages")
-        .withIndex("by_session_created", (q) => q.eq("sessionId", session._id))
-        .collect();
-      messagesBySession[session._id] = messages;
-    }
+    await Promise.all(
+      sessions.map(async (session) => {
+        if (!session) return;
+        const messages = await ctx.db
+          .query("messages")
+          .withIndex("by_session_created", (q) =>
+            q.eq("sessionId", session._id),
+          )
+          .collect();
+        messagesBySession[session._id] = messages;
+      }),
+    );
 
     return { sessions: sessions.filter(Boolean), messagesBySession };
   },
@@ -571,7 +1418,7 @@ export const getExportData = query({
 // Helper to generate README content
 function generateReadme(sessionCount: number, testCaseCount: number): string {
   return `================================================================================
-OPENSYNC - EVAL EXPORT
+OPENSYNC EVAL EXPORT
 ================================================================================
 
 Export date: ${new Date().toISOString()}
@@ -582,26 +1429,29 @@ Test cases: ${testCaseCount}
 QUICK START
 ================================================================================
 
-OPTION 1: DeepEval (Recommended)
---------------------------------
+OPTION 1: DeepEval
+------------------
 pip install deepeval
-deepeval test run eval-export.json
+export OPENAI_API_KEY=sk-...
+deepeval test run opensync-deepeval-*.json
 
-Results at: https://app.confident-ai.com
+Results: https://app.confident-ai.com
 Docs: https://docs.deepeval.com
 
 OPTION 2: OpenAI Evals
---------------------------------
-pip install openai-evals
-export OPENAI_API_KEY=your-key
-oaieval gpt-4o eval-export.jsonl
+----------------------
+curl https://api.openai.com/v1/files \\
+  -H "Authorization: Bearer $OPENAI_API_KEY" \\
+  -F purpose="evals" \\
+  -F file="@opensync-openai-*.jsonl"
 
 Docs: https://github.com/openai/evals
 
 OPTION 3: Promptfoo
---------------------------------
-npx promptfoo@latest init
-npx promptfoo@latest eval
+-------------------
+npm install -g promptfoo
+echo 'tests: file://opensync-promptfoo-*.jsonl' >> promptfooconfig.yaml
+promptfoo eval
 
 Docs: https://promptfoo.dev/docs
 
@@ -609,14 +1459,14 @@ Docs: https://promptfoo.dev/docs
 FORMAT INFO
 ================================================================================
 
-Filesystem format exports each session as a plain text file.
-Based on Letta research showing filesystem retrieval outperforms
-specialized memory tools for AI agent benchmarks.
+This export contains real coding sessions captured from AI coding tools.
+Use these datasets to evaluate model performance on your actual workflows.
 
-Use cases:
-- Test RAG systems with file-based retrieval
-- Evaluate agents using standard tools (grep, find)
-- Human-readable format for manual review
+Formats included:
+- DeepEval JSON: Best for LLM-as-judge metrics (relevancy, coherence, etc.)
+- OpenAI JSONL: Compatible with OpenAI's evaluation framework
+- Promptfoo JSONL: Works with Promptfoo's flexible assertion system
+- Filesystem: Plain text files for RAG and retrieval testing
 
 ================================================================================
 `;

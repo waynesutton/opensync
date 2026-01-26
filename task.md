@@ -7,12 +7,88 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 ## Active Tasks
 
 - [ ] (add next task here)
-- [ ] fix write conflics
-- [ ] add cursor cli plugin
+- [ ] fix write conflicts
 - [ ] add one click deploy
-- [ ] update dashboard udpates
-- [ ] add export evales
-- [ ] worksos domain
+- [ ] workos domain updates
+- [ ] models untitled
+- [ ] let users change session name
+
+## Recently Completed (Dropdown UI and Sessions Features)
+
+- [x] Fixed all dropdown filters to use custom themed components matching dark/tan modes
+  - Dashboard EvalsView: source and tag filters converted to CompactDropdown
+  - Dashboard AnalyticsView: min sessions and min tokens filters converted to CompactDropdown
+  - Charts ConsumptionBreakdown (Usage Overview): date range, project, model filters converted to ChartDropdown
+  - All dropdowns now have consistent styling, click-outside-to-close, chevron rotation
+- [x] Added sessions pagination (40 initial load, "Load more" for 20 at a time)
+- [x] Added eval selection mode in Sessions view
+  - Checkbox toggle icon next to list view icon
+  - Select individual sessions or "Select All" for bulk operations
+  - "Mark" button to batch set eval-ready status
+  - "Cancel" button to exit selection mode
+
+## Recently Completed (Cursor Plugin Integration)
+
+- [x] cursor-opensync-plugin integration for syncing Cursor IDE sessions
+  - Added cursor-sync to SourceType union with "CR" badge label
+  - Added cursor-sync to AI Coding Agents in Settings (status: supported)
+  - Added cursor-sync-plugin to Plugin Setup and Quick Setup sections
+  - Added Cursor to homepage "Syncs with" section (removed "coming soon" badge)
+  - Added cursor-sync-plugin to homepage "Getting started" section
+  - Added CR source badge with violet theme color
+  - Added Cursor Plugin documentation section in Docs.tsx
+  - Added cursor-sync-plugin to README ecosystem table
+- [x] Added "tool" to message role validator for cursor tool call messages
+  - Updated convex/schema.ts messages role union
+  - Updated convex/messages.ts upsert args and messageInputValidator
+  - Updated convex/api.ts return types and inline type definitions
+  - Updated convex/search.ts return types
+- [x] Evals export cursor-sync support
+  - Added cursor-sync source filtering in listEvalSessions stats
+  - Added cursor-sync source filtering in previewExport stats
+  - Added cursor-sync to filesystem export manifest sources
+  - Updated export logic to skip tool messages when finding user-assistant pairs
+  - Added cursor-sync to AI_AGENTS_MAP in Evals.tsx
+
+## Recently Completed (Plugin Development Guide)
+
+- [x] Created comprehensive Plugin Development Guide (docs/PLUGIN-DEVELOPMENT-GUIDE.md)
+  - API endpoints reference (/sync/session, /sync/message, /sync/batch, /sync/sessions/list)
+  - Database schema documentation (sessions, messages, parts tables with all fields)
+  - CLI commands reference (login, logout, status, verify, sync, synctest, config, hook, etc.)
+  - TypeScript code examples (API client, session parser, cost calculation, CLI implementation)
+  - README and package.json templates for new plugins
+  - Testing checklist for plugin verification
+  - Architecture diagrams showing data flow from CLI to OpenSync
+
+## Recently Completed (Evals UI Improvements)
+
+- [x] Redesigned Evals page (standalone) for CRM-style compact layout
+  - Hidden scrollbars, flex layout (no horizontal scroll)
+  - 50 items initially with "Load more" button
+  - Truncated session names (40 chars) and model names
+- [x] Redesigned EvalsView in Dashboard with same CRM-style layout
+  - Flex layout instead of table
+  - Wider Model column (w-44, 28 chars before truncate)
+  - Compact filters bar, pagination support
+- [x] Added enhanced eval export features per PRD
+  - Promptfoo JSONL format, multi-turn modes
+  - Export preview with validation warnings
+  - Annotation system with eval status
+  - Bulk status updates, API endpoint
+
+## Recently Completed (Updates Page)
+
+- [x] Created public Updates page (/updates) with GitHub issues and discussions
+  - Two-column layout with open issues (left) and discussions (right)
+  - Client-side GitHub API fetching (no auth required)
+  - Shows labels, avatars, timestamps, comment counts
+  - Dark/tan theme support
+- [x] Added Updates navigation links throughout the app
+  - Dashboard header (Bell icon, desktop text + mobile icon)
+  - Docs page header and sidebar Resources section
+  - Login page footer (next to Terms/Privacy)
+- [x] Removed duplicate search from Docs sidebar (header search only)
 
 ## Recently Completed (Stats Page Disabled)
 

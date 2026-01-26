@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { useAuth as useAuthKit } from "@workos-inc/authkit-react";
 import {
@@ -110,6 +111,17 @@ function LegalLinks() {
       >
         Privacy
       </button>
+      <span className={isDark ? "text-zinc-700" : "text-[#ccc7c0]"}>|</span>
+      <Link
+        to="/updates"
+        className={`text-xs transition-colors ${
+          isDark
+            ? "text-zinc-600 hover:text-zinc-400"
+            : "text-[#8b7355] hover:text-[#6b6b6b]"
+        }`}
+      >
+        Updates
+      </Link>
 
       {/* Legal modals */}
       <LegalModal
@@ -144,6 +156,7 @@ function getSourceDisplayName(source: string): string {
   const names: Record<string, string> = {
     opencode: "OpenCode",
     "claude-code": "Claude Code",
+    "cursor-sync": "Cursor",
     cursor: "Cursor",
     droid: "Droid",
     codex: "Codex",
@@ -396,8 +409,8 @@ export function LoginPage() {
               <h2
                 className={`mt-8 text-lg font-medium sm:text-xl ${isDark ? "text-zinc-200" : "text-[#1a1a1a]"}`}
               >
-                Dashboards for OpenCode, Claude Code, Codex, Factory Droid, and
-                more.
+                Dashboards for OpenCode, Claude Code, Codex, Cursor, and Factory
+                Droid.
               </h2>
               <p
                 className={`mt-3 text-sm sm:text-base leading-relaxed ${isDark ? "text-zinc-300" : "text-[#1a1a1a]"}`}
@@ -878,8 +891,11 @@ export function LoginPage() {
                 </h3>
                 <div className="flex items-end justify-center gap-8 flex-wrap">
                   {/* OpenCode */}
-                  <div
-                    className="flex flex-col items-center gap-1.5"
+                  <a
+                    href="https://www.npmjs.com/package/opencode-sync-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
                     title="OpenCode"
                   >
                     <img
@@ -894,11 +910,14 @@ export function LoginPage() {
                     >
                       OpenCode
                     </span>
-                  </div>
+                  </a>
 
                   {/* Claude Code */}
-                  <div
-                    className="flex flex-col items-center gap-1.5"
+                  <a
+                    href="https://www.npmjs.com/package/claude-code-sync"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
                     title="Claude Code"
                   >
                     <svg
@@ -915,11 +934,14 @@ export function LoginPage() {
                     >
                       Claude Code
                     </span>
-                  </div>
+                  </a>
 
                   {/* Factory Droid */}
-                  <div
-                    className="flex flex-col items-center gap-1.5"
+                  <a
+                    href="https://www.npmjs.com/package/droid-sync"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
                     title="Factory Droid"
                   >
                     <svg
@@ -935,11 +957,14 @@ export function LoginPage() {
                     >
                       Droid
                     </span>
-                  </div>
+                  </a>
 
                   {/* Codex CLI */}
-                  <div
-                    className="flex flex-col items-center gap-1.5"
+                  <a
+                    href="https://www.npmjs.com/package/codex-sync"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
                     title="Codex CLI"
                   >
                     <svg
@@ -955,24 +980,18 @@ export function LoginPage() {
                     >
                       Codex CLI
                     </span>
-                  </div>
+                  </a>
 
-                  {/* Cursor - Coming Soon */}
-                  <div
-                    className="flex flex-col items-center gap-1.5 relative"
-                    title="Cursor (Coming Soon)"
+                  {/* Cursor */}
+                  <a
+                    href="https://www.npmjs.com/package/cursor-opensync-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
+                    title="Cursor"
                   >
-                    <span
-                      className={`absolute -top-5 text-[8px] px-1.5 py-0.5 rounded whitespace-nowrap ${
-                        isDark
-                          ? "bg-zinc-800 text-zinc-500"
-                          : "bg-[#ebe9e6] text-[#8b7355]"
-                      }`}
-                    >
-                      coming soon
-                    </span>
                     <svg
-                      className={`h-8 w-8 ${isDark ? "text-zinc-500" : "text-[#8b7355]"}`}
+                      className={`h-8 w-8 ${isDark ? "text-zinc-300" : "text-[#1a1a1a]"}`}
                       viewBox="0 0 24 24"
                       fill="currentColor"
                       fillRule="evenodd"
@@ -981,11 +1000,11 @@ export function LoginPage() {
                       <path d="M22.106 5.68L12.5.135a.998.998 0 00-.998 0L1.893 5.68a.84.84 0 00-.419.726v11.186c0 .3.16.577.42.727l9.607 5.547a.999.999 0 00.998 0l9.608-5.547a.84.84 0 00.42-.727V6.407a.84.84 0 00-.42-.726zm-.603 1.176L12.228 22.92c-.063.108-.228.064-.228-.061V12.34a.59.59 0 00-.295-.51l-9.11-5.26c-.107-.062-.063-.228.062-.228h18.55c.264 0 .428.286.296.514z" />
                     </svg>
                     <span
-                      className={`text-[10px] ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
+                      className={`text-[10px] ${isDark ? "text-zinc-500" : "text-[#8b7355]"}`}
                     >
                       Cursor
                     </span>
-                  </div>
+                  </a>
                 </div>
               </div>
 
@@ -1133,6 +1152,37 @@ export function LoginPage() {
                       }`}
                     >
                       codex-sync
+                    </span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[10px] ${
+                        isDark
+                          ? "bg-zinc-800 text-zinc-600"
+                          : "bg-[#ebe9e6] text-[#8b7355]"
+                      }`}
+                    >
+                      npm
+                    </span>
+                  </a>
+
+                  {/* Cursor Sync */}
+                  <a
+                    href="https://www.npmjs.com/package/cursor-opensync-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-colors ${
+                      isDark
+                        ? "border-zinc-800 bg-[#0E0E0E] hover:border-zinc-700"
+                        : "border-[#e6e4e1] bg-[#faf8f5] hover:border-[#8b7355]"
+                    }`}
+                  >
+                    <span
+                      className={`font-mono text-xs ${
+                        isDark
+                          ? "text-zinc-100 group-hover:text-zinc-300"
+                          : "text-[#6b6b6b] group-hover:text-[#1a1a1a]"
+                      }`}
+                    >
+                      cursor-opensync-plugin
                     </span>
                     <span
                       className={`rounded px-1.5 py-0.5 text-[10px] ${

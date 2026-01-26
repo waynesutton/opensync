@@ -1,6 +1,7 @@
-  # WorkOS AuthKit Integration Fix
+# WorkOS AuthKit Integration Fix
 
 This document explains the changes made to fix WorkOS authentication with Convex.
+more on this later
 
 ## Problem
 
@@ -117,6 +118,7 @@ VITE_REDIRECT_URI=http://localhost:5173/callback
 ### Convex Environment Variables
 
 Set `WORKOS_CLIENT_ID` in your Convex dashboard:
+
 1. Go to https://dashboard.convex.dev
 2. Select your project
 3. Go to Settings > Environment Variables

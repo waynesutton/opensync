@@ -60,6 +60,17 @@ export default defineSchema({
     reviewedAt: v.optional(v.number()),
     evalNotes: v.optional(v.string()),
     evalTags: v.optional(v.array(v.string())),
+    // Annotation status for eval quality (golden = high-quality, correct = verified, incorrect = wrong, needs_review = unverified)
+    evalStatus: v.optional(v.union(
+      v.literal("golden"),
+      v.literal("correct"),
+      v.literal("incorrect"),
+      v.literal("needs_review")
+    )),
+    // Expected output for ground truth comparison in evals
+    expectedOutput: v.optional(v.string()),
+    // Auto-detected programming language from code blocks
+    detectedLanguage: v.optional(v.string()),
     
     createdAt: v.number(),
     updatedAt: v.number(),
@@ -71,6 +82,7 @@ export default defineSchema({
     .index("by_public_slug", ["publicSlug"])
     .index("by_user_source", ["userId", "source"])
     .index("by_user_eval_ready", ["userId", "evalReady"])
+    .index("by_user_eval_status", ["userId", "evalStatus"])
     .searchIndex("search_sessions", {
       searchField: "searchableText",
       filterFields: ["userId"],
@@ -80,7 +92,7 @@ export default defineSchema({
   messages: defineTable({
     sessionId: v.id("sessions"),
     externalId: v.string(),
-    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
     textContent: v.optional(v.string()),
     model: v.optional(v.string()),
     

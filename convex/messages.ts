@@ -11,7 +11,7 @@ export const upsert = internalMutation({
     userId: v.id("users"),
     sessionExternalId: v.string(),
     externalId: v.string(),
-    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
     textContent: v.optional(v.string()),
     model: v.optional(v.string()),
     promptTokens: v.optional(v.number()),
@@ -194,7 +194,7 @@ export const upsert = internalMutation({
 const messageInputValidator = v.object({
   sessionExternalId: v.string(),
   externalId: v.string(),
-  role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("unknown")),
+  role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system"), v.literal("tool"), v.literal("unknown")),
   textContent: v.optional(v.string()),
   model: v.optional(v.string()),
   promptTokens: v.optional(v.number()),

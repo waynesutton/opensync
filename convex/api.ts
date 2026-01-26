@@ -41,7 +41,7 @@ type SessionWithMessages = {
   messages: {
     id: Id<"messages">;
     externalId: string;
-    role: "user" | "assistant" | "system" | "unknown";
+    role: "user" | "assistant" | "system" | "tool" | "unknown";
     textContent?: string;
     model?: string;
     promptTokens?: number;
@@ -145,6 +145,7 @@ export const getSession = internalQuery({
             v.literal("user"),
             v.literal("assistant"),
             v.literal("system"),
+            v.literal("tool"),
             v.literal("unknown")
           ),
           textContent: v.optional(v.string()),
@@ -296,6 +297,7 @@ export const exportSession = internalQuery({
             v.literal("user"),
             v.literal("assistant"),
             v.literal("system"),
+            v.literal("tool"),
             v.literal("unknown")
           ),
           content: v.string(),
@@ -631,6 +633,7 @@ export const getContext = internalAction({
             v.literal("user"),
             v.literal("assistant"),
             v.literal("system"),
+            v.literal("tool"),
             v.literal("unknown")
           ),
           content: v.string(),
@@ -645,7 +648,7 @@ export const getContext = internalAction({
   ),
   handler: async (ctx, { userId, query, limit, format }): Promise<
     | { text: string; sessionCount: number }
-    | { messages: { role: "user" | "assistant" | "system" | "unknown"; content: string; metadata: { sessionId: Id<"sessions">; sessionTitle?: string } }[]; sessionCount: number }
+    | { messages: { role: "user" | "assistant" | "system" | "tool" | "unknown"; content: string; metadata: { sessionId: Id<"sessions">; sessionTitle?: string } }[]; sessionCount: number }
   > => {
     // Get relevant sessions via semantic search
     const sessions: SessionResult[] = await ctx.runAction(internal.api.semanticSearch, {
@@ -694,7 +697,7 @@ export const getContext = internalAction({
     }
 
     // OpenAI messages format
-    const messages: { role: "user" | "assistant" | "system" | "unknown"; content: string; metadata: { sessionId: Id<"sessions">; sessionTitle?: string } }[] = [];
+    const messages: { role: "user" | "assistant" | "system" | "tool" | "unknown"; content: string; metadata: { sessionId: Id<"sessions">; sessionTitle?: string } }[] = [];
 
     for (const session of sessions) {
       const data: SessionWithMessages = await ctx.runQuery(internal.api.getSession, {

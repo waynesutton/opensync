@@ -72,7 +72,13 @@ const AI_AGENTS: AIAgent[] = [
     defaultEnabled: false,
     url: "https://github.com/waynesutton/opensync/pull/3",
   },
-  { id: "cursor", name: "Cursor", status: "planned", defaultEnabled: false },
+  {
+    id: "cursor-sync",
+    name: "Cursor",
+    status: "supported",
+    defaultEnabled: false,
+    url: "https://www.npmjs.com/package/cursor-sync-plugin",
+  },
   {
     id: "codex-cli",
     name: "Codex CLI",
@@ -464,6 +470,9 @@ export function SettingsPage() {
                       <p className={cn("mt-2", t.textDim)}># For Codex CLI</p>
                       <p>npm install -g codex-sync</p>
                       <p>codex-sync login</p>
+                      <p className={cn("mt-2", t.textDim)}># For Cursor</p>
+                      <p>npm install -g cursor-sync-plugin</p>
+                      <p>cursor-sync login</p>
                     </div>
                   </div>
 
@@ -570,6 +579,33 @@ export function SettingsPage() {
                       </span>{" "}
                       <a
                         href="https://github.com/waynesutton/codex-sync-plugin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("text-xs", t.textDim, "hover:underline")}
+                      >
+                        (GitHub)
+                      </a>
+                    </p>
+                    <p>
+                      <a
+                        href="https://www.npmjs.com/package/cursor-sync-plugin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "inline-flex items-center gap-1 font-medium",
+                          theme === "dark"
+                            ? "text-blue-400 hover:text-blue-300"
+                            : "text-[#EB5601] hover:text-[#d14a01]",
+                        )}
+                      >
+                        cursor-sync-plugin
+                        <ExternalLink className="h-3 w-3" />
+                      </a>{" "}
+                      <span className={t.textDim}>
+                        Sync your Cursor sessions
+                      </span>{" "}
+                      <a
+                        href="https://github.com/waynesutton/cursor-cli-sync-plugin"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn("text-xs", t.textDim, "hover:underline")}

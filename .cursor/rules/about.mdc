@@ -1,0 +1,115 @@
+---
+description: Project documentation rule for creating about.md files that explain projects in plain language
+globs:
+alwaysApply: false
+---
+
+# Project Documentation Rule
+
+After completing any significant project or feature, create or update `about.md` with detailed documentation.
+
+## What to include
+
+### Technical architecture
+
+Explain how the system works. What are the main components? How do they connect? Draw ASCII diagrams with nicknames for each component.
+
+### Codebase structure
+
+Walk through the file tree. Explain what each major file or directory does and why it exists.
+
+### Technology choices
+
+List the technologies used and why you picked them over alternatives. Include the tradeoffs you considered.
+
+### Decisions and rationale
+
+Document the non-obvious choices. Why this database? Why this API design? Why this folder structure?
+
+### Assumptions and invariants
+
+What must remain true as the code evolves? What are the core constraints the architecture depends on?
+
+### Lessons learned
+
+This is the most important section. Include:
+
+- Bugs you ran into and how you fixed them
+- Potential pitfalls and how to avoid them
+- New technologies used and what you learned about them
+- How experienced engineers think through problems
+- Best practices you discovered or applied
+- Patterns worth reusing in future projects
+
+### Tests to add next
+
+What tests would make this code more reliable? What edge cases need coverage? This section transfers learning into reliability.
+
+## Writing style
+
+Make it engaging. This is not boring technical documentation.
+
+- Use analogies. Compare unfamiliar concepts to familiar ones.
+- Tell the story. How did the project evolve? What problems did you solve along the way?
+- Include anecdotes. What surprised you? What took longer than expected?
+- Be specific. Name the files, the functions, the exact errors.
+- Write like you're explaining it to a friend who's a developer but hasn't seen this codebase.
+
+## Example: Production line analogy
+
+```
++-----------------------------------------------------------------------+
+|                        YOUR YOUTUBE NEWSLETTER                         |
++-----------------------------------------------------------------------+
+|                                                                       |
+|   INTAKE                   PROCESSING                OUTPUT           |
+|   ------------            ------------------      --------------      |
+|                                                                       |
+|   get_videos.py  ->  get_transcripts.py -> write_articles.py         |
+|   (The Scout)        (The Stenographer)    (The Writer)              |
+|       |                       |                    |                  |
+|       v                       v                    v                  |
+|   YouTube API          Transcript API          Claude AI              |
+|                                                                       |
+|                               |                                       |
+|                               v                                       |
+|                          send_email.py                                |
+|                         (The Publisher)                               |
+|                               |                                       |
+|                       +-------+-------+                               |
+|                       v               v                               |
+|                  EPUB Ebook    Email Newsletter                       |
+|                                                                       |
++-----------------------------------------------------------------------+
+|   CONTROL CENTER                                                      |
+|   ----------------                                                    |
+|   main.py           -> Orchestrates the whole pipeline                |
+|   video_tracker.py  -> Remembers what's already been sent             |
+|   dashboard.py      -> Pretty web interface (no Terminal needed!)     |
+|   *.plist files     -> Mac automation (runs while you sleep)          |
++-----------------------------------------------------------------------+
+```
+
+Each file gets a role and a nickname. The architecture becomes a story about characters doing jobs.
+
+## Why this works
+
+This approach turns "vibe coding" into deliberate practice. You ship code, then you ship the explanation. The act of writing forces you to understand what you built. The document becomes a reference for future projects and a teaching tool for others.
+
+The assumptions + invariants section catches the implicit knowledge that usually lives only in the original developer's head. The tests to add next section builds the habit of thinking about reliability even when you don't have time to implement it immediately.
+
+You compound skill by shipping artifacts and explanations together.
+
+## Quick checklist
+
+When creating about.md:
+
+1. Technical architecture (with ASCII diagrams and component nicknames)
+2. Codebase structure walkthrough
+3. Technology choices and why
+4. Key decisions and rationale
+5. Assumptions and invariants (what must stay true)
+6. Lessons learned (bugs, fixes, pitfalls, patterns)
+7. Tests to add next
+
+Credit: Inspired by @zarazhangrui and the FORZARA project documentation pattern.

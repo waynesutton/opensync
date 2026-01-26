@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { cn } from "../lib/utils";
+import { ChevronDown } from "lucide-react";
 
 // Simple bar chart for usage data
 interface BarChartProps {
@@ -615,6 +616,116 @@ export function UsageCreditBar({
   );
 }
 
+// Chart dropdown component for consistent styling
+interface ChartDropdownProps {
+  value?: string | number;
+  onChange: (v?: string | number) => void;
+  options: Array<{ value: string | number; label: string }>;
+  placeholder?: string;
+  theme?: "dark" | "tan";
+  className?: string;
+}
+
+function ChartDropdown({
+  value,
+  onChange,
+  options,
+  placeholder = "All",
+  theme = "dark",
+  className,
+}: ChartDropdownProps) {
+  const isDark = theme === "dark";
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const displayValue = options.find((opt) => opt.value === value)?.label || placeholder;
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  
+  return (
+    <div ref={dropdownRef} className={cn("relative", className)}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border transition-colors min-w-[100px] justify-between",
+          isDark
+            ? "bg-zinc-800/50 border-zinc-700 hover:border-zinc-600 text-zinc-300"
+            : "bg-[#ebe9e6] border-[#e6e4e1] hover:border-[#c9c5bf] text-[#1a1a1a]"
+        )}
+      >
+        <span className="truncate">{displayValue}</span>
+        <ChevronDown className={cn("h-3 w-3 shrink-0 transition-transform", isOpen && "rotate-180")} />
+      </button>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div
+          className={cn(
+            "absolute top-full left-0 mt-1 min-w-full max-h-[200px] overflow-y-auto rounded-md border shadow-lg z-50 py-0.5",
+            isDark
+              ? "bg-[#161616] border-zinc-800"
+              : "bg-[#faf8f5] border-[#e6e4e1]"
+          )}
+        >
+          {/* All/placeholder option */}
+          <button
+            type="button"
+            onClick={() => {
+              onChange(undefined);
+              setIsOpen(false);
+            }}
+            className={cn(
+              "w-full px-3 py-1.5 text-left text-xs transition-colors",
+              !value
+                ? isDark
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "bg-[#ebe9e6] text-[#1a1a1a]"
+                : isDark
+                  ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                  : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+            )}
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={cn(
+                "w-full px-3 py-1.5 text-left text-xs transition-colors truncate",
+                opt.value === value
+                  ? isDark
+                    ? "bg-zinc-800 text-zinc-100"
+                    : "bg-[#ebe9e6] text-[#1a1a1a]"
+                  : isDark
+                    ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                    : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Consumption breakdown component (main export for dashboard)
 interface ConsumptionBreakdownProps {
   dailyStats: Array<{
@@ -904,18 +1015,13 @@ export function ConsumptionBreakdown({
           
           <div className="flex items-center gap-3 flex-wrap">
             {/* Date range selector */}
-            <select
+            <ChartDropdown
               value={dateRangeDays}
-              onChange={(e) => setDateRangeDays(Number(e.target.value))}
-              className={cn(
-                "text-xs rounded-md px-3 py-1.5 border focus:outline-none",
-                isDark ? "bg-zinc-800/50 border-zinc-700 text-zinc-300" : "bg-[#ebe9e6] border-[#e6e4e1] text-[#1a1a1a]"
-              )}
-            >
-              {dateRangeOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+              onChange={(v) => setDateRangeDays(Number(v) || 30)}
+              options={dateRangeOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
+              placeholder="Last 30 days"
+              theme={theme}
+            />
             
             {/* Date range display */}
             <span className={cn("text-xs", isDark ? "text-zinc-500" : "text-[#8b7355]")}>
@@ -923,34 +1029,22 @@ export function ConsumptionBreakdown({
             </span>
             
             {/* Project filter */}
-            <select
-              value={selectedProject || ""}
-              onChange={(e) => setSelectedProject(e.target.value || undefined)}
-              className={cn(
-                "text-xs rounded-md px-3 py-1.5 border focus:outline-none",
-                isDark ? "bg-zinc-800/50 border-zinc-700 text-zinc-300" : "bg-[#ebe9e6] border-[#e6e4e1] text-[#1a1a1a]"
-              )}
-            >
-              <option value="">All Projects</option>
-              {projectStats.slice(0, 10).map((p) => (
-                <option key={p.project} value={p.project}>{p.project}</option>
-              ))}
-            </select>
+            <ChartDropdown
+              value={selectedProject}
+              onChange={(v) => setSelectedProject(v as string | undefined)}
+              options={projectStats.slice(0, 10).map((p) => ({ value: p.project, label: p.project }))}
+              placeholder="All Projects"
+              theme={theme}
+            />
             
             {/* Model filter */}
-            <select
-              value={selectedModel || ""}
-              onChange={(e) => setSelectedModel(e.target.value || undefined)}
-              className={cn(
-                "text-xs rounded-md px-3 py-1.5 border focus:outline-none",
-                isDark ? "bg-zinc-800/50 border-zinc-700 text-zinc-300" : "bg-[#ebe9e6] border-[#e6e4e1] text-[#1a1a1a]"
-              )}
-            >
-              <option value="">All Models</option>
-              {modelStats.slice(0, 10).map((m) => (
-                <option key={m.model} value={m.model}>{m.model}</option>
-              ))}
-            </select>
+            <ChartDropdown
+              value={selectedModel}
+              onChange={(v) => setSelectedModel(v as string | undefined)}
+              options={modelStats.slice(0, 10).map((m) => ({ value: m.model, label: m.model }))}
+              placeholder="All Models"
+              theme={theme}
+            />
           </div>
         </div>
       </div>

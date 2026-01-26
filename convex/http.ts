@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 const http = httpRouter();
 
@@ -495,6 +495,123 @@ http.route({
       });
 
       return json(stats);
+    } catch (e) {
+      return json({ error: String(e) }, 500);
+    }
+  }),
+});
+
+// GET /api/export/evals - Export eval sessions in various formats
+http.route({
+  path: "/api/export/evals",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const start = Date.now();
+    const auth = await authenticate(ctx, request);
+    if (auth.error) return json({ error: auth.error }, auth.status);
+
+    try {
+      const url = new URL(request.url);
+      
+      // Parse format (deepeval, openai, promptfoo, filesystem)
+      const format = url.searchParams.get("format") || "deepeval";
+      if (!["deepeval", "openai", "promptfoo", "filesystem"].includes(format)) {
+        return json({ error: "Invalid format. Use: deepeval, openai, promptfoo, filesystem" }, 400);
+      }
+      
+      // Parse optional filters
+      const tool = url.searchParams.get("tool") || undefined;
+      const model = url.searchParams.get("model") || undefined;
+      const dateFrom = url.searchParams.get("date_from");
+      const dateTo = url.searchParams.get("date_to");
+      const tags = url.searchParams.get("tags")?.split(",").filter(Boolean) || undefined;
+      const minTokens = url.searchParams.get("min_tokens") ? parseInt(url.searchParams.get("min_tokens")!) : undefined;
+      const evalStatus = url.searchParams.get("status") || undefined;
+      
+      // Parse options
+      const includeMetadata = url.searchParams.get("include_metadata") !== "false";
+      const anonymizePaths = url.searchParams.get("anonymize") !== "false";
+      const turnMode = url.searchParams.get("turn_mode") || "per_turn";
+      
+      // First get the list of eval sessions with filters
+      const sessionsResult = await ctx.runQuery(api.evals.getExportData, {
+        sessionIds: "all",
+        workosId: auth.user.workosId,
+      });
+      
+      if (!sessionsResult || sessionsResult.sessions.length === 0) {
+        return json({ error: "No eval-ready sessions found" }, 404);
+      }
+
+      // Apply additional filters in memory (source, model, date, tokens, status)
+      let filteredSessions = sessionsResult.sessions;
+      
+      if (tool) {
+        filteredSessions = filteredSessions.filter((s: any) => s.source === tool);
+      }
+      if (model) {
+        filteredSessions = filteredSessions.filter((s: any) => s.model === model);
+      }
+      if (dateFrom) {
+        const fromTs = new Date(dateFrom).getTime();
+        filteredSessions = filteredSessions.filter((s: any) => s.createdAt >= fromTs);
+      }
+      if (dateTo) {
+        const toTs = new Date(dateTo + "T23:59:59").getTime();
+        filteredSessions = filteredSessions.filter((s: any) => s.createdAt <= toTs);
+      }
+      if (minTokens) {
+        filteredSessions = filteredSessions.filter((s: any) => s.totalTokens >= minTokens);
+      }
+      if (evalStatus) {
+        filteredSessions = filteredSessions.filter((s: any) => s.evalStatus === evalStatus);
+      }
+      if (tags && tags.length > 0) {
+        filteredSessions = filteredSessions.filter((s: any) => 
+          s.evalTags && tags.some((tag: string) => s.evalTags.includes(tag))
+        );
+      }
+      
+      if (filteredSessions.length === 0) {
+        return json({ error: "No sessions match the specified filters" }, 404);
+      }
+
+      // Generate export using the action
+      const result = await ctx.runAction(api.evals.generateEvalExport, {
+        sessionIds: filteredSessions.map((s: any) => s._id),
+        format: format as "deepeval" | "openai" | "promptfoo" | "filesystem",
+        options: {
+          includeSystemPrompts: false,
+          includeToolCalls: includeMetadata,
+          anonymizePaths,
+          turnMode: turnMode as "full" | "per_turn" | "final_only",
+        },
+      });
+
+      // Log API access
+      await ctx.runMutation(internal.api.logAccess, {
+        userId: auth.user._id,
+        endpoint: "/api/export/evals",
+        method: "GET",
+        statusCode: 200,
+        responseTimeMs: Date.now() - start,
+      });
+
+      // Return as downloadable file
+      const contentType = format === "openai" || format === "promptfoo" 
+        ? "application/x-ndjson" 
+        : "application/json";
+      
+      return new Response(result.data, {
+        status: 200,
+        headers: {
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename="${result.filename}"`,
+          "Access-Control-Allow-Origin": "*",
+          "X-Export-Sessions": result.stats.sessions.toString(),
+          "X-Export-TestCases": result.stats.testCases.toString(),
+        },
+      });
     } catch (e) {
       return json({ error: String(e) }, 500);
     }

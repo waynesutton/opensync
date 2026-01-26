@@ -46,6 +46,9 @@ import {
   FileDown,
   CheckCircle2,
   Loader2,
+  Bell,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 
 // View modes
@@ -60,7 +63,7 @@ const AI_AGENTS_MAP: Record<string, string> = {
   "opencode": "OpenCode",
   "claude-code": "Claude Code",
   "factory-droid": "Factory Droid",
-  "cursor": "Cursor",
+  "cursor-sync": "Cursor",
   "codex-cli": "Codex CLI",
   "continue": "Continue",
   "amp": "Amp",
@@ -248,7 +251,7 @@ export function DashboardPage() {
 
         {/* View toggles - scrollable on mobile */}
         <div className={cn("flex items-center gap-1 rounded-md p-0.5 border overflow-x-auto scrollbar-hide", t.bgToggle, t.border)}>
-          {(["overview", "sessions", "evals", "analytics", "wrapped"] as const).map((mode) => (
+          {(["overview", "sessions", "analytics", "evals", "wrapped"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
@@ -278,6 +281,14 @@ export function DashboardPage() {
             <span className="hidden lg:inline">Context</span>
           </Link>
           <Link
+            to="/updates"
+            className={cn("flex items-center gap-1.5 text-xs transition-colors", t.textSubtle, "hover:opacity-80")}
+            title="GitHub updates"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            <span className="hidden lg:inline">Updates</span>
+          </Link>
+          <Link
             to="/docs"
             className={cn("text-xs transition-colors", t.textSubtle, "hover:opacity-80")}
           >
@@ -294,6 +305,14 @@ export function DashboardPage() {
             title="Search and context"
           >
             <Search className="h-4 w-4" />
+          </Link>
+          {/* Updates link - mobile only (icon) */}
+          <Link
+            to="/updates"
+            className={cn("md:hidden p-1.5 rounded transition-colors", t.textSubtle, t.bgHover)}
+            title="GitHub updates"
+          >
+            <Bell className="h-4 w-4" />
           </Link>
           {/* Theme toggle */}
           <button
@@ -399,10 +418,6 @@ export function DashboardPage() {
           />
         )}
 
-        {viewMode === "evals" && (
-          <EvalsView theme={theme} />
-        )}
-
         {viewMode === "analytics" && (
           <AnalyticsView
             summaryStats={summaryStats}
@@ -411,6 +426,10 @@ export function DashboardPage() {
             providerStats={providerStats || []}
             theme={theme}
           />
+        )}
+
+        {viewMode === "evals" && (
+          <EvalsView theme={theme} />
         )}
 
         {viewMode === "wrapped" && (
@@ -867,6 +886,10 @@ function OverviewView({
 // Sessions view mode type
 type SessionsViewMode = "list" | "timeline";
 
+// Sessions pagination constants
+const SESSIONS_INITIAL_LOAD = 40;
+const SESSIONS_LOAD_MORE = 20;
+
 // Sessions View - Table with filters
 function SessionsView({
   sessions,
@@ -912,6 +935,7 @@ function SessionsView({
   theme: "dark" | "tan";
 }) {
   const t = getThemeClasses(theme);
+  const isDark = theme === "dark";
   const deleteSession = useMutation(api.sessions.remove);
   const setVisibility = useMutation(api.sessions.setVisibility);
   const setEvalReady = useMutation(api.evals.setEvalReady);
@@ -926,6 +950,67 @@ function SessionsView({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<Id<"sessions"> | null>(null);
   const [isTogglingEval, setIsTogglingEval] = useState(false);
+  
+  // Pagination state: initial load of 40, then load more in groups of 20
+  const [displayCount, setDisplayCount] = useState(SESSIONS_INITIAL_LOAD);
+  const displayedSessions = sessions.slice(0, displayCount);
+  const hasMoreSessions = sessions.length > displayCount;
+  
+  // Eval selection mode state
+  const [showEvalSelection, setShowEvalSelection] = useState(false);
+  const [selectedForEval, setSelectedForEval] = useState<Set<Id<"sessions">>>(new Set());
+  const [isBatchSettingEval, setIsBatchSettingEval] = useState(false);
+  
+  // Reset pagination when filters change
+  useEffect(() => {
+    setDisplayCount(SESSIONS_INITIAL_LOAD);
+  }, [filterModel, filterProject, filterProvider]);
+  
+  // Handlers for pagination
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + SESSIONS_LOAD_MORE);
+  };
+  
+  // Handlers for eval selection
+  const handleToggleEvalSession = (sessionId: Id<"sessions">) => {
+    const newSet = new Set(selectedForEval);
+    if (newSet.has(sessionId)) {
+      newSet.delete(sessionId);
+    } else {
+      newSet.add(sessionId);
+    }
+    setSelectedForEval(newSet);
+  };
+  
+  const handleSelectAllForEval = () => {
+    if (selectedForEval.size === displayedSessions.length) {
+      setSelectedForEval(new Set());
+    } else {
+      setSelectedForEval(new Set(displayedSessions.map((s) => s._id)));
+    }
+  };
+  
+  const handleBatchSetEvalReady = async () => {
+    if (selectedForEval.size === 0) return;
+    setIsBatchSettingEval(true);
+    try {
+      // Set all selected sessions as eval-ready
+      await Promise.all(
+        Array.from(selectedForEval).map((sessionId) =>
+          setEvalReady({ sessionId, evalReady: true })
+        )
+      );
+      setSelectedForEval(new Set());
+      setShowEvalSelection(false);
+    } finally {
+      setIsBatchSettingEval(false);
+    }
+  };
+  
+  const handleCancelEvalSelection = () => {
+    setShowEvalSelection(false);
+    setSelectedForEval(new Set());
+  };
 
   // CSV export handler
   const handleExportCSV = () => {
@@ -1047,6 +1132,43 @@ function SessionsView({
 
           <div className="flex-1 min-w-0" />
 
+          {/* Eval selection mode actions */}
+          {showEvalSelection && (
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={handleSelectAllForEval}
+                className={cn(
+                  "px-2 py-1 text-[10px] rounded border transition-colors",
+                  isDark
+                    ? "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                    : "border-[#e6e4e1] text-[#6b6b6b] hover:bg-[#ebe9e6]"
+                )}
+              >
+                {selectedForEval.size === displayedSessions.length ? "None" : "All"}
+              </button>
+              <button
+                onClick={handleBatchSetEvalReady}
+                disabled={selectedForEval.size === 0 || isBatchSettingEval}
+                className={cn(
+                  "px-2 py-1 text-[10px] rounded font-medium transition-colors",
+                  selectedForEval.size === 0 || isBatchSettingEval ? "opacity-50 cursor-not-allowed" : "",
+                  isDark
+                    ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                    : "bg-[#EB5601] text-white hover:bg-[#d14a01]"
+                )}
+              >
+                {isBatchSettingEval ? "..." : `Mark (${selectedForEval.size})`}
+              </button>
+              <button
+                onClick={handleCancelEvalSelection}
+                className={cn("p-1 rounded transition-colors", t.textSubtle, t.bgHover)}
+                title="Cancel selection"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* View mode toggle */}
           <div className={cn("flex items-center gap-1 rounded-md p-0.5 border shrink-0", t.bgToggle, t.border)}>
             <button
@@ -1073,6 +1195,25 @@ function SessionsView({
             >
               <Layers className="h-3.5 w-3.5" />
             </button>
+            {/* Eval selection toggle */}
+            <button
+              onClick={() => {
+                if (showEvalSelection) {
+                  handleCancelEvalSelection();
+                } else {
+                  setShowEvalSelection(true);
+                }
+              }}
+              className={cn(
+                "p-1 rounded transition-colors",
+                showEvalSelection
+                  ? cn(isDark ? "bg-emerald-600/20 text-emerald-400" : "bg-[#EB5601]/20 text-[#EB5601]")
+                  : cn(t.textSubtle, "hover:opacity-80")
+              )}
+              title={showEvalSelection ? "Cancel eval selection" : "Select sessions for evals"}
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+            </button>
             <button
               onClick={handleExportCSV}
               disabled={!csvData || isExportingCSV}
@@ -1087,7 +1228,7 @@ function SessionsView({
             </button>
           </div>
 
-          <span className={cn("text-xs shrink-0", t.textDim)}>{sessions.length}<span className="hidden sm:inline"> of {total}</span></span>
+          <span className={cn("text-xs shrink-0", t.textDim)}>{displayedSessions.length}<span className="hidden sm:inline"> of {total}</span></span>
         </div>
 
         {/* Filter dropdowns - shrink-0 to prevent shrinking */}
@@ -1146,18 +1287,38 @@ function SessionsView({
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}
             >
-              {sessions.map((session) => (
+              {displayedSessions.map((session) => (
                 <SessionTableRow
                   key={session._id}
                   session={session}
                   isSelected={selectedSession?.session?._id === session._id}
                   onClick={() => onSelectSession(session._id)}
                   theme={theme}
+                  showCheckbox={showEvalSelection}
+                  isChecked={selectedForEval.has(session._id)}
+                  onCheckChange={() => handleToggleEvalSession(session._id)}
                 />
               ))}
-              {sessions.length === 0 && (
+              {displayedSessions.length === 0 && (
                 <div className={cn("px-4 py-12 text-center text-sm", t.textDim)}>
                   No sessions found
+                </div>
+              )}
+              
+              {/* Load More button */}
+              {hasMoreSessions && (
+                <div className={cn("px-4 py-3 border-t", t.border)}>
+                  <button
+                    onClick={handleLoadMore}
+                    className={cn(
+                      "w-full py-2 text-xs font-medium rounded transition-colors",
+                      isDark
+                        ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                        : "bg-[#ebe9e6] text-[#1a1a1a] hover:bg-[#e0deda]"
+                    )}
+                  >
+                    Load more ({sessions.length - displayCount} remaining)
+                  </button>
                 </div>
               )}
             </div>
@@ -1167,10 +1328,13 @@ function SessionsView({
         {/* Timeline View */}
         {sessionsViewMode === "timeline" && (
           <TimelineView
-            sessions={sessions}
+            sessions={displayedSessions}
             selectedSessionId={selectedSession?.session?._id}
             onSelectSession={onSelectSession}
             theme={theme}
+            hasMore={hasMoreSessions}
+            onLoadMore={handleLoadMore}
+            remainingCount={sessions.length - displayCount}
           />
         )}
       </div>
@@ -1345,13 +1509,20 @@ function TimelineView({
   selectedSessionId,
   onSelectSession,
   theme,
+  hasMore = false,
+  onLoadMore,
+  remainingCount = 0,
 }: {
   sessions: any[];
   selectedSessionId?: Id<"sessions">;
   onSelectSession: (id: Id<"sessions"> | null) => void;
   theme: "dark" | "tan";
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  remainingCount?: number;
 }) {
   const t = getThemeClasses(theme);
+  const isDark = theme === "dark";
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -1515,7 +1686,7 @@ function TimelineView({
         )}
       </div>
 
-      {/* Footer with legend */}
+      {/* Footer with legend and load more */}
       <div className={cn("px-4 py-2 border-t flex items-center gap-4 text-[10px]", t.border, t.textDim)}>
         <span className="flex items-center gap-1">
           <Play className="h-3 w-3" />
@@ -1529,6 +1700,23 @@ function TimelineView({
           <Zap className="h-3 w-3" />
           Drag to scroll
         </span>
+        
+        <div className="flex-1" />
+        
+        {/* Load More button */}
+        {hasMore && onLoadMore && (
+          <button
+            onClick={onLoadMore}
+            className={cn(
+              "px-3 py-1 text-[10px] font-medium rounded transition-colors",
+              isDark
+                ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                : "bg-[#ebe9e6] text-[#1a1a1a] hover:bg-[#e0deda]"
+            )}
+          >
+            Load more ({remainingCount})
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1536,8 +1724,9 @@ function TimelineView({
 
 // Export format type for evals
 type ExportFormat = "deepeval" | "openai" | "filesystem";
+const EVALS_ITEMS_PER_PAGE = 50;
 
-// Evals View - Evaluation sessions and export
+// Evals View - Evaluation sessions and export (compact CRM-style)
 function EvalsView({ theme }: { theme: "dark" | "tan" }) {
   const t = getThemeClasses(theme);
   const isDark = theme === "dark";
@@ -1554,6 +1743,7 @@ function EvalsView({ theme }: { theme: "dark" | "tan" }) {
     anonymizePaths: true,
   });
   const [isExporting, setIsExporting] = useState(false);
+  const [displayCount, setDisplayCount] = useState(EVALS_ITEMS_PER_PAGE);
   const setEvalReady = useMutation(api.evals.setEvalReady);
 
   // Queries
@@ -1565,7 +1755,9 @@ function EvalsView({ theme }: { theme: "dark" | "tan" }) {
   const generateExport = useAction(api.evals.generateEvalExport);
 
   // Computed
-  const sessions = evalData?.sessions || [];
+  const allSessions = evalData?.sessions || [];
+  const sessions = allSessions.slice(0, displayCount);
+  const hasMore = allSessions.length > displayCount;
   const stats = evalData?.stats || { total: 0, bySource: { opencode: 0, claudeCode: 0 }, totalTestCases: 0 };
   const hasActiveFilters = sourceFilter || tagFilter;
 
@@ -1588,8 +1780,12 @@ function EvalsView({ theme }: { theme: "dark" | "tan" }) {
     setSelectedSessions(newSet);
   };
 
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + EVALS_ITEMS_PER_PAGE);
+  };
+
   const handleExport = async () => {
-    if (sessions.length === 0) return;
+    if (allSessions.length === 0) return;
     
     setIsExporting(true);
     try {
@@ -1623,212 +1819,177 @@ function EvalsView({ theme }: { theme: "dark" | "tan" }) {
   const clearFilters = () => {
     setSourceFilter(undefined);
     setTagFilter(undefined);
+    setDisplayCount(EVALS_ITEMS_PER_PAGE);
   };
 
-  // Source badge inline component
+  // Source badge inline component (compact)
   const SourceBadge = ({ source }: { source?: string }) => (
-    <span className={cn("inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded", getSourceColorClass(source, { theme }))}>
+    <span className={cn("inline-flex items-center px-1 py-0.5 text-[9px] font-medium rounded", getSourceColorClass(source, { theme }))}>
       {getSourceLabel(source, true)}
     </span>
   );
 
-  // Tag badge inline component
-  const TagBadge = ({ tag }: { tag: string }) => (
-    <span
-      className={cn(
-        "inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded",
-        isDark ? "bg-zinc-700 text-zinc-300" : "bg-[#ebe9e6] text-[#6b6b6b]"
-      )}
-    >
-      {tag}
-    </span>
-  );
-
   return (
-    <div className="h-full overflow-auto p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Eval Sessions" value={stats.total} theme={theme} />
-          <StatCard label="Test Cases" value={stats.totalTestCases} theme={theme} />
-          <StatCard label="OpenCode" value={stats.bySource.opencode} theme={theme} />
-          <StatCard label="Claude Code" value={stats.bySource.claudeCode} theme={theme} />
+    <div className="h-full overflow-auto p-3" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <style>{`.evals-scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
+      <div className="max-w-5xl mx-auto space-y-3 evals-scrollbar-hide">
+        {/* Compact stats row */}
+        <div className="grid grid-cols-4 gap-2">
+          <StatCard label="Sessions" value={stats.total} theme={theme} />
+          <StatCard label="Tests" value={stats.totalTestCases} theme={theme} />
+          <StatCard label="OC" value={stats.bySource.opencode} theme={theme} />
+          <StatCard label="CC" value={stats.bySource.claudeCode} theme={theme} />
         </div>
 
-        {/* Filters and actions bar */}
-        <div className={cn("flex items-center justify-between p-3 rounded-lg border", t.bgCard, t.border)}>
-          <div className="flex items-center gap-2">
-            {/* Source filter */}
-            <select
-              value={sourceFilter || ""}
-              onChange={(e) => setSourceFilter(e.target.value || undefined)}
-              className={cn("text-xs px-2 py-1.5 rounded border", t.bgInput, t.border, t.textPrimary)}
-            >
-              <option value="">All Sources</option>
-              <option value="opencode">OpenCode</option>
-              <option value="claude-code">Claude Code</option>
-            </select>
+        {/* Compact filters bar */}
+        <div className={cn("flex flex-wrap items-center gap-1.5 p-2 rounded-lg border", t.bgCard, t.border)}>
+          {/* Source filter */}
+          <CompactDropdown
+            value={sourceFilter}
+            onChange={(v) => setSourceFilter(v as string | undefined)}
+            options={[
+              { value: "opencode", label: "OpenCode" },
+              { value: "claude-code", label: "Claude Code" },
+            ]}
+            placeholder="Source"
+            theme={theme}
+            size="xs"
+          />
 
-            {/* Tag filter */}
-            {allTags && allTags.length > 0 && (
-              <select
-                value={tagFilter || ""}
-                onChange={(e) => setTagFilter(e.target.value || undefined)}
-                className={cn("text-xs px-2 py-1.5 rounded border", t.bgInput, t.border, t.textPrimary)}
-              >
-                <option value="">All Tags</option>
-                {allTags.map((tag) => (
-                  <option key={tag} value={tag}>{tag}</option>
-                ))}
-              </select>
-            )}
+          {/* Tag filter */}
+          {allTags && allTags.length > 0 && (
+            <CompactDropdown
+              value={tagFilter}
+              onChange={(v) => setTagFilter(v as string | undefined)}
+              options={allTags.map((tag) => ({ value: tag, label: tag }))}
+              placeholder="Tags"
+              theme={theme}
+              size="xs"
+            />
+          )}
 
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className={cn("text-xs flex items-center gap-1", t.textSubtle, "hover:opacity-80")}
-              >
-                <X className="h-3 w-3" />
-                Clear
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Select all */}
-            {sessions.length > 0 && (
-              <button
-                onClick={handleSelectAll}
-                className={cn("text-xs px-2 py-1.5 rounded border", t.bgInput, t.border, t.textSubtle)}
-              >
-                {selectedSessions.size === sessions.length ? "Deselect All" : "Select All"}
-              </button>
-            )}
-
-            {/* Export button */}
-            <button
-              onClick={() => setShowExportModal(true)}
-              disabled={sessions.length === 0}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 text-xs rounded font-medium transition-colors",
-                sessions.length === 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : "",
-                isDark
-                  ? "bg-emerald-600 text-white hover:bg-emerald-500"
-                  : "bg-[#EB5601] text-white hover:bg-[#d14d01]"
-              )}
-            >
-              <FileDown className="h-3.5 w-3.5" />
-              Export for Evals
-              {selectedSessions.size > 0 && ` (${selectedSessions.size})`}
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className={cn("text-[10px] flex items-center gap-0.5", t.textSubtle, "hover:opacity-80")}>
+              <X className="h-2.5 w-2.5" />
             </button>
-          </div>
+          )}
+
+          <div className="flex-1" />
+
+          {/* Select all */}
+          {sessions.length > 0 && (
+            <button onClick={handleSelectAll} className={cn("text-[10px] px-1.5 py-1 rounded border", t.border, t.textSubtle, t.bgHover)}>
+              {selectedSessions.size === sessions.length ? "None" : "All"}
+            </button>
+          )}
+
+          {/* Export button */}
+          <button
+            onClick={() => setShowExportModal(true)}
+            disabled={allSessions.length === 0}
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 text-[10px] rounded font-medium transition-colors",
+              allSessions.length === 0 ? "opacity-50 cursor-not-allowed" : "",
+              isDark ? "bg-zinc-100 text-zinc-900 hover:bg-white" : "bg-[#1a1a1a] text-white hover:bg-[#333]"
+            )}
+          >
+            <FileDown className="h-3 w-3" />
+            Export{selectedSessions.size > 0 && ` (${selectedSessions.size})`}
+          </button>
         </div>
 
-        {/* Sessions list */}
+        {/* Sessions list - CRM style */}
         {sessions.length === 0 ? (
-          <div className={cn("text-center py-16 rounded-lg border", t.bgCard, t.border)}>
-            <CheckCircle2 className={cn("h-12 w-12 mx-auto mb-4", t.textDim)} />
-            <h3 className={cn("text-lg font-medium mb-2", t.textPrimary)}>No Eval-Ready Sessions</h3>
-            <p className={cn("text-sm max-w-md mx-auto", t.textMuted)}>
-              Mark sessions as eval-ready from the Sessions view to add them here for export.
+          <div className={cn("text-center py-12 rounded-lg border", t.bgCard, t.border)}>
+            <CheckCircle2 className={cn("h-10 w-10 mx-auto mb-3", t.textDim)} />
+            <h3 className={cn("text-xs font-medium mb-1", t.textPrimary)}>No Eval-Ready Sessions</h3>
+            <p className={cn("text-[10px]", t.textMuted)}>
+              Mark sessions as eval-ready from Sessions view
             </p>
           </div>
         ) : (
-          <div className={cn("rounded-lg border overflow-hidden", t.bgCard, t.border)}>
-            <div className={cn("overflow-x-auto")}>
-              <table className="w-full">
-                <thead>
-                  <tr className={cn("border-b text-left", t.border)}>
-                    <th className={cn("px-4 py-3 text-xs font-medium w-10", t.textMuted)}></th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Session</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Source</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Model</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Messages</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Tags</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium", t.textMuted)}>Reviewed</th>
-                    <th className={cn("px-4 py-3 text-xs font-medium w-10", t.textMuted)}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map((session) => (
-                    <tr
-                      key={session._id}
-                      className={cn(
-                        "border-b transition-colors",
-                        t.border,
-                        selectedSessions.has(session._id) ? (isDark ? "bg-zinc-800/50" : "bg-[#f5f3f0]") : t.bgHover
-                      )}
-                    >
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedSessions.has(session._id)}
-                          onChange={() => handleToggleSession(session._id)}
-                          className="h-4 w-4 rounded border-gray-300"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <Folder className={cn("h-3.5 w-3.5 flex-shrink-0", t.textDim)} />
-                          <div className="min-w-0">
-                            <p className={cn("text-sm truncate", t.textPrimary)}>
-                              {session.title || session.externalId.slice(0, 8)}
-                            </p>
-                            <p className={cn("text-xs truncate", t.textDim)}>
-                              {session.projectPath || "Unknown project"}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <SourceBadge source={session.source} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={cn("text-xs", t.textMuted)}>{session.model || "Unknown"}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={cn("text-xs", t.textMuted)}>{session.messageCount}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {session.evalTags?.slice(0, 2).map((tag) => (
-                            <TagBadge key={tag} tag={tag} />
-                          ))}
-                          {(session.evalTags?.length || 0) > 2 && (
-                            <span className={cn("text-[10px]", t.textDim)}>
-                              +{session.evalTags!.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={cn("text-xs", t.textMuted)}>
-                          {session.reviewedAt
-                            ? new Date(session.reviewedAt).toLocaleDateString()
-                            : "-"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={async () => {
-                            await setEvalReady({
-                              sessionId: session._id,
-                              evalReady: false,
-                            });
-                          }}
-                          className={cn("p-1 rounded hover:bg-red-500/20 text-red-400")}
-                          title="Remove from evals"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className={cn("rounded-lg border overflow-hidden", t.border)}>
+            {/* Header row */}
+            <div className={cn("flex items-center px-3 py-2 text-xs font-medium border-b gap-3", t.bgSecondary, t.border, t.textMuted)}>
+              <div className="w-5 shrink-0"></div>
+              <div className="flex-1 min-w-0">Session</div>
+              <div className="w-10 text-center shrink-0">Src</div>
+              <div className="w-44 shrink-0 hidden sm:block">Model</div>
+              <div className="w-10 text-center shrink-0">Msgs</div>
+              <div className="w-12 text-right shrink-0">Rev</div>
+              <div className="w-6 shrink-0"></div>
             </div>
+
+            {/* Rows */}
+            {sessions.map((session) => (
+              <div
+                key={session._id}
+                className={cn(
+                  "flex items-center px-3 py-2 text-xs border-b last:border-b-0 gap-3 transition-colors",
+                  t.border,
+                  selectedSessions.has(session._id) ? (isDark ? "bg-zinc-800/50" : "bg-[#f5f3f0]") : "hover:bg-opacity-50"
+                )}
+              >
+                <div className="w-5 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={selectedSessions.has(session._id)}
+                    onChange={() => handleToggleSession(session._id)}
+                    className="rounded h-3.5 w-3.5"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className={cn("font-medium truncate block", t.textPrimary)} title={session.title || session.externalId}>
+                    {session.title ? (session.title.length > 40 ? session.title.slice(0, 40) + "..." : session.title) : session.externalId.slice(0, 8)}
+                  </span>
+                </div>
+                <div className="w-10 shrink-0 flex justify-center">
+                  <SourceBadge source={session.source} />
+                </div>
+                <div className={cn("w-44 shrink-0 truncate hidden sm:block", t.textMuted)} title={session.model || "unknown"}>
+                  {session.model ? (session.model.length > 28 ? session.model.slice(0, 28) + "..." : session.model) : "-"}
+                </div>
+                <div className={cn("w-10 text-center shrink-0", t.textMuted)}>
+                  {session.messageCount}
+                </div>
+                <div className={cn("w-12 text-right shrink-0", t.textMuted)}>
+                  {session.reviewedAt ? new Date(session.reviewedAt).toLocaleDateString("en-US", { month: "numeric", day: "numeric" }) : "-"}
+                </div>
+                <div className="w-6 shrink-0">
+                  <button
+                    onClick={async () => {
+                      await setEvalReady({ sessionId: session._id, evalReady: false });
+                    }}
+                    className="p-0.5 rounded hover:bg-red-500/20 text-red-400"
+                    title="Remove"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Load more */}
+            {hasMore && (
+              <div className={cn("px-2 py-2 border-t", t.border)}>
+                <button
+                  onClick={handleLoadMore}
+                  className={cn(
+                    "w-full py-1.5 text-[10px] font-medium rounded transition-colors",
+                    isDark ? "bg-zinc-800 text-zinc-300 hover:bg-zinc-700" : "bg-[#ebe9e6] text-[#1a1a1a] hover:bg-[#e0deda]"
+                  )}
+                >
+                  Load more ({allSessions.length - displayCount} remaining)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Count indicator */}
+        {sessions.length > 0 && (
+          <div className={cn("text-[10px] text-center", t.textMuted)}>
+            {sessions.length} of {allSessions.length}
           </div>
         )}
       </div>
@@ -2250,31 +2411,35 @@ function AnalyticsView({
             {/* Min sessions filter - hidden on mobile */}
             <div className="hidden sm:flex items-center gap-1.5">
               <span className={cn("text-[10px]", t.textDim)}>Min:</span>
-              <select
-                value={minSessions ?? ""}
-                onChange={(e) => setMinSessions(e.target.value ? Number(e.target.value) : undefined)}
-                className={cn("text-xs rounded px-2 py-1 h-7 focus:outline-none", t.bgCode, t.border, t.textSecondary)}
-              >
-                <option value="">All</option>
-                <option value="2">2+</option>
-                <option value="5">5+</option>
-                <option value="10">10+</option>
-              </select>
+              <CompactDropdown
+                value={minSessions}
+                onChange={(v) => setMinSessions(v as number | undefined)}
+                options={[
+                  { value: 2, label: "2+" },
+                  { value: 5, label: "5+" },
+                  { value: 10, label: "10+" },
+                ]}
+                placeholder="All"
+                theme={theme}
+                size="sm"
+              />
             </div>
             
             {/* Min tokens filter - hidden on mobile */}
             <div className="hidden md:flex items-center gap-1.5">
               <span className={cn("text-[10px]", t.textDim)}>Tokens:</span>
-              <select
-                value={minTokens ?? ""}
-                onChange={(e) => setMinTokens(e.target.value ? Number(e.target.value) : undefined)}
-                className={cn("text-xs rounded px-2 py-1 h-7 focus:outline-none", t.bgCode, t.border, t.textSecondary)}
-              >
-                <option value="">All</option>
-                <option value="1000">1K+</option>
-                <option value="10000">10K+</option>
-                <option value="50000">50K+</option>
-              </select>
+              <CompactDropdown
+                value={minTokens}
+                onChange={(v) => setMinTokens(v as number | undefined)}
+                options={[
+                  { value: 1000, label: "1K+" },
+                  { value: 10000, label: "10K+" },
+                  { value: 50000, label: "50K+" },
+                ]}
+                placeholder="All"
+                theme={theme}
+                size="sm"
+              />
             </div>
             
             {hasActiveProjectFilters && (
@@ -2416,24 +2581,72 @@ function SessionRow({ session, isSelected, onClick, theme }: { session: any; isS
   );
 }
 
-function SessionTableRow({ session, isSelected, onClick, theme }: { session: any; isSelected: boolean; onClick: () => void; theme: "dark" | "tan" }) {
+function SessionTableRow({ 
+  session, 
+  isSelected, 
+  onClick, 
+  theme, 
+  showCheckbox = false,
+  isChecked = false,
+  onCheckChange,
+}: { 
+  session: any; 
+  isSelected: boolean; 
+  onClick: () => void; 
+  theme: "dark" | "tan";
+  showCheckbox?: boolean;
+  isChecked?: boolean;
+  onCheckChange?: () => void;
+}) {
   const t = getThemeClasses(theme);
+  const isDark = theme === "dark";
   const source = session.source || "opencode";
   const badgeLabel = getSourceLabel(source, true);
   const badgeColor = getSourceColorClass(source, { themed: false });
   
+  // Handle checkbox click without triggering row selection
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCheckChange?.();
+  };
+  
   return (
     <>
       {/* Desktop row */}
-      <button
-        onClick={onClick}
+      <div
         className={cn(
           "hidden sm:grid w-full grid-cols-12 gap-2 px-4 py-2.5 transition-colors text-left items-center",
           t.bgHover,
           isSelected && t.bgActive
         )}
       >
-        <div className="col-span-5 flex items-center gap-2 min-w-0">
+        {/* Checkbox column when in selection mode */}
+        {showCheckbox && (
+          <div className="col-span-1 flex items-center">
+            <button
+              onClick={handleCheckboxClick}
+              className={cn(
+                "p-0.5 rounded transition-colors",
+                isChecked 
+                  ? isDark ? "text-emerald-400" : "text-[#EB5601]"
+                  : t.textSubtle
+              )}
+            >
+              {isChecked ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        )}
+        <button
+          onClick={onClick}
+          className={cn(
+            "flex items-center gap-2 min-w-0 text-left",
+            showCheckbox ? "col-span-4" : "col-span-5"
+          )}
+        >
           <MessageSquare className={cn("h-3.5 w-3.5 shrink-0", t.iconMuted)} />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -2447,24 +2660,23 @@ function SessionTableRow({ session, isSelected, onClick, theme }: { session: any
               {session.model || "unknown"} · {getTimeAgo(session.updatedAt)}
             </p>
           </div>
-        </div>
-        <div className="col-span-2 text-right">
+        </button>
+        <button onClick={onClick} className="col-span-2 text-right">
           <span className={cn("text-sm", t.textMuted)}>{formatNumber(session.totalTokens)}</span>
-        </div>
-        <div className="col-span-2 text-right">
+        </button>
+        <button onClick={onClick} className="col-span-2 text-right">
           <span className={cn("text-sm", t.textSubtle)}>${session.cost.toFixed(4)}</span>
-        </div>
-        <div className="col-span-2 text-right">
+        </button>
+        <button onClick={onClick} className="col-span-2 text-right">
           <span className={cn("text-sm", t.textDim)}>{formatDuration(session.durationMs)}</span>
-        </div>
-        <div className="col-span-1 flex justify-end">
+        </button>
+        <button onClick={onClick} className="col-span-1 flex justify-end">
           {session.isPublic && <Globe className="h-3 w-3 text-emerald-500" />}
-        </div>
-      </button>
+        </button>
+      </div>
       
       {/* Mobile row */}
-      <button
-        onClick={onClick}
+      <div
         className={cn(
           "sm:hidden w-full px-3 py-3 transition-colors text-left",
           t.bgHover,
@@ -2472,25 +2684,47 @@ function SessionTableRow({ session, isSelected, onClick, theme }: { session: any
         )}
       >
         <div className="flex items-start gap-2">
-          <MessageSquare className={cn("h-4 w-4 shrink-0 mt-0.5", t.iconMuted)} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
-              <span className={cn("shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase", badgeColor)}>
-                {badgeLabel}
-              </span>
-              {session.isPublic && <Globe className="h-3 w-3 text-emerald-500 shrink-0" />}
+          {/* Checkbox for mobile when in selection mode */}
+          {showCheckbox && (
+            <button
+              onClick={handleCheckboxClick}
+              className={cn(
+                "shrink-0 p-0.5 rounded transition-colors mt-0.5",
+                isChecked 
+                  ? isDark ? "text-emerald-400" : "text-[#EB5601]"
+                  : t.textSubtle
+              )}
+            >
+              {isChecked ? (
+                <CheckSquare className="h-4 w-4" />
+              ) : (
+                <Square className="h-4 w-4" />
+              )}
+            </button>
+          )}
+          <button onClick={onClick} className="flex-1 min-w-0 text-left">
+            <div className="flex items-start gap-2">
+              {!showCheckbox && <MessageSquare className={cn("h-4 w-4 shrink-0 mt-0.5", t.iconMuted)} />}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className={cn("text-sm truncate", t.textSecondary)}>{session.title || "Untitled"}</p>
+                  <span className={cn("shrink-0 px-1 py-0.5 rounded text-[9px] font-medium uppercase", badgeColor)}>
+                    {badgeLabel}
+                  </span>
+                  {session.isPublic && <Globe className="h-3 w-3 text-emerald-500 shrink-0" />}
+                </div>
+                <div className={cn("flex items-center gap-2 mt-1 text-[11px]", t.textDim)}>
+                  <span>{formatNumber(session.totalTokens)} tokens</span>
+                  <span>·</span>
+                  <span>${session.cost.toFixed(4)}</span>
+                  <span>·</span>
+                  <span>{getTimeAgo(session.updatedAt)}</span>
+                </div>
+              </div>
             </div>
-            <div className={cn("flex items-center gap-2 mt-1 text-[11px]", t.textDim)}>
-              <span>{formatNumber(session.totalTokens)} tokens</span>
-              <span>·</span>
-              <span>${session.cost.toFixed(4)}</span>
-              <span>·</span>
-              <span>{getTimeAgo(session.updatedAt)}</span>
-            </div>
-          </div>
+          </button>
         </div>
-      </button>
+      </div>
     </>
   );
 }
@@ -2635,20 +2869,209 @@ function FilterDropdown({
   onChange: (v?: string) => void;
   theme: "dark" | "tan";
 }) {
+  const isDark = theme === "dark";
   const t = getThemeClasses(theme);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const displayValue = value || "All";
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  
   return (
     <div className="flex items-center gap-2">
       <span className={cn("text-xs", t.textSubtle)}>{label}</span>
-      <select
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value || undefined)}
-        className={cn("text-xs rounded px-2 py-1 focus:outline-none", t.bgCode, t.border, t.textSecondary)}
+      <div ref={dropdownRef} className="relative">
+        {/* Trigger button */}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "flex items-center gap-1.5 px-2 py-1 text-xs rounded border transition-colors min-w-[80px] justify-between",
+            isDark
+              ? "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 text-zinc-300"
+              : "bg-[#f5f3f0] border-[#e6e4e1] hover:border-[#c9c5bf] text-[#6b6b6b]"
+          )}
+        >
+          <span className="truncate">{displayValue}</span>
+          <ChevronDown className={cn("h-3 w-3 shrink-0 transition-transform", isOpen && "rotate-180")} />
+        </button>
+
+        {/* Dropdown menu */}
+        {isOpen && (
+          <div
+            className={cn(
+              "absolute top-full left-0 mt-1 min-w-full max-h-[200px] overflow-y-auto rounded-md border shadow-lg z-50 py-1",
+              isDark
+                ? "bg-[#161616] border-zinc-800"
+                : "bg-[#faf8f5] border-[#e6e4e1]"
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                onChange(undefined);
+                setIsOpen(false);
+              }}
+              className={cn(
+                "w-full px-3 py-1.5 text-left text-xs transition-colors",
+                !value
+                  ? isDark
+                    ? "bg-zinc-800 text-zinc-100"
+                    : "bg-[#ebe9e6] text-[#1a1a1a]"
+                  : isDark
+                    ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                    : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+              )}
+            >
+              All
+            </button>
+            {options.map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "w-full px-3 py-1.5 text-left text-xs transition-colors truncate",
+                  opt === value
+                    ? isDark
+                      ? "bg-zinc-800 text-zinc-100"
+                      : "bg-[#ebe9e6] text-[#1a1a1a]"
+                    : isDark
+                      ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                      : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+                )}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Compact dropdown for small filter areas (Evals, Analytics)
+function CompactDropdown({
+  value,
+  onChange,
+  options,
+  placeholder = "All",
+  theme,
+  size = "sm",
+}: {
+  value?: string | number;
+  onChange: (v?: string | number) => void;
+  options: Array<{ value: string | number; label: string }>;
+  placeholder?: string;
+  theme: "dark" | "tan";
+  size?: "xs" | "sm";
+}) {
+  const isDark = theme === "dark";
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const displayValue = options.find((opt) => opt.value === value)?.label || placeholder;
+  const isXs = size === "xs";
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  
+  return (
+    <div ref={dropdownRef} className="relative">
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "flex items-center gap-1 rounded border transition-colors justify-between",
+          isXs ? "px-1.5 py-1 text-[10px] min-w-[60px]" : "px-2 py-1 text-xs min-w-[70px] h-7",
+          isDark
+            ? "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 text-zinc-300"
+            : "bg-[#f5f3f0] border-[#e6e4e1] hover:border-[#c9c5bf] text-[#6b6b6b]"
+        )}
       >
-        <option value="">All</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
-        ))}
-      </select>
+        <span className="truncate">{displayValue}</span>
+        <ChevronDown className={cn("shrink-0 transition-transform", isXs ? "h-2.5 w-2.5" : "h-3 w-3", isOpen && "rotate-180")} />
+      </button>
+
+      {/* Dropdown menu */}
+      {isOpen && (
+        <div
+          className={cn(
+            "absolute top-full left-0 mt-1 min-w-full max-h-[180px] overflow-y-auto rounded-md border shadow-lg z-50 py-0.5",
+            isDark
+              ? "bg-[#161616] border-zinc-800"
+              : "bg-[#faf8f5] border-[#e6e4e1]"
+          )}
+        >
+          {/* All/placeholder option */}
+          <button
+            type="button"
+            onClick={() => {
+              onChange(undefined);
+              setIsOpen(false);
+            }}
+            className={cn(
+              "w-full px-2 py-1 text-left transition-colors",
+              isXs ? "text-[10px]" : "text-xs",
+              !value
+                ? isDark
+                  ? "bg-zinc-800 text-zinc-100"
+                  : "bg-[#ebe9e6] text-[#1a1a1a]"
+                : isDark
+                  ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                  : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+            )}
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setIsOpen(false);
+              }}
+              className={cn(
+                "w-full px-2 py-1 text-left transition-colors truncate",
+                isXs ? "text-[10px]" : "text-xs",
+                opt.value === value
+                  ? isDark
+                    ? "bg-zinc-800 text-zinc-100"
+                    : "bg-[#ebe9e6] text-[#1a1a1a]"
+                  : isDark
+                    ? "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+                    : "text-[#6b6b6b] hover:bg-[#ebe9e6]/50 hover:text-[#1a1a1a]"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
