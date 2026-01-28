@@ -77,7 +77,7 @@ const AI_AGENTS: AIAgent[] = [
     name: "Cursor",
     status: "supported",
     defaultEnabled: false,
-    url: "https://www.npmjs.com/package/cursor-sync-plugin",
+    url: "https://www.npmjs.com/package/cursor-opensync-plugin",
   },
   {
     id: "codex-cli",
@@ -471,7 +471,7 @@ export function SettingsPage() {
                       <p>npm install -g codex-sync</p>
                       <p>codex-sync login</p>
                       <p className={cn("mt-2", t.textDim)}># For Cursor</p>
-                      <p>npm install -g cursor-sync-plugin</p>
+                      <p>npm install -g cursor-opensync-plugin</p>
                       <p>cursor-sync login</p>
                     </div>
                   </div>
