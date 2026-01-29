@@ -1115,10 +1115,9 @@ function SectionHeader({
   const Tag = level === 2 ? "h2" : "h3";
 
   return (
-    <div className="flex items-center gap-2 group" id={id}>
+    <div className="flex items-center gap-2 group">
       <Tag
         className={cn(
-          "scroll-mt-20",
           level === 2
             ? cn("text-lg font-semibold", t.textPrimary)
             : cn("text-sm font-medium", t.textSecondary),
@@ -2133,7 +2132,7 @@ npm install
             </div>
 
             {/* Use Hosted Version Section */}
-            <section id="hosted" data-section className="mb-12">
+            <section id="hosted" data-section className="scroll-mt-20 mb-12">
               <SectionHeader
                 id="hosted"
                 title="Use the Hosted Version"
@@ -2160,7 +2159,7 @@ npm install
 
               <div className="mt-6 space-y-6">
                 {/* Features */}
-                <div id="hosted-features" data-section>
+                <div id="hosted-features" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosted-features"
                     title="Features"
@@ -2299,7 +2298,7 @@ npm install
                 </div>
 
                 {/* Install Plugins */}
-                <div id="hosted-install" data-section>
+                <div id="hosted-install" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosted-install"
                     title="Install Plugins Locally"
@@ -2437,7 +2436,7 @@ npm install
                 </div>
 
                 {/* Login and Sync */}
-                <div id="hosted-login" data-section>
+                <div id="hosted-login" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosted-login"
                     title="Login and Sync"
@@ -2517,7 +2516,7 @@ npm install
             </section>
 
             {/* Requirements Section */}
-            <section id="requirements" data-section className="mb-12">
+            <section id="requirements" data-section className="scroll-mt-20 mb-12">
               <SectionHeader
                 id="requirements"
                 title="Requirements for Self-Hosting"
@@ -2548,7 +2547,7 @@ npm install
 
               <div className="mt-6 space-y-6">
                 {/* Cloud Deployment */}
-                <div id="requirements-cloud" data-section>
+                <div id="requirements-cloud" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="requirements-cloud"
                     title="Option A: Cloud Deployment"
@@ -2615,7 +2614,7 @@ npm install
                 </div>
 
                 {/* 100% Local Deployment */}
-                <div id="requirements-local" data-section>
+                <div id="requirements-local" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="requirements-local"
                     title="Option B: 100% Local Deployment"
@@ -2827,7 +2826,7 @@ npm run dev`}
             </section>
 
             {/* Quick Start Section */}
-            <section id="quickstart" data-section className="mb-12">
+            <section id="quickstart" data-section className="scroll-mt-20 mb-12">
               <SectionHeader
                 id="quickstart"
                 title="Quick Start"
@@ -2840,7 +2839,7 @@ npm run dev`}
               />
 
               <div className="mt-6 space-y-6">
-                <div id="quickstart-deploy" data-section>
+                <div id="quickstart-deploy" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="quickstart-deploy"
                     title="1. Deploy Your Backend"
@@ -2866,7 +2865,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="quickstart-api-key" data-section>
+                <div id="quickstart-api-key" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="quickstart-api-key"
                     title="2. Get Your API Key"
@@ -2903,7 +2902,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="quickstart-plugin" data-section>
+                <div id="quickstart-plugin" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="quickstart-plugin"
                     title="3. Install a Plugin"
@@ -3031,11 +3030,11 @@ npx convex dev`}
             </section>
 
             {/* Dashboard Features */}
-            <section id="dashboard" data-section className="mb-12">
+            <section id="dashboard" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="dashboard" title="Dashboard Features" />
 
               <div className="mt-6 space-y-6">
-                <div id="dashboard-overview" data-section>
+                <div id="dashboard-overview" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="dashboard-overview"
                     title="Overview"
@@ -3049,7 +3048,7 @@ npx convex dev`}
                   </p>
                 </div>
 
-                <div id="dashboard-sessions" data-section>
+                <div id="dashboard-sessions" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="dashboard-sessions"
                     title="Sessions View"
@@ -3064,7 +3063,7 @@ npx convex dev`}
                   </p>
                 </div>
 
-                <div id="dashboard-evals" data-section>
+                <div id="dashboard-evals" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="dashboard-evals"
                     title="Evals Export"
@@ -3094,7 +3093,7 @@ npx convex dev`}
                   </ul>
                 </div>
 
-                <div id="dashboard-analytics" data-section>
+                <div id="dashboard-analytics" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="dashboard-analytics"
                     title="Analytics"
@@ -3108,7 +3107,7 @@ npx convex dev`}
                   </p>
                 </div>
 
-                <div id="dashboard-context" data-section>
+                <div id="dashboard-context" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="dashboard-context"
                     title="Context Search"
@@ -3125,7 +3124,7 @@ npx convex dev`}
             </section>
 
             {/* OpenCode Plugin */}
-            <section id="opencode-plugin" data-section className="mb-12">
+            <section id="opencode-plugin" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="opencode-plugin" title="OpenCode Plugin" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 Sync your{" "}
@@ -3141,7 +3140,7 @@ npx convex dev`}
               </p>
 
               <div className="mt-6 space-y-6">
-                <div id="opencode-install" data-section>
+                <div id="opencode-install" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="opencode-install"
                     title="Installation"
@@ -3178,7 +3177,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="opencode-config" data-section>
+                <div id="opencode-config" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="opencode-config"
                     title="Configuration"
@@ -3202,7 +3201,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="opencode-commands" data-section>
+                <div id="opencode-commands" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="opencode-commands"
                     title="Commands"
@@ -3274,7 +3273,7 @@ npx convex dev`}
             </section>
 
             {/* Claude Code Plugin */}
-            <section id="claude-plugin" data-section className="mb-12">
+            <section id="claude-plugin" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="claude-plugin" title="Claude Code Plugin" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 Sync your{" "}
@@ -3290,7 +3289,7 @@ npx convex dev`}
               </p>
 
               <div className="mt-6 space-y-6">
-                <div id="claude-install" data-section>
+                <div id="claude-install" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="claude-install"
                     title="Installation"
@@ -3327,7 +3326,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="claude-config" data-section>
+                <div id="claude-config" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="claude-config"
                     title="Configuration"
@@ -3354,7 +3353,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="claude-commands" data-section>
+                <div id="claude-commands" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="claude-commands"
                     title="Commands"
@@ -3422,7 +3421,7 @@ npx convex dev`}
             </section>
 
             {/* Codex CLI Plugin */}
-            <section id="codex-plugin" data-section className="mb-12">
+            <section id="codex-plugin" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="codex-plugin" title="Codex CLI Plugin" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 Sync your{" "}
@@ -3438,7 +3437,7 @@ npx convex dev`}
               </p>
 
               <div className="mt-6 space-y-6">
-                <div id="codex-install" data-section>
+                <div id="codex-install" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="codex-install"
                     title="Installation"
@@ -3475,7 +3474,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="codex-config" data-section>
+                <div id="codex-config" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="codex-config"
                     title="Configuration"
@@ -3515,7 +3514,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="codex-commands" data-section>
+                <div id="codex-commands" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="codex-commands"
                     title="Commands"
@@ -3603,7 +3602,7 @@ npx convex dev`}
             </section>
 
             {/* Cursor Plugin */}
-            <section id="cursor-plugin" data-section className="mb-12">
+            <section id="cursor-plugin" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="cursor-plugin" title="Cursor Plugin" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 Sync your{" "}
@@ -3619,7 +3618,7 @@ npx convex dev`}
               </p>
 
               <div className="mt-6 space-y-6">
-                <div id="cursor-install" data-section>
+                <div id="cursor-install" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="cursor-install"
                     title="Installation"
@@ -3656,7 +3655,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="cursor-config" data-section>
+                <div id="cursor-config" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="cursor-config"
                     title="Configuration"
@@ -3705,7 +3704,7 @@ npx convex dev`}
                   </div>
                 </div>
 
-                <div id="cursor-commands" data-section>
+                <div id="cursor-commands" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="cursor-commands"
                     title="Commands"
@@ -3803,7 +3802,7 @@ npx convex dev`}
             </section>
 
             {/* API Reference */}
-            <section id="api" data-section className="mb-12">
+            <section id="api" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="api" title="API Reference" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 All endpoints require authentication via Bearer token (API key
@@ -3811,7 +3810,7 @@ npx convex dev`}
               </p>
 
               <div className="mt-6 space-y-6">
-                <div id="api-auth" data-section>
+                <div id="api-auth" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="api-auth"
                     title="Authentication"
@@ -3830,7 +3829,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="api-sessions" data-section>
+                <div id="api-sessions" data-section className="scroll-mt-20">
                   <SectionHeader id="api-sessions" title="Sessions" level={3} />
                   <div className="mt-3 space-y-4">
                     <div
@@ -3887,7 +3886,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="api-search" data-section>
+                <div id="api-search" data-section className="scroll-mt-20">
                   <SectionHeader id="api-search" title="Search" level={3} />
                   <div
                     className={cn(
@@ -3919,7 +3918,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="api-context" data-section>
+                <div id="api-context" data-section className="scroll-mt-20">
                   <SectionHeader id="api-context" title="Context" level={3} />
                   <div
                     className={cn(
@@ -3951,7 +3950,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="api-export" data-section>
+                <div id="api-export" data-section className="scroll-mt-20">
                   <SectionHeader id="api-export" title="Export" level={3} />
                   <div
                     className={cn(
@@ -3982,7 +3981,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="api-stats" data-section>
+                <div id="api-stats" data-section className="scroll-mt-20">
                   <SectionHeader id="api-stats" title="Stats" level={3} />
                   <div
                     className={cn(
@@ -4013,7 +4012,7 @@ curl "${convexUrl}/api/sessions" \\
             </section>
 
             {/* Search Section */}
-            <section id="search" data-section className="mb-12">
+            <section id="search" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="search" title="Search" />
               <p className={cn("mt-2 text-sm", t.textMuted)}>
                 OpenSync supports three search modes to find sessions by
@@ -4079,11 +4078,11 @@ curl "${convexUrl}/api/sessions" \\
             </section>
 
             {/* Authentication Section */}
-            <section id="auth" data-section className="mb-12">
+            <section id="auth" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="auth" title="Authentication" />
 
               <div className="mt-6 space-y-6">
-                <div id="auth-workos" data-section>
+                <div id="auth-workos" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="auth-workos"
                     title="WorkOS AuthKit"
@@ -4128,7 +4127,7 @@ curl "${convexUrl}/api/sessions" \\
                   </div>
                 </div>
 
-                <div id="auth-api-keys" data-section>
+                <div id="auth-api-keys" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="auth-api-keys"
                     title="API Keys"
@@ -4167,11 +4166,11 @@ curl "${convexUrl}/api/sessions" \\
             </section>
 
             {/* Hosting Section */}
-            <section id="hosting" data-section className="mb-12">
+            <section id="hosting" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="hosting" title="Hosting & Deploy" />
 
               <div className="mt-6 space-y-6">
-                <div id="hosting-convex" data-section>
+                <div id="hosting-convex" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosting-convex"
                     title="Convex Backend"
@@ -4192,7 +4191,7 @@ npx convex deploy`}
                   </div>
                 </div>
 
-                <div id="hosting-netlify" data-section>
+                <div id="hosting-netlify" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosting-netlify"
                     title="Netlify Frontend"
@@ -4212,7 +4211,7 @@ npm run build
                   </div>
                 </div>
 
-                <div id="hosting-env" data-section>
+                <div id="hosting-env" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="hosting-env"
                     title="Environment Variables"
@@ -4280,11 +4279,11 @@ npm run build
             </section>
 
             {/* Fork Section */}
-            <section id="fork" data-section className="mb-12">
+            <section id="fork" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="fork" title="Fork & Self-Host" />
 
               <div className="mt-6 space-y-6">
-                <div id="fork-repo" data-section>
+                <div id="fork-repo" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="fork-repo"
                     title="Clone Repository"
@@ -4299,7 +4298,7 @@ npm install`}
                   </div>
                 </div>
 
-                <div id="fork-setup" data-section>
+                <div id="fork-setup" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="fork-setup"
                     title="Setup Steps"
@@ -4360,7 +4359,7 @@ npm install`}
                   </div>
                 </div>
 
-                <div id="fork-customize" data-section>
+                <div id="fork-customize" data-section className="scroll-mt-20">
                   <SectionHeader
                     id="fork-customize"
                     title="Customization"
@@ -4405,7 +4404,7 @@ npm install`}
             </section>
 
             {/* Troubleshooting */}
-            <section id="troubleshooting" data-section className="mb-12">
+            <section id="troubleshooting" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="troubleshooting" title="Troubleshooting" />
 
               <div className={cn("mt-4 space-y-3")}>
@@ -4481,7 +4480,7 @@ npm install`}
             </section>
 
             {/* FAQ */}
-            <section id="faq" data-section className="mb-12">
+            <section id="faq" data-section className="scroll-mt-20 mb-12">
               <SectionHeader id="faq" title="Frequently Asked Questions" />
 
               <div className="mt-4 space-y-2">
