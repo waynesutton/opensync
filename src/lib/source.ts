@@ -5,7 +5,8 @@ export type SourceType =
   | "opencode"
   | "codex-cli"
   | "cursor-sync"
-  | "cursor"; // Alias for cursor-sync (legacy data)
+  | "cursor" // Alias for cursor-sync (legacy data)
+  | "pi";
 
 /**
  * Get display label for a source
@@ -26,7 +27,9 @@ export function getSourceLabel(
           ? "CX"
           : s === "cursor-sync" || s === "cursor"
             ? "CR"
-            : "OC";
+            : s === "pi"
+              ? "PI"
+              : "OC";
   }
   return s === "claude-code"
     ? "Claude Code"
@@ -36,7 +39,9 @@ export function getSourceLabel(
         ? "Codex CLI"
         : s === "cursor-sync" || s === "cursor"
           ? "Cursor"
-          : "OpenCode";
+          : s === "pi"
+            ? "Pi"
+            : "OpenCode";
 }
 
 /**
@@ -73,6 +78,11 @@ export function getSourceColorClass(
         ? "bg-violet-500/20 text-violet-400"
         : "bg-violet-100 text-violet-700";
     }
+    if (s === "pi") {
+      return isDark
+        ? "bg-[#f97316]/20 text-[#f97316]"
+        : "bg-[#f97316]/10 text-[#ea580c]";
+    }
     return isDark
       ? "bg-blue-500/20 text-blue-400"
       : "bg-blue-100 text-blue-700";
@@ -83,5 +93,6 @@ export function getSourceColorClass(
   if (s === "factory-droid") return "bg-orange-500/15 text-orange-400";
   if (s === "codex-cli") return "bg-purple-500/15 text-purple-400";
   if (s === "cursor-sync" || s === "cursor") return "bg-violet-500/15 text-violet-400";
+  if (s === "pi") return "bg-[#f97316]/15 text-[#f97316]";
   return "bg-blue-500/15 text-blue-400";
 }

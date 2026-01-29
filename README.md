@@ -16,6 +16,7 @@ Cloud-synced dashboards that track session activity, tool usage, and token spend
 | droid-sync             | Sync Factory Droid sessions (community built) | [GitHub](https://github.com/yemyat/droid-sync-plugin) / [npm](https://www.npmjs.com/package/droid-sync)                       |
 | codex-sync             | Sync Codex CLI sessions                       | [GitHub](https://github.com/waynesutton/codex-sync-plugin) / [npm](https://www.npmjs.com/package/codex-sync)                  |
 | cursor-opensync-plugin | Sync Cursor sessions                          | [GitHub](https://github.com/waynesutton/cursor-cli-sync-plugin) / [npm](https://www.npmjs.com/package/cursor-opensync-plugin) |
+| pi-opensync-plugin     | Sync Pi coding agent sessions                 | [GitHub](https://github.com/joshuadavidthomas/pi-opensync-plugin) / [npm](https://www.npmjs.com/package/pi-opensync-plugin)   |
 
 ## Features
 
@@ -84,6 +85,16 @@ cursor-sync login
 ```
 
 [Cursor plugin docs](https://www.opensync.dev/docs#cursor-plugin)
+
+**For Pi:**
+
+```bash
+npm install -g pi-opensync-plugin
+```
+
+Then run `/opensync:config` in pi to configure the extension.
+
+[Pi plugin docs](https://www.opensync.dev/docs#pi-plugin)
 
 ## Self hosting
 

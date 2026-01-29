@@ -38,6 +38,7 @@ const AI_AGENTS_MAP: Record<string, string> = {
   "factory-droid": "Factory Droid",
   "cursor-sync": "Cursor",
   cursor: "Cursor",
+  pi: "Pi",
   "codex-cli": "Codex CLI",
   continue: "Continue",
   amp: "Amp",
