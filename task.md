@@ -8,6 +8,10 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Homepage Crash Debug)
+
+- [x] Temporarily disabled homepage Platform Stats rendering to isolate crash
+
 ## Recently Completed (Pi Plugin Integration)
 
 - [x] pi-opensync-plugin community plugin support (PR #26)

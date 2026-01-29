@@ -25,6 +25,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Temporarily disabled homepage Platform Stats rendering to isolate crash
 - Fixed duplicate "cursor" and "Cursor" entries in source filter dropdown
   - Normalized source values: "cursor" is now converted to "cursor-sync" on sync
   - Updated sessions.upsert and batchUpsert to normalize source on insert/update

@@ -176,174 +176,179 @@ function PlatformLeaderboard({ isDark }: { isDark: boolean }) {
   const topModels = platformStats?.topModels ?? [];
   const topSources = platformStats?.topSources ?? [];
 
-  return (
-    <div
-      className={`mt-10 rounded-lg border p-5 ${
-        isDark
-          ? "border-zinc-800 bg-[#161616]"
-          : "border-[#e6e4e1] bg-[#f5f3f0]"
-      }`}
-    >
-      <h3
-        className={`text-sm font-medium mb-5 flex items-center gap-2 ${
-          isDark ? "text-zinc-300" : "text-[#1a1a1a]"
+  // TEMP: Disable Platform Stats rendering to isolate crash.
+  if (false) {
+    return (
+      <div
+        className={`mt-10 rounded-lg border p-5 ${
+          isDark
+            ? "border-zinc-800 bg-[#161616]"
+            : "border-[#e6e4e1] bg-[#f5f3f0]"
         }`}
       >
-        <Zap
-          className={`h-4 w-4 ${isDark ? "text-zinc-500" : "text-[#8b7355]"}`}
-        />
-        Platform Stats
-        <span
-          className={`ml-auto text-[10px] font-normal ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
-        >
-          real-time
-        </span>
-      </h3>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Top Models */}
-        <div
-          className={`rounded-md border p-4 ${
-            isDark
-              ? "border-zinc-800 bg-[#0E0E0E]"
-              : "border-[#e6e4e1] bg-[#faf8f5]"
+        <h3
+          className={`text-sm font-medium mb-5 flex items-center gap-2 ${
+            isDark ? "text-zinc-300" : "text-[#1a1a1a]"
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5">
-              <Trophy
-                className={`h-3 w-3 ${isDark ? "text-amber-500" : "text-amber-600"}`}
+          <Zap
+            className={`h-4 w-4 ${isDark ? "text-zinc-500" : "text-[#8b7355]"}`}
+          />
+          Platform Stats
+          <span
+            className={`ml-auto text-[10px] font-normal ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
+          >
+            real-time
+          </span>
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Top Models */}
+          <div
+            className={`rounded-md border p-4 ${
+              isDark
+                ? "border-zinc-800 bg-[#0E0E0E]"
+                : "border-[#e6e4e1] bg-[#faf8f5]"
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <Trophy
+                  className={`h-3 w-3 ${isDark ? "text-amber-500" : "text-amber-600"}`}
+                />
+                <p
+                  className={`text-[10px] uppercase tracking-wider ${
+                    isDark ? "text-zinc-600" : "text-[#8b7355]"
+                  }`}
+                >
+                  Top Models
+                </p>
+              </div>
+              <span
+                className={`text-[10px] uppercase tracking-wider ${
+                  isDark ? "text-zinc-600" : "text-[#8b7355]"
+                }`}
+              >
+                tokens
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {topModels.length === 0 ? (
+                <p
+                  className={`text-xs ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
+                >
+                  No data yet
+                </p>
+              ) : (
+                topModels.map((item, index) => (
+                  <div
+                    key={item.model}
+                    className="flex items-center justify-between"
+                  >
+                    <span
+                      className={`text-xs truncate max-w-[140px] ${
+                        isDark ? "text-zinc-400" : "text-[#6b6b6b]"
+                      }`}
+                    >
+                      <span
+                        className={`mr-1.5 ${
+                          index === 0
+                            ? isDark
+                              ? "text-amber-500"
+                              : "text-amber-600"
+                            : isDark
+                              ? "text-zinc-600"
+                              : "text-[#8b7355]"
+                        }`}
+                      >
+                        {index + 1}.
+                      </span>
+                      {item.model}
+                    </span>
+                    <span
+                      className={`text-[10px] tabular-nums ${
+                        isDark ? "text-zinc-500" : "text-[#8b7355]"
+                      }`}
+                    >
+                      {formatNumber(item.totalTokens)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Top CLI (sources: opencode, claude-code, cursor, droid, codex, amp, etc.) */}
+          <div
+            className={`rounded-md border p-4 ${
+              isDark
+                ? "border-zinc-800 bg-[#0E0E0E]"
+                : "border-[#e6e4e1] bg-[#faf8f5]"
+            }`}
+          >
+            <div className="flex items-center gap-1.5 mb-3">
+              <Zap
+                className={`h-3 w-3 ${isDark ? "text-blue-400" : "text-[#EB5601]"}`}
               />
               <p
                 className={`text-[10px] uppercase tracking-wider ${
                   isDark ? "text-zinc-600" : "text-[#8b7355]"
                 }`}
               >
-                Top Models
+                Top CLI
               </p>
             </div>
-            <span
-              className={`text-[10px] uppercase tracking-wider ${
-                isDark ? "text-zinc-600" : "text-[#8b7355]"
-              }`}
-            >
-              tokens
-            </span>
-          </div>
-          <div className="space-y-1.5">
-            {topModels.length === 0 ? (
-              <p
-                className={`text-xs ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
-              >
-                No data yet
-              </p>
-            ) : (
-              topModels.map((item, index) => (
-                <div
-                  key={item.model}
-                  className="flex items-center justify-between"
+            <div className="space-y-1.5">
+              {topSources.length === 0 ? (
+                <p
+                  className={`text-xs ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
                 >
-                  <span
-                    className={`text-xs truncate max-w-[140px] ${
-                      isDark ? "text-zinc-400" : "text-[#6b6b6b]"
-                    }`}
+                  No data yet
+                </p>
+              ) : (
+                topSources.map((item, index) => (
+                  <div
+                    key={item.source}
+                    className="flex items-center justify-between"
                   >
                     <span
-                      className={`mr-1.5 ${
-                        index === 0
-                          ? isDark
-                            ? "text-amber-500"
-                            : "text-amber-600"
-                          : isDark
-                            ? "text-zinc-600"
-                            : "text-[#8b7355]"
+                      className={`text-xs truncate max-w-[140px] ${
+                        isDark ? "text-zinc-400" : "text-[#6b6b6b]"
                       }`}
                     >
-                      {index + 1}.
+                      <span
+                        className={`mr-1.5 ${
+                          index === 0
+                            ? isDark
+                              ? "text-blue-400"
+                              : "text-[#EB5601]"
+                            : isDark
+                              ? "text-zinc-600"
+                              : "text-[#8b7355]"
+                        }`}
+                      >
+                        {index + 1}.
+                      </span>
+                      {getSourceDisplayName(item.source)}
                     </span>
-                    {item.model}
-                  </span>
-                  <span
-                    className={`text-[10px] tabular-nums ${
-                      isDark ? "text-zinc-500" : "text-[#8b7355]"
-                    }`}
-                  >
-                    {formatNumber(item.totalTokens)}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Top CLI (sources: opencode, claude-code, cursor, droid, codex, amp, etc.) */}
-        <div
-          className={`rounded-md border p-4 ${
-            isDark
-              ? "border-zinc-800 bg-[#0E0E0E]"
-              : "border-[#e6e4e1] bg-[#faf8f5]"
-          }`}
-        >
-          <div className="flex items-center gap-1.5 mb-3">
-            <Zap
-              className={`h-3 w-3 ${isDark ? "text-blue-400" : "text-[#EB5601]"}`}
-            />
-            <p
-              className={`text-[10px] uppercase tracking-wider ${
-                isDark ? "text-zinc-600" : "text-[#8b7355]"
-              }`}
-            >
-              Top CLI
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            {topSources.length === 0 ? (
-              <p
-                className={`text-xs ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
-              >
-                No data yet
-              </p>
-            ) : (
-              topSources.map((item, index) => (
-                <div
-                  key={item.source}
-                  className="flex items-center justify-between"
-                >
-                  <span
-                    className={`text-xs truncate max-w-[140px] ${
-                      isDark ? "text-zinc-400" : "text-[#6b6b6b]"
-                    }`}
-                  >
                     <span
-                      className={`mr-1.5 ${
-                        index === 0
-                          ? isDark
-                            ? "text-blue-400"
-                            : "text-[#EB5601]"
-                          : isDark
-                            ? "text-zinc-600"
-                            : "text-[#8b7355]"
+                      className={`text-[10px] tabular-nums ${
+                        isDark ? "text-zinc-500" : "text-[#8b7355]"
                       }`}
                     >
-                      {index + 1}.
+                      {item.sessions} sessions
                     </span>
-                    {getSourceDisplayName(item.source)}
-                  </span>
-                  <span
-                    className={`text-[10px] tabular-nums ${
-                      isDark ? "text-zinc-500" : "text-[#8b7355]"
-                    }`}
-                  >
-                    {item.sessions} sessions
-                  </span>
-                </div>
-              ))
-            )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }
 
 // TEMP: Stats components moved to /stats page
@@ -1021,7 +1026,10 @@ export function LoginPage() {
                       fill="currentColor"
                       xmlns="http://www.w3.org/2000/svg"
                     >
-                      <path fillRule="evenodd" d="M165.29 165.29 H517.36 V400 H400 V517.36 H282.65 V634.72 H165.29 Z M282.65 282.65 V400 H400 V282.65 Z" />
+                      <path
+                        fillRule="evenodd"
+                        d="M165.29 165.29 H517.36 V400 H400 V517.36 H282.65 V634.72 H165.29 Z M282.65 282.65 V400 H400 V282.65 Z"
+                      />
                       <path d="M517.36 400 H634.72 V634.72 H517.36 Z" />
                     </svg>
                     <span
