@@ -162,6 +162,7 @@ function getSourceDisplayName(source: string): string {
     codex: "Codex",
     "codex-cli": "Codex CLI",
     amp: "Amp",
+    pi: "Pi",
   };
   return names[source] || source;
 }
@@ -1005,6 +1006,30 @@ export function LoginPage() {
                       Cursor
                     </span>
                   </a>
+
+                  {/* Pi */}
+                  <a
+                    href="https://www.npmjs.com/package/pi-opensync-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 transition-opacity hover:opacity-70"
+                    title="Pi"
+                  >
+                    <svg
+                      className={`h-8 w-8 ${isDark ? "text-zinc-300" : "text-[#1a1a1a]"}`}
+                      viewBox="155 155 490 490"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path fillRule="evenodd" d="M165.29 165.29 H517.36 V400 H400 V517.36 H282.65 V634.72 H165.29 Z M282.65 282.65 V400 H400 V282.65 Z" />
+                      <path d="M517.36 400 H634.72 V634.72 H517.36 Z" />
+                    </svg>
+                    <span
+                      className={`text-[10px] ${isDark ? "text-zinc-500" : "text-[#8b7355]"}`}
+                    >
+                      Pi
+                    </span>
+                  </a>
                 </div>
               </div>
 
@@ -1193,6 +1218,48 @@ export function LoginPage() {
                     >
                       npm
                     </span>
+                  </a>
+
+                  {/* Pi Sync - Community */}
+                  <a
+                    href="https://www.npmjs.com/package/pi-opensync-plugin"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex items-center justify-between rounded-md border px-3 py-2 transition-colors ${
+                      isDark
+                        ? "border-zinc-800 bg-[#0E0E0E] hover:border-zinc-700"
+                        : "border-[#e6e4e1] bg-[#faf8f5] hover:border-[#8b7355]"
+                    }`}
+                  >
+                    <span
+                      className={`font-mono text-xs ${
+                        isDark
+                          ? "text-zinc-100 group-hover:text-zinc-300"
+                          : "text-[#6b6b6b] group-hover:text-[#1a1a1a]"
+                      }`}
+                    >
+                      pi-opensync-plugin
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] ${
+                          isDark
+                            ? "bg-emerald-900/30 text-emerald-400"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}
+                      >
+                        community
+                      </span>
+                      <span
+                        className={`rounded px-1.5 py-0.5 text-[10px] ${
+                          isDark
+                            ? "bg-zinc-800 text-zinc-600"
+                            : "bg-[#ebe9e6] text-[#8b7355]"
+                        }`}
+                      >
+                        npm
+                      </span>
+                    </div>
                   </a>
                 </div>
               </div>

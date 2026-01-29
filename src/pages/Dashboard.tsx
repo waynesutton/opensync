@@ -66,6 +66,7 @@ const AI_AGENTS_MAP: Record<string, string> = {
   "cursor-sync": "Cursor",
   "cursor": "Cursor", // Alias for legacy data
   "codex-cli": "Codex CLI",
+  "pi": "Pi",
   "continue": "Continue",
   "amp": "Amp",
   "aider": "Aider",
@@ -643,6 +644,55 @@ function SetupBanner({ theme, onDismiss }: { theme: "dark" | "tan"; onDismiss: (
                   className={cn(
                     "flex items-center gap-1 text-[10px] transition-colors",
                     isDark ? "text-orange-400 hover:text-orange-300" : "text-[#EB5601] hover:opacity-80"
+                  )}
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  npm
+                </a>
+              </div>
+            </div>
+            
+            {/* Pi Plugin */}
+            <div className={cn(
+              "rounded-lg border p-3",
+              isDark ? "bg-zinc-900/50 border-zinc-700" : "bg-white border-[#e5e0d8]"
+            )}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 rounded bg-[#f97316]/15 flex items-center justify-center">
+                  <span className="text-[10px] font-medium text-[#f97316]">PI</span>
+                </div>
+                <span className={cn("text-xs font-medium", t.textSecondary)}>pi-opensync-plugin</span>
+              </div>
+              <p className={cn("text-[11px] mb-2", t.textDim)}>
+                Sync your Pi coding agent sessions to the dashboard.
+              </p>
+              <div className={cn(
+                "rounded px-2 py-1.5 text-[11px] font-mono mb-2",
+                isDark ? "bg-zinc-800" : "bg-[#f5f3f0]",
+                t.textMuted
+              )}>
+                npm install -g pi-opensync-plugin
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href="https://github.com/joshuadavidthomas/pi-opensync-plugin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1 text-[10px] transition-colors",
+                    isDark ? "text-[#f97316] hover:text-[#fb923c]" : "text-[#EB5601] hover:opacity-80"
+                  )}
+                >
+                  <Github className="h-3 w-3" />
+                  GitHub
+                </a>
+                <a
+                  href="https://www.npmjs.com/package/pi-opensync-plugin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-1 text-[10px] transition-colors",
+                    isDark ? "text-[#f97316] hover:text-[#fb923c]" : "text-[#EB5601] hover:opacity-80"
                   )}
                 >
                   <ExternalLink className="h-3 w-3" />

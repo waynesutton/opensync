@@ -87,6 +87,13 @@ const AI_AGENTS: AIAgent[] = [
     url: "https://www.npmjs.com/package/codex-sync",
   },
   {
+    id: "pi",
+    name: "Pi",
+    status: "community",
+    defaultEnabled: false,
+    url: "https://www.npmjs.com/package/pi-opensync-plugin",
+  },
+  {
     id: "continue",
     name: "Continue",
     status: "planned",
@@ -473,6 +480,9 @@ export function SettingsPage() {
                       <p className={cn("mt-2", t.textDim)}># For Cursor</p>
                       <p>npm install -g cursor-opensync-plugin</p>
                       <p>cursor-sync login</p>
+                      <p className={cn("mt-2", t.textDim)}># For Pi</p>
+                      <p>npm install -g pi-opensync-plugin</p>
+                      <p># Then run /opensync:config in pi</p>
                     </div>
                   </div>
 
@@ -606,6 +616,33 @@ export function SettingsPage() {
                       </span>{" "}
                       <a
                         href="https://github.com/waynesutton/cursor-cli-sync-plugin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("text-xs", t.textDim, "hover:underline")}
+                      >
+                        (GitHub)
+                      </a>
+                    </p>
+                    <p>
+                      <a
+                        href="https://www.npmjs.com/package/pi-opensync-plugin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn(
+                          "inline-flex items-center gap-1 font-medium",
+                          theme === "dark"
+                            ? "text-blue-400 hover:text-blue-300"
+                            : "text-[#EB5601] hover:text-[#d14a01]",
+                        )}
+                      >
+                        pi-opensync-plugin
+                        <ExternalLink className="h-3 w-3" />
+                      </a>{" "}
+                      <span className={t.textDim}>
+                        Sync your Pi sessions
+                      </span>{" "}
+                      <a
+                        href="https://github.com/joshuadavidthomas/pi-opensync-plugin"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={cn("text-xs", t.textDim, "hover:underline")}
