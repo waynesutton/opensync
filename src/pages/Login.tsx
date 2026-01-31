@@ -176,9 +176,7 @@ function PlatformLeaderboard({ isDark }: { isDark: boolean }) {
   const topModels = platformStats?.topModels ?? [];
   const topSources = platformStats?.topSources ?? [];
 
-  // TEMP: Disable Platform Stats rendering to isolate crash.
-  if (false) {
-    return (
+  return (
       <div
         className={`mt-10 rounded-lg border p-5 ${
           isDark
@@ -346,9 +344,6 @@ function PlatformLeaderboard({ isDark }: { isDark: boolean }) {
         </div>
       </div>
     );
-  }
-
-  return null;
 }
 
 // TEMP: Stats components moved to /stats page
@@ -361,8 +356,13 @@ export function LoginPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  // Show loading state while processing callback or checking auth
-  if (isLoading || workosLoading) {
+  // Only show loading spinner during active OAuth callback (URL has ?code=)
+  // Do NOT block the public homepage waiting for Convex auth to complete
+  const isOAuthCallback =
+    typeof window !== "undefined" && window.location.search.includes("code=");
+
+  // Only block render during OAuth callback flow
+  if (isOAuthCallback && (isLoading || workosLoading)) {
     return (
       <div
         className={`min-h-screen flex items-center justify-center ${isDark ? "bg-[#0E0E0E]" : "bg-[#faf8f5]"}`}

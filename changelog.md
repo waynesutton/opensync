@@ -25,7 +25,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
-- Temporarily disabled homepage Platform Stats rendering to isolate crash
+- Fixed homepage blank screen in production caused by auth loading blocking page render
+  - Changed loading guard to only block during OAuth callback (when URL contains ?code=)
+  - Anonymous visitors now see homepage content immediately without waiting for Convex auth
+  - Platform Stats leaderboard re-enabled after confirming auth was the root cause
 - Fixed duplicate "cursor" and "Cursor" entries in source filter dropdown
   - Normalized source values: "cursor" is now converted to "cursor-sync" on sync
   - Updated sessions.upsert and batchUpsert to normalize source on insert/update

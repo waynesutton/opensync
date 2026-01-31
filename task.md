@@ -8,9 +8,14 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
-## Recently Completed (Homepage Crash Debug)
+## Recently Completed (Homepage Blank Screen Fix)
 
-- [x] Temporarily disabled homepage Platform Stats rendering to isolate crash
+- [x] Fixed homepage blank screen in production
+  - Root cause: `isLoading` from `useAuth()` stayed `true` indefinitely for anonymous visitors
+  - `convexLoading` from `useConvexAuth()` was hanging in production
+  - Fix: Changed loading guard to only block during OAuth callback (URL contains ?code=)
+  - Anonymous visitors now see homepage immediately without waiting for Convex auth
+  - Platform Stats leaderboard re-enabled after confirming auth was root cause
 
 ## Recently Completed (Pi Plugin Integration)
 
