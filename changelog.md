@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Platform Stats now loads ALL session data instead of last 1000 sessions
+  - Changed publicPlatformStats query to use async iteration (streams data without memory limits)
+  - Added total sessions and total tokens display in Platform Stats header
+  - Same pattern used by publicMessageCount and publicMessageGrowth queries
+
 ### Fixed
 
 - Fixed Netlify build error: Stats.tsx was git-ignored causing module not found error

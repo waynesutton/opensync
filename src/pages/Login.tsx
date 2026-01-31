@@ -176,6 +176,8 @@ function PlatformLeaderboard({ isDark }: { isDark: boolean }) {
   // Show the container with "No data yet" if empty or query not ready
   const topModels = platformStats?.topModels ?? [];
   const topSources = platformStats?.topSources ?? [];
+  const totalSessions = platformStats?.totalSessions ?? 0;
+  const totalTokens = platformStats?.totalTokens ?? 0;
 
   // Don't render anything until query is ready (prevents hydration issues)
   if (platformStats === undefined) {
@@ -202,7 +204,8 @@ function PlatformLeaderboard({ isDark }: { isDark: boolean }) {
         <span
           className={`ml-auto text-[10px] font-normal ${isDark ? "text-zinc-600" : "text-[#8b7355]"}`}
         >
-          real-time
+          {formatNumber(totalSessions)} sessions | {formatNumber(totalTokens)}{" "}
+          tokens
         </span>
       </h3>
 

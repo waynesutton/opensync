@@ -8,6 +8,15 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Platform Stats Full Data)
+
+- [x] Platform Stats now loads ALL session data instead of last 1000 sessions
+  - Changed publicPlatformStats query from `.take(1000)` to async iteration
+  - Streams through all sessions without memory limits (same pattern as publicMessageCount)
+  - Added totalSessions and totalTokens to query return value
+  - Updated Login.tsx PlatformLeaderboard to display total counts in header
+  - Homepage won't crash with large datasets
+
 ## Recently Completed (Stats.tsx Build Fix)
 
 - [x] Fixed Netlify build error: Stats.tsx module not found
