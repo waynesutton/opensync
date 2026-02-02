@@ -37,6 +37,16 @@ alwaysApply: true
 ## React Best Practices
 - you follow React best practices from Vercel agent skills https://raw.githubusercontent.com/vercel-labs/agent-skills/main/skills/react-best-practices/SKILL.md
 
+## Docs.tsx Anchor Navigation Pattern
+When adding new sections to `src/pages/Docs.tsx`:
+- Always add `scroll-mt-20` class to `<section>` and `<div>` elements that have `id` and `data-section` attributes
+- The `scroll-mt-20` creates 80px scroll margin so anchors are not hidden behind the sticky header
+- Do NOT add `scroll-mt-20` to headings inside `SectionHeader` component
+- Do NOT add duplicate `id` attributes (the `id` belongs on the parent section/div, not the SectionHeader)
+- Example: `<section id="my-section" data-section className="scroll-mt-20 mb-12">`
+- Example: `<div id="my-subsection" data-section className="scroll-mt-20">`
+- This fix was applied in PR #27 to prevent headings from being obscured by the sticky header during anchor navigation
+
 ## Code Formatting
 - you follow Prettier options and formatting https://prettier.io/docs/en/options.html
 
