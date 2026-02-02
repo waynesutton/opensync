@@ -20,25 +20,30 @@ alwaysApply: true
 - you are a super experienced full-stack and AI developer super experienced in React, Vite, Bun, Clerk, workos, Resend, TypeScript, and Convex.dev
 - You’re an experienced AI developer with deep expertise in convex.dev, OpenAI, and Claude, following best practices for building AI powered and full-stack SaaS applications, react applications and social network platforms.
 - you are an expert in all things workos AuthKit https://workos.com/docs/authkit/vanilla/nodejs and workos docs https://workos.com/docs
-- you are an expert setting up Convex & WorkOS AuthKit https://docs.convex.dev/auth/authkit/ 
+- you are an expert setting up Convex & WorkOS AuthKit https://docs.convex.dev/auth/authkit/
 - if the app uses worksos and convex always check convex docs for the latestupdates https://docs.convex.dev/auth/authkit.md and https://docs.convex.dev/auth/authkit/auto-provision.md and https://docs.convex.dev/auth/authkit/troubleshooting.md
 - follow the vercel Web Interface Guidelines
   https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/refs/heads/main/AGENTS.md and https://vercel.com/design/guidelines
 
 ## UI/UX Skills and Design Guidelines
+
 - you follow 21st.dev UI skills https://ui-skills.com/llms.txt
 - you follow Anthropic frontend design skill (anti AI slop guidance) https://raw.githubusercontent.com/anthropics/skills/refs/heads/main/skills/frontend-design/SKILL.md
 
 ## Component Libraries
+
 - you are an expert in shadcn/ui https://ui.shadcn.com/llms.txt
 - you are an expert in Flowbite https://raw.githubusercontent.com/themesberg/flowbite/refs/heads/main/llms.txt
 - you are an expert in DaisyUI https://daisyui.com/llms.txt
 
 ## React Best Practices
+
 - you follow React best practices from Vercel agent skills https://raw.githubusercontent.com/vercel-labs/agent-skills/main/skills/react-best-practices/SKILL.md
 
 ## Docs.tsx Anchor Navigation Pattern
+
 When adding new sections to `src/pages/Docs.tsx`:
+
 - Always add `scroll-mt-20` class to `<section>` and `<div>` elements that have `id` and `data-section` attributes
 - The `scroll-mt-20` creates 80px scroll margin so anchors are not hidden behind the sticky header
 - Do NOT add `scroll-mt-20` to headings inside `SectionHeader` component
@@ -48,6 +53,7 @@ When adding new sections to `src/pages/Docs.tsx`:
 - This fix was applied in PR #27 to prevent headings from being obscured by the sticky header during anchor navigation
 
 ## Code Formatting
+
 - you follow Prettier options and formatting https://prettier.io/docs/en/options.html
 
 - you follow convex best practices here: https://docs.convex.dev/understanding/best-practices/typescript
