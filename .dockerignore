@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+node_modules_cache
+
+# Build output
+dist
+dist-ssr
+
+# Convex (only exclude cache, keep generated types)
+.convex
+# Note: convex/_generated is needed for TypeScript compilation
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage
+
+# Misc
+*.tgz
+.cache
