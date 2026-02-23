@@ -18,6 +18,7 @@
       { "anchor": "Dashboard", "url": "https://opensync.dev" },
       { "anchor": "GitHub", "url": "https://github.com/waynesutton/opensync" }
     ],
+    "pages": ["index"],
     "groups": [
       {
         "group": "Getting Started",
