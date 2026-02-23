@@ -1,87 +1,152 @@
 ---
 title: "Context Search"
-description: "Search across sessions with semantic and full-text search"
+description: "Find relevant sessions using semantic and full-text search for RAG and context engineering"
 ---
 
 # Context Search
 
-Find relevant context from past sessions using semantic and full-text search.
+The Context view lets you search across all your sessions using either exact text matching or semantic (meaning-based) search. Results can be copied and injected into new coding prompts, used in RAG pipelines, or exported for analysis.
 
-## Search Types
+## Search types
 
 <CardGroup cols={2}>
-  <Card title="Full-Text Search" description="Match exact words and phrases" />
-  <Card
-    title="Semantic Search"
-    description="Find similar concepts and meaning"
-  />
+  <Card title="Full-Text Search" href="/search/fulltext" description="Match exact words and phrases in session content" />
+  <Card title="Semantic Search" href="/search/semantic" description="Find conceptually similar content using AI embeddings" />
 </CardGroup>
 
-## How It Works
+### Full-text search
 
-### Full-Text Search
-
-Matches exact terms in session content:
+Matches exact terms against `sessions.searchableText`, which concatenates the session title with all message text content. Uses Convex's built-in search indexes for fast, ranked results.
 
 ```
-authentication middleware
+authentication middleware express
 ```
 
-Returns sessions containing "authentication" and "middleware".
+Returns sessions containing all three terms, ranked by relevance.
 
-### Semantic Search
+### Semantic search
 
-Uses AI embeddings to find conceptually similar content:
+Converts your query into a 1536-dimension vector using OpenAI's `text-embedding-3-small` model and searches against the `sessionEmbeddings` table using cosine similarity.
 
 ```
-how to handle user login
+how to handle OAuth callback errors
 ```
 
-Returns sessions about authentication, even if they don't contain those exact words.
+Returns sessions about authentication and error handling, even if they use different terminology.
 
-## Using Context Search
+<Info title="Semantic search requires OpenAI">
+  Semantic search uses OpenAI embeddings. On self-hosted deployments, you need to set the `OPENAI_API_KEY` environment variable. On the hosted version, this is already configured.
+</Info>
+
+## How embeddings work
+
+When a session is synced, OpenSync generates an embedding vector from the session's searchable text. This vector is stored in the `sessionEmbeddings` table with:
+
+| Field | Description |
+| --- | --- |
+| `sessionId` | Reference to the session |
+| `embedding` | 1536-dimension float array |
+| `textHash` | Hash of the source text, used to skip re-embedding unchanged sessions |
+| `createdAt` | When the embedding was generated |
+
+Message-level embeddings are also generated for finer-grained search, stored in the `messageEmbeddings` table.
+
+Embeddings are generated asynchronously after session sync. There may be a brief delay before a newly synced session appears in semantic search results.
+
+## Using context search in the dashboard
 
 <Steps>
-  <Step title="Navigate to Context">
-    Click **Context** in the navigation menu
+  <Step title="Open the Context tab">
+    Click **Context** in the sidebar navigation.
+  </Step>
+  <Step title="Choose search type">
+    Toggle between **Full-text** and **Semantic** at the top of the search box.
   </Step>
   <Step title="Enter your query">
-    Type a question or keywords in the search box
+    Type keywords (for full-text) or a natural language question (for semantic).
   </Step>
   <Step title="Review results">
-    Results show matching sessions ranked by relevance
+    Results show matched sessions ranked by relevance score. Each result includes a title, snippet, score, and link to the full session.
   </Step>
   <Step title="Copy context">
-    Click **Copy** to copy relevant context for use in prompts
+    Click **Copy** on any result to copy the relevant session content to your clipboard. Paste it into your next coding prompt for better context.
   </Step>
 </Steps>
 
-## API Access
+## Using context search via API
 
-Use the search API for programmatic access:
+### Full-text
 
 ```bash
-# Full-text search
-curl -X POST "https://your-convex.convex.site/search" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X POST "https://polished-penguin-622.convex.site/search" \
+  -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
-  -d '{"query": "authentication", "type": "fulltext"}'
-
-# Semantic search
-curl -X POST "https://your-convex.convex.site/search" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "how to handle login", "type": "semantic"}'
+  -d '{"query": "authentication middleware", "type": "fulltext", "limit": 10}'
 ```
 
-## Use Cases
+### Semantic
 
-- **RAG pipelines** - Inject relevant context into prompts
-- **Knowledge retrieval** - Find past solutions to similar problems
-- **Documentation** - Search through coding conversations
-- **Learning** - Review how you solved problems before
+```bash
+curl -X POST "https://polished-penguin-622.convex.site/search" \
+  -H "Authorization: Bearer osk_your_key" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "how to handle login errors", "type": "semantic", "limit": 10}'
+```
 
-<Tip title="Combine with prompts">
-  Use context search results to provide relevant background when starting new
-  coding sessions.
-</Tip>
+### Context endpoint (for RAG)
+
+The dedicated `/api/context` endpoint returns results formatted for injection into LLM prompts:
+
+```bash
+curl "https://polished-penguin-622.convex.site/api/context?q=handle+auth+errors&limit=5" \
+  -H "Authorization: Bearer osk_your_key"
+```
+
+Response:
+
+```json
+{
+  "context": [
+    {
+      "sessionId": "j57a...",
+      "title": "Fix OAuth callback loop",
+      "content": "The relevant conversation excerpt...",
+      "score": 0.91
+    }
+  ]
+}
+```
+
+## Use cases
+
+### RAG pipelines
+
+Inject past session knowledge into new prompts. When starting a new coding task, query the context API for relevant past sessions and include the results in your system prompt.
+
+### Knowledge retrieval
+
+Find how you solved a specific problem before. Semantic search is especially useful here because you can describe the problem in your own words.
+
+### Team documentation
+
+If your team shares an OpenSync instance (via self-hosting), search becomes a shared knowledge base of all coding sessions across the team.
+
+### Eval dataset curation
+
+Use search to find sessions about specific topics, then mark them as eval-ready for export.
+
+## Tips
+
+- **Be specific** with full-text search. Use function names, library names, and error messages.
+- **Be descriptive** with semantic search. Ask questions as if you were talking to a colleague.
+- **Combine search types**. Start with semantic to find the general area, then use full-text to find exact matches.
+- **Use source filters** alongside search to narrow results to a specific tool.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Full-Text Search" href="/search/fulltext" description="How full-text indexing works" />
+  <Card title="Semantic Search" href="/search/semantic" description="How embedding-based search works" />
+  <Card title="Hybrid Search" href="/search/hybrid" description="Combining both search types" />
+  <Card title="API Reference" href="/api/endpoints" description="Search and context API details" />
+</CardGroup>

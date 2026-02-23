@@ -6,29 +6,31 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- Migrated all in-app documentation to Mintlify at docs.opensync.dev
-  - Removed Docs.tsx (full in-app documentation page with sidebar, search, and markdown export)
-  - Removed src/lib/search.ts (client-side search index builder for docs)
-  - Removed src/search-index.json (pre-built search index data)
-  - Removed src/mdx.d.ts (MDX type declarations)
-  - All /docs, /docs/*, and /docs-legacy routes now redirect externally to docs.opensync.dev
-  - Added DocsRedirect component in App.tsx for client-side redirect
-  - Updated Sidebar.tsx docs link to point to external docs.opensync.dev
-- Platform Stats header now displays "last 1000 sessions" label for clarity
-  - Users know the leaderboard data is based on recent activity, not all-time totals
-
-### Fixed
-
-- Fixed Netlify build error: Stats.tsx was git-ignored causing module not found error
-  - Removed src/pages/Stats.tsx from .gitignore so placeholder page is included in build
-  - Updated Stats.tsx header comment to reflect it's no longer git-ignored
-- Fixed Netlify build error caused by removed Docs.tsx import references
-  - Cleaned up all imports of deleted files (search.ts, search-index.json, mdx.d.ts)
-
 ### Added
 
+- Comprehensive Mintlify documentation rewrite with in-depth technical content
+  - Created docs.json (replacing mint.json) with new Mintlify schema, navigation groups, and correct GitHub URLs
+  - Created index.mdx landing page with CardGroup links to all documentation sections
+  - Rewrote getting-started/hosted.mdx with supported tools table, step-by-step setup, what gets synced, privacy details
+  - Rewrote getting-started/requirements.mdx with cloud vs local deployment, architecture overview, env var reference
+  - Rewrote dashboard/overview.mdx with schema field mapping, filter details, real-time update explanation
+  - Rewrote dashboard/sessions.mdx with full data model table, filtering, sorting, message parts, bulk actions
+  - Rewrote dashboard/evals.mdx with eval workflow, labels, metadata fields, three export formats with examples
+  - Rewrote dashboard/analytics.mdx with cost formula, model pricing table, token breakdown, trend charts
+  - Rewrote dashboard/context.mdx with embedding internals, API examples, RAG use cases
+  - Rewrote plugins/opencode-sync.mdx with setup steps, commands, syncing internals, schema mapping, troubleshooting
+  - Rewrote plugins/claude-code-sync.mdx with setup, commands, session data mapping, troubleshooting
+  - Rewrote plugins/codex-sync.mdx with supported models, pricing, troubleshooting
+  - Rewrote plugins/cursor-sync.mdx with supported models, what gets synced, privacy notes
+  - Rewrote api/endpoints.mdx with full sync/query/search/export/context endpoint reference and request/response examples
+  - Rewrote search/fulltext.mdx with indexing details, syntax, ranking, comparison with semantic
+  - Rewrote search/semantic.mdx with embedding model, storage schema, examples, requirements
+  - Rewrote search/hybrid.mdx with scoring formula, RAG pipeline example, comparison table
+  - Rewrote auth/workos.mdx with auth flow, user provisioning schema, redirect URIs, CORS, troubleshooting
+  - Rewrote hosting/convex.mdx with schema tables, indexes, HTTP endpoints, monitoring, scaling
+  - Fixed broken /docs#anchor links in README.md, ONE-CLICK-DEPLOY.md, and Login.tsx (mapped to new Mintlify paths)
+  - Fixed /docs/fork/contribute link in FAQ
+  - Added Pi and Factory Droid to supported tools in FAQ
 - pi-opensync-plugin community plugin support (syncs Pi coding agent sessions)
   - Added "pi" to SourceType union with orange PI badge (#f97316)
   - Added Pi to Login page "Syncs with" section with SVG icon

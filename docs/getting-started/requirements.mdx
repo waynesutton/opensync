@@ -5,55 +5,122 @@ description: "What you need to self-host OpenSync"
 
 # Self-Hosting Requirements
 
-OpenSync can be deployed in two ways: cloud deployment with managed services, or 100% local deployment.
+OpenSync can run on managed cloud services or on your own infrastructure. This page covers what you need for each approach.
 
-## Cloud Deployment
+## Cloud deployment
 
-For standard deployment with cloud services:
+The standard deployment uses these managed services:
 
-| Service                                                        | Purpose                        | Required |
-| -------------------------------------------------------------- | ------------------------------ | -------- |
-| [Convex](https://convex.dev)                                   | Real-time database and backend | Yes      |
-| [WorkOS](https://workos.com)                                   | Authentication (AuthKit)       | Yes      |
-| [OpenAI](https://platform.openai.com)                          | Embeddings for semantic search | Optional |
-| [Netlify](https://netlify.com) or [Vercel](https://vercel.com) | Frontend hosting               | Yes      |
+| Service | Purpose | Required | Free tier |
+| --- | --- | --- | --- |
+| [Convex](https://convex.dev) | Real-time database, backend functions, file storage | Yes | 1M function calls/month |
+| [WorkOS](https://workos.com) | Authentication via AuthKit (GitHub, Google, email) | Yes | 1M MAUs |
+| [OpenAI](https://platform.openai.com) | text-embedding-3-small for semantic search | Optional | Pay-as-you-go |
+| [Netlify](https://netlify.com) or [Vercel](https://vercel.com) | Static frontend hosting | Yes | Generous free tier |
 
-<Info title="Free tiers available">
-  All services have generous free tiers. Convex free tier includes 1M function
-  calls/month. WorkOS free tier includes 1M MAUs.
+<Info title="Cost for small teams">
+  Most individual developers and small teams will stay within free tiers for Convex, WorkOS, and Netlify. The main variable cost is OpenAI embeddings, which run about $0.02 per 1M tokens. A typical coding session generates roughly 2K-10K tokens of searchable text, so embedding costs are negligible.
 </Info>
 
-## 100% Local Deployment
+## What Convex handles
 
-For air-gapped or privacy-focused deployments:
+Convex serves as the entire backend for OpenSync. There is no separate server or API layer to deploy. Convex provides:
 
-| Component  | Local Alternative                                |
-| ---------- | ------------------------------------------------ |
-| Database   | Convex self-hosted (coming soon) or local SQLite |
-| Auth       | Local auth provider or disable auth              |
-| Embeddings | Local models via Ollama                          |
-| Frontend   | Any static server                                |
+- **Real-time database** with automatic sync to connected clients
+- **Serverless functions** for queries, mutations, and actions
+- **HTTP endpoints** for the plugin sync API (`/sync/session`, `/sync/message`, etc.)
+- **Full-text search** indexes for keyword search across sessions
+- **Vector search** indexes for semantic search with 1536-dimension OpenAI embeddings
+- **File storage** for daily wrapped images and profile photos
+- **Scheduled functions** for background processing like embedding generation
 
-<Warning title="Local deployment">
-  100% local deployment requires additional configuration. See the [Fork &
-  Self-Host](/docs#fork) section for details.
+All backend logic lives in the `convex/` directory of the repository.
+
+## What WorkOS handles
+
+WorkOS AuthKit provides authentication with zero configuration for OAuth providers:
+
+- GitHub sign-in
+- Google sign-in
+- Email/password sign-in
+- Session management and token refresh
+
+WorkOS is configured through environment variables. See the [WorkOS setup guide](/auth/workos) for details.
+
+## 100% Local deployment
+
+For air-gapped environments or developers who want full control:
+
+| Component | Cloud service | Local alternative |
+| --- | --- | --- |
+| Database & backend | Convex Cloud | Convex self-hosted (when available) |
+| Authentication | WorkOS | Disable auth or use a local provider |
+| Embeddings | OpenAI API | Local models via Ollama (nomic-embed-text, etc.) |
+| Frontend | Netlify/Vercel | Any static file server (`npx serve dist/`) |
+
+<Warning title="Local deployment is advanced">
+  Running fully local requires modifying authentication logic and embedding generation. The codebase assumes Convex Cloud and WorkOS by default. See the [Fork Guide](/fork/guide) for instructions on customizing these components.
 </Warning>
 
-## Environment Variables
+## System requirements
 
-Required environment variables for cloud deployment:
+For local development:
+
+- **Node.js** 18 or later
+- **npm** 9+ or **bun** 1.0+
+- **Git** for cloning the repository
+
+No Docker or container runtime is needed. Convex runs as a cloud service and the frontend is a standard Vite/React app.
+
+## Environment variables
+
+All configuration is done through environment variables. Here is the minimum set for a cloud deployment:
 
 ```bash
-# Convex
+# Frontend (Vite)
 VITE_CONVEX_URL=https://your-deployment.convex.cloud
+VITE_WORKOS_CLIENT_ID=client_...
 
-# WorkOS (for authentication)
+# Convex backend (set via npx convex env set)
 WORKOS_API_KEY=sk_...
 WORKOS_CLIENT_ID=client_...
-WORKOS_COOKIE_PASSWORD=a-32-character-or-longer-secret
+WORKOS_COOKIE_PASSWORD=a-random-string-at-least-32-characters
 
-# OpenAI (optional, for semantic search)
+# Optional: enables semantic search
 OPENAI_API_KEY=sk-...
 ```
 
-See the [Environment Variables](/docs#hosting-env) section for complete setup instructions.
+For the complete list with descriptions, see [Environment Variables](/hosting/env).
+
+## Architecture overview
+
+```
+CLI Tool (OpenCode, Claude, Cursor, etc.)
+    |
+    v
+Sync Plugin (npm package, runs locally)
+    |
+    v  HTTPS POST /sync/session, /sync/message
+    |
+Convex HTTP Endpoints (convex/http.ts)
+    |
+    v
+Convex Database (sessions, messages, parts, embeddings)
+    |
+    v
+React Dashboard (Vite, served from Netlify/Vercel)
+    |
+    v
+User's browser (real-time subscriptions via Convex client)
+```
+
+Plugins authenticate using API keys generated in the dashboard Settings. Each API call includes an `Authorization: Bearer osk_...` header that maps to a user account.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" href="/getting-started/quick-start" description="Deploy OpenSync in 5 minutes" />
+  <Card title="Convex Backend" href="/hosting/convex" description="Set up and deploy the Convex backend" />
+  <Card title="WorkOS Auth" href="/auth/workos" description="Configure authentication" />
+  <Card title="Environment Variables" href="/hosting/env" description="Complete variable reference" />
+</CardGroup>

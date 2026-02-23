@@ -5,11 +5,13 @@ description: "Sync sessions from Claude Code to OpenSync"
 
 # Claude Code Plugin
 
-Sync your Claude Code sessions to OpenSync automatically.
+The `claude-code-sync` plugin syncs your [Claude Code](https://claude.ai) sessions to OpenSync. It reads session data from Claude Code's local storage and pushes it to your dashboard in real time.
+
+**Source identifier:** `claude-code`
 
 ## Installation
 
-Install the plugin globally:
+Install globally with npm:
 
 ```bash
 npm install -g claude-code-sync
@@ -21,99 +23,157 @@ Or with yarn:
 yarn global add claude-code-sync
 ```
 
-## Configuration
-
-### Login
-
-Connect the plugin to your OpenSync account:
+Verify the installation:
 
 ```bash
-claude-code-sync login
+claude-code-sync --version
 ```
 
-You'll be prompted for:
+## Setup
 
-- **Convex URL** - Your OpenSync backend URL
-- **API Key** - Your API key from Settings
+<Steps>
+  <Step title="Generate an API key">
+    Log in to [opensync.dev](https://www.opensync.dev), go to **Settings**, and click **Generate API Key**. Copy the key (starts with `osk_`).
+  </Step>
+  <Step title="Run login">
+    ```bash
+    claude-code-sync login
+    ```
 
-### Config File
+    Enter your Convex URL and API key when prompted:
 
-Configuration is stored in `~/.claude-code-sync/config.json`:
+    - **Convex URL**: `https://polished-penguin-622.convex.cloud` (for hosted) or your self-hosted URL
+    - **API Key**: The key you copied from Settings
+  </Step>
+  <Step title="Verify the connection">
+    ```bash
+    claude-code-sync status
+    ```
+
+    You should see `Connected: true` with your Convex URL.
+  </Step>
+</Steps>
+
+## Config file
+
+Credentials are stored in `~/.claude-code-sync/config.json`:
 
 ```json
 {
-  "convexUrl": "https://your-deployment.convex.cloud",
+  "convexUrl": "https://polished-penguin-622.convex.cloud",
   "apiKey": "osk_..."
 }
 ```
 
 ## Commands
 
-### status
+### claude-code-sync login
 
-Check connection and sync status:
+Prompts for Convex URL and API key, then saves them to the config file.
 
-```bash
-claude-code-sync status
-```
+### claude-code-sync status
 
-Output:
+Shows connection info and sync stats:
 
 ```
 Connected: true
-Convex URL: https://your-deployment.convex.cloud
+Convex URL: https://polished-penguin-622.convex.cloud
 Sessions synced: 28
 Last sync: 5 minutes ago
 ```
 
-### sync
+### claude-code-sync sync
 
-Manually trigger a sync:
+Force a manual sync of all sessions.
 
 ```bash
 claude-code-sync sync
 ```
 
 <Info>
-  Sessions sync automatically. Manual sync is useful after a network
-  interruption.
+  Sessions sync automatically. Use manual sync after a network interruption or to catch any missed sessions.
 </Info>
 
-### logout
+### claude-code-sync logout
 
-Disconnect and clear credentials:
+Clears stored credentials.
 
 ```bash
 claude-code-sync logout
 ```
 
-## How Syncing Works
+## How syncing works
 
-1. Claude Code stores sessions in `~/.claude/projects/`
-2. The plugin monitors for new and updated sessions
-3. Sessions sync to OpenSync in real-time
-4. Each message includes model, tokens, and timestamp
+1. Claude Code stores session data in `~/.claude/projects/` and related directories.
+2. The plugin scans for new and updated sessions.
+3. Each session is pushed to the `/sync/session` endpoint with `source: "claude-code"`.
+4. Each message is pushed to `/sync/message` with its role, text content, token counts, and any tool call data.
+5. Deduplication uses `externalId`, so re-syncing is safe.
 
-## Session Data
+### What gets synced
 
-Synced sessions include:
+| Data | Description |
+| --- | --- |
+| Conversation messages | Full history with role labels (user, assistant, system, tool) |
+| Model info | Model name (e.g., "claude-sonnet-4-20250514") and provider ("anthropic") |
+| Token counts | Prompt and completion tokens per message and per session |
+| Cost | Estimated cost based on Anthropic pricing |
+| Project path | Working directory associated with the Claude Code session |
+| Tool calls | Tool names, arguments, and results |
 
-| Field    | Description                  |
-| -------- | ---------------------------- |
-| messages | Full conversation history    |
-| model    | claude-3-5-sonnet, etc.      |
-| tokens   | Prompt and completion tokens |
-| cost     | Estimated cost               |
-| project  | Project directory path       |
+### Session data
+
+Each synced session maps to these database fields:
+
+| Plugin data | Database field |
+| --- | --- |
+| Session ID from Claude | `sessions.externalId` |
+| First user message | `sessions.title` (auto-generated) |
+| Model name | `sessions.model` |
+| Input tokens | `sessions.promptTokens` |
+| Output tokens | `sessions.completionTokens` |
+| Calculated cost | `sessions.cost` |
+| Project directory | `sessions.projectPath`, `sessions.projectName` |
 
 ## Troubleshooting
 
 ### Sessions not appearing
 
-1. Verify login: `claude-code-sync status`
-2. Check Claude Code is writing to the expected directory
-3. Try manual sync: `claude-code-sync sync`
+1. Run `claude-code-sync status` to verify the connection.
+2. Check that Claude Code is active and has sessions in `~/.claude/projects/`.
+3. Run `claude-code-sync sync` to force a manual push.
 
 ### Duplicate sessions
 
-This can happen if session IDs change. Contact support if duplicates persist.
+Duplicates can occur if Claude Code regenerates session IDs. The plugin uses `externalId` for dedup, but if the source ID changes, a new session is created. Contact support if duplicates persist across syncs.
+
+### Authentication errors
+
+If you see "Unauthorized" or "Invalid API key":
+
+1. Check that your API key is active in the dashboard Settings.
+2. Re-run `claude-code-sync login` to refresh credentials.
+3. Verify the Convex URL matches your deployment.
+
+### Network timeouts
+
+For slow connections, the plugin retries failed requests up to 3 times with exponential backoff. If syncs consistently fail, check your network and Convex deployment health:
+
+```bash
+curl https://polished-penguin-622.convex.site/health
+```
+
+## Updating
+
+```bash
+npm update -g claude-code-sync
+```
+
+## Uninstalling
+
+```bash
+claude-code-sync logout
+npm uninstall -g claude-code-sync
+```
+
+Synced sessions remain in your dashboard after uninstalling the plugin.

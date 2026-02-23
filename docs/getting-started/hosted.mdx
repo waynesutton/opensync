@@ -3,94 +3,138 @@ title: "Use the Hosted Version"
 description: "Start syncing sessions in under 2 minutes with opensync.dev"
 ---
 
-# Use the Hosted Versions
+# Use the Hosted Version
 
 The fastest way to get started. Sign in at [opensync.dev](https://www.opensync.dev), install a plugin locally, and start syncing in under 2 minutes.
 
-## Features
+No servers to configure. No databases to provision. The hosted version runs on Convex with WorkOS authentication and handles everything for you.
+
+## What you get
 
 <CardGroup cols={2}>
   <Card
-    title="Sync"
-    description="Sessions sync from CLI to cloud automatically as you work"
+    title="Real-time sync"
+    description="Sessions sync from your CLI to the cloud automatically as you work. Every message, tool call, and token count lands in your dashboard within seconds."
   />
   <Card
-    title="Search"
-    description="Full-text and semantic search across all sessions"
+    title="Full-text and semantic search"
+    description="Search across all your sessions using exact keywords or natural language queries powered by OpenAI embeddings."
   />
   <Card
-    title="Private"
-    description="Your data stays in your account, secured by WorkOS"
+    title="Private by default"
+    description="Your data stays in your account, secured by WorkOS AuthKit. No sessions are shared unless you explicitly make them public."
   />
   <Card
-    title="Export"
-    description="Export for evals in DeepEval, OpenAI, or plain text formats"
+    title="Eval exports"
+    description="Export sessions in DeepEval JSON, OpenAI Evals JSONL, or plain text. Build evaluation datasets from real coding conversations."
   />
   <Card
-    title="Delete"
-    description="Your control. Delete sessions or your entire account anytime."
+    title="Full data control"
+    description="Delete individual sessions, bulk delete, or wipe your entire account. Your data, your call."
   />
   <Card
-    title="API"
-    description="Use the REST API for RAG, context injection, and integrations"
+    title="REST API"
+    description="Programmatic access to sessions, search, and exports. Use the API for RAG pipelines, context injection, and custom integrations."
   />
 </CardGroup>
 
-## Install Plugins Locally
+## Supported tools
 
-Install one or more plugins globally. They run on your machine and sync to the hosted dashboard.
+OpenSync works with these AI coding tools through dedicated sync plugins:
 
-### OpenCode
+| Tool | Plugin | npm |
+| --- | --- | --- |
+| [OpenCode](https://opencode.ai) | opencode-sync-plugin | [npm](https://www.npmjs.com/package/opencode-sync-plugin) |
+| [Claude Code](https://claude.ai) | claude-code-sync | [npm](https://www.npmjs.com/package/claude-code-sync) |
+| [Codex CLI](https://github.com/openai/codex) | codex-sync | [npm](https://www.npmjs.com/package/codex-sync) |
+| [Cursor](https://cursor.com) | cursor-opensync-plugin | [npm](https://www.npmjs.com/package/cursor-opensync-plugin) |
+| [Pi](https://github.com/joshuadavidthomas/pi-opensync-plugin) | pi-opensync-plugin | [npm](https://www.npmjs.com/package/pi-opensync-plugin) |
+| [Factory Droid](https://github.com/yemyat/droid-sync-plugin) | droid-sync | [npm](https://www.npmjs.com/package/droid-sync) |
 
-```bash
-npm install -g opencode-sync-plugin
-```
-
-[View on npm](https://www.npmjs.com/package/opencode-sync-plugin)
-
-### Claude Code
-
-```bash
-npm install -g claude-code-sync
-```
-
-[View on npm](https://www.npmjs.com/package/claude-code-sync)
-
-### Codex CLI
-
-```bash
-npm install -g codex-sync
-```
-
-[View on npm](https://www.npmjs.com/package/codex-sync)
-
-### Cursor
-
-```bash
-npm install -g cursor-sync-plugin
-```
-
-[View on npm](https://www.npmjs.com/package/cursor-opensync-plugin)
-
-## Login and Sync
+## Step by step setup
 
 <Steps>
-  <Step title="Sign in">
-    Sign in at [opensync.dev](https://www.opensync.dev)
+  <Step title="Sign in to OpenSync">
+    Go to [opensync.dev](https://www.opensync.dev) and sign in with GitHub, Google, or email. Your account is created automatically on first sign in.
   </Step>
-  <Step title="Generate API Key">
-    Go to **Settings** and click **Generate API Key**
+  <Step title="Generate an API key">
+    Open **Settings** from the sidebar and click **Generate API Key**. Copy the key. It starts with `osk_` and is shown only once.
   </Step>
-  <Step title="Run login command">
-    Run the login command for your plugin: ```bash opencode-sync login # or
-    claude-code-sync login # or codex-sync login # or cursor-sync login ```
+  <Step title="Install a sync plugin">
+    Install the plugin for your tool globally with npm:
+
+    ```bash
+    npm install -g opencode-sync-plugin   # For OpenCode
+    npm install -g claude-code-sync       # For Claude Code
+    npm install -g codex-sync             # For Codex CLI
+    npm install -g cursor-opensync-plugin # For Cursor
+    ```
   </Step>
-  <Step title="Enter credentials">
-    Enter the **Convex URL** and **API key** when prompted
+  <Step title="Run the login command">
+    Each plugin has a `login` command that stores your credentials locally:
+
+    ```bash
+    opencode-sync login
+    ```
+
+    When prompted, enter:
+    - **Convex URL**: `https://polished-penguin-622.convex.cloud`
+    - **API Key**: The key you copied from Settings
   </Step>
-  <Step title="Start coding">Start coding. Sessions sync automatically.</Step>
+  <Step title="Start coding">
+    Open your coding tool and start a session. The plugin picks up new sessions automatically and syncs them to your dashboard. You should see your first session appear within seconds.
+  </Step>
 </Steps>
 
 <Info title="Hosted Convex URL">
-  `https://polished-penguin-622.convex.cloud`
+  The hosted version uses `https://polished-penguin-622.convex.cloud` as the Convex URL. All plugins need this URL during login.
 </Info>
+
+## Verify it works
+
+After logging in, run the status command to confirm the connection:
+
+```bash
+opencode-sync status
+```
+
+You should see output like:
+
+```
+Connected: true
+Convex URL: https://polished-penguin-622.convex.cloud
+Sessions synced: 0
+```
+
+Then start a coding session. Open your dashboard at [opensync.dev](https://www.opensync.dev) and the session should appear in the Sessions view.
+
+## What gets synced
+
+Each session includes:
+
+- **Title** auto-generated from the first user message
+- **All messages** with role labels (user, assistant, system, tool)
+- **Token counts** per message and per session (prompt and completion tokens)
+- **Cost estimate** based on published model pricing
+- **Model name** and provider
+- **Project path** (if available from the tool)
+- **Timestamps** for session creation and last update
+
+Message parts are preserved, including text content, tool calls, and code blocks.
+
+## Data and privacy
+
+- Sessions are stored in your personal Convex database partition
+- No data is shared between accounts
+- WorkOS handles authentication with enterprise-grade security
+- You can delete any session or your entire account at any time
+- Self-hosting is available if you need full control over the infrastructure
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Dashboard Overview" href="/dashboard/overview" description="Learn how to navigate sessions, analytics, and search" />
+  <Card title="Eval Exports" href="/dashboard/evals" description="Build evaluation datasets from your sessions" />
+  <Card title="API Reference" href="/api/endpoints" description="Access your data programmatically" />
+  <Card title="Self-Host" href="/getting-started/requirements" description="Deploy your own instance for full control" />
+</CardGroup>

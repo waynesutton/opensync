@@ -1,75 +1,161 @@
 ---
 title: "Evals Export"
-description: "Export sessions for AI evaluation frameworks"
+description: "Tag sessions with quality labels and export evaluation datasets"
 ---
 
 # Evals Export
 
-Export your sessions in formats compatible with popular AI evaluation frameworks.
+The Evals view lets you label coding sessions with quality ratings and export them as structured datasets for AI evaluation frameworks. This is useful for building benchmarks, training data, and quality assurance workflows.
 
-## Supported Formats
+## Eval workflow
 
-<CardGroup cols={3}>
-  <Card title="DeepEval" description="JSONL format for DeepEval framework" />
-  <Card title="OpenAI Evals" description="JSONL format for OpenAI evals" />
-  <Card title="Plain Text" description="Human-readable text format" />
-</CardGroup>
+<Steps>
+  <Step title="Mark sessions as eval-ready">
+    From the Sessions view, select sessions and click **Mark as Eval Ready**. This sets `evalReady: true` on the session, making it appear in the Evals tab.
+  </Step>
+  <Step title="Review and label">
+    Open each eval-ready session and assign a quality status and optional tags.
+  </Step>
+  <Step title="Add expected output">
+    For sessions you want to use as ground truth, write the expected output that the model should have produced.
+  </Step>
+  <Step title="Export">
+    Select labeled sessions and export in your chosen format.
+  </Step>
+</Steps>
 
-## DeepEval Format
+## Eval labels
 
-Export for use with [DeepEval](https://github.com/confident-ai/deepeval):
+Each session can be tagged with one of these statuses:
+
+| Status | Meaning | When to use |
+| --- | --- | --- |
+| `golden` | Perfect response, suitable as ground truth | The assistant's answer is exactly right, well-structured, and complete |
+| `correct` | Acceptable response | The answer works but could be better in style or completeness |
+| `incorrect` | Wrong or harmful response | The assistant made factual errors, produced broken code, or missed the point |
+| `needs_review` | Not yet evaluated | Default for sessions that need human review |
+
+These map to the `sessions.evalStatus` field in the database.
+
+## Eval metadata fields
+
+Beyond the status label, each session supports these eval-specific fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `evalReady` | boolean | Whether the session appears in the Evals view |
+| `evalStatus` | string | One of: golden, correct, incorrect, needs_review |
+| `evalNotes` | string | Free-text notes about the quality or issues |
+| `evalTags` | string[] | Custom tags for categorization (e.g., "refactoring", "debugging", "architecture") |
+| `expectedOutput` | string | The ideal response for ground-truth comparison |
+| `reviewedAt` | number | Timestamp of the last review |
+
+## Export formats
+
+### DeepEval JSON
+
+For use with [DeepEval](https://github.com/confident-ai/deepeval), the open-source LLM evaluation framework.
+
+Each session exports as one JSON object per user-assistant turn pair:
 
 ```json
 {
-  "input": "User prompt here",
-  "actual_output": "Assistant response here",
-  "context": ["Previous context..."],
+  "input": "The user's message text",
+  "actual_output": "The assistant's response text",
+  "expected_output": "The expected response (if set)",
+  "context": ["Previous messages in the conversation..."],
   "retrieval_context": []
 }
 ```
 
-## OpenAI Evals Format
+A session with 5 user-assistant exchanges produces 5 JSON objects. The `context` field includes all prior messages in the conversation up to that point.
 
-Export for use with [OpenAI Evals](https://github.com/openai/evals):
+If `expectedOutput` is set on the session, it is included in the `expected_output` field of the last turn.
 
-```json
-{
-  "messages": [
-    { "role": "user", "content": "User prompt" },
-    { "role": "assistant", "content": "Assistant response" }
-  ]
-}
+### OpenAI Evals JSONL
+
+For use with [OpenAI Evals](https://github.com/openai/evals) and similar chat-format evaluation tools.
+
+Each line is a JSON object representing the full conversation:
+
+```jsonl
+{"messages": [{"role": "user", "content": "User prompt"}, {"role": "assistant", "content": "Assistant response"}]}
 ```
 
-## How to Export
+The messages array preserves the complete conversation order including system, user, assistant, and tool messages.
+
+### Plain Text
+
+A human-readable format that outputs the conversation as labeled text:
+
+```
+## Session: Fix the login redirect bug
+
+**User:** I'm seeing a redirect loop when I try to log in...
+
+**Assistant:** The issue is in your AuthProvider component...
+
+---
+Tokens: 4,521 | Cost: $0.08 | Model: claude-sonnet-4-20250514
+Status: golden | Tags: debugging, auth
+```
+
+## Exporting from the UI
 
 <Steps>
+  <Step title="Open the Evals tab">
+    Click **Evals** in the sidebar. This shows only sessions where `evalReady` is true.
+  </Step>
+  <Step title="Filter by status">
+    Use the status filter to show only golden, correct, incorrect, or needs_review sessions.
+  </Step>
   <Step title="Select sessions">
-    From the sessions list, select the sessions you want to export using the
-    checkboxes.
+    Use the checkboxes to select individual sessions, or **Select All** for the current filtered view.
   </Step>
-  <Step title="Click Export">Click the **Export** button in the toolbar.</Step>
-  <Step title="Choose format">
-    Select your desired format (DeepEval, OpenAI, or Plain Text).
+  <Step title="Click Export">
+    Choose your format from the Export dropdown. The file downloads immediately.
   </Step>
-  <Step title="Download">The export file will download automatically.</Step>
 </Steps>
 
-## Bulk Export
+## Exporting via API
 
-To export all sessions:
-
-1. Use the **Select All** checkbox
-2. Or use the API endpoint for programmatic export:
+For programmatic access, use the export API endpoint:
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
-  "https://your-convex.convex.site/api/export?format=deepeval"
+curl -H "Authorization: Bearer osk_your_api_key" \
+  "https://your-convex.convex.site/api/export?format=deepeval&status=golden"
 ```
 
-## Use Cases
+Query parameters:
 
-- **Model evaluation** - Compare model performance across sessions
-- **Fine-tuning** - Create training data from successful sessions
-- **Quality assurance** - Review and score AI responses
-- **Benchmarking** - Track improvements over time
+| Param | Values | Description |
+| --- | --- | --- |
+| `format` | `deepeval`, `openai`, `text` | Export format |
+| `status` | `golden`, `correct`, `incorrect`, `needs_review` | Filter by eval status |
+| `tag` | Any string | Filter by eval tag |
+| `limit` | Number | Max sessions to export |
+
+## Use cases
+
+### Model comparison
+
+Export the same set of "golden" sessions and run them against different models. Compare actual outputs against expected outputs to measure which model performs better on your specific coding tasks.
+
+### Fine-tuning datasets
+
+Use "golden" sessions as training data for fine-tuning. The DeepEval format provides input/output pairs that work directly as supervised training examples.
+
+### Regression testing
+
+When you update your prompts or switch models, re-run your evaluation suite against the labeled sessions to check for regressions.
+
+### Team quality review
+
+Tag sessions from different team members, review them together, and build shared benchmarks for what "good" looks like for your codebase.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Sessions View" href="/dashboard/sessions" description="Browse and manage all sessions" />
+  <Card title="API Reference" href="/api/endpoints" description="Programmatic access to export and search" />
+</CardGroup>

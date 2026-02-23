@@ -1,182 +1,348 @@
 ---
 title: "API Endpoints"
-description: "Complete API endpoint reference"
+description: "Complete REST API reference for OpenSync"
 ---
 
 # API Endpoints
 
-All endpoints use the base URL: `https://your-deployment.convex.site`
+OpenSync exposes a REST API through Convex HTTP endpoints. All endpoints are authenticated with API keys.
 
-## Sessions
+## Base URL
 
-### List Sessions
+For the hosted version:
 
-```http
-GET /api/sessions
+```
+https://polished-penguin-622.convex.site
 ```
 
-Query parameters:
+For self-hosted deployments, replace the base URL with your Convex deployment URL, substituting `.convex.cloud` with `.convex.site`:
 
-| Parameter | Type   | Description                                        |
-| --------- | ------ | -------------------------------------------------- |
-| limit     | number | Max sessions to return (default: 50)               |
-| cursor    | string | Pagination cursor                                  |
-| source    | string | Filter by source (opencode, claude, codex, cursor) |
+```
+https://your-deployment.convex.site
+```
 
-Response:
+## Authentication
+
+All endpoints (except `/health`) require an API key in the `Authorization` header:
+
+```bash
+Authorization: Bearer osk_your_api_key_here
+```
+
+Generate API keys from the **Settings** page in the dashboard. Keys start with `osk_` and are tied to your user account.
+
+<Warning title="Keep your API key secret">
+  API keys provide full access to your account data. Do not commit them to version control or share them publicly.
+</Warning>
+
+## Sync endpoints
+
+These endpoints are used by sync plugins to push session and message data.
+
+### POST /sync/session
+
+Create or update a session. Uses upsert logic based on `externalId`, so calling this multiple times with the same `externalId` is safe.
+
+**Request body:**
+
+```json
+{
+  "externalId": "unique-session-id-from-your-tool",
+  "source": "opencode",
+  "title": "Fix the login redirect bug",
+  "model": "claude-sonnet-4-20250514",
+  "provider": "anthropic",
+  "projectPath": "/Users/me/projects/my-app",
+  "projectName": "my-app",
+  "promptTokens": 3200,
+  "completionTokens": 1800,
+  "totalTokens": 5000,
+  "cost": 0.037,
+  "durationMs": 45000,
+  "messageCount": 8
+}
+```
+
+**Required fields:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `externalId` | string | Unique session ID from the originating tool. Used for dedup. |
+| `source` | string | Plugin identifier (e.g., "opencode", "claude-code", "codex-cli", "cursor") |
+| `promptTokens` | number | Total input tokens |
+| `completionTokens` | number | Total output tokens |
+| `cost` | number | Estimated USD cost |
+
+**Optional fields:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `title` | string | Session title |
+| `model` | string | Model name |
+| `provider` | string | Model provider |
+| `projectPath` | string | Absolute project path |
+| `projectName` | string | Project directory name |
+| `totalTokens` | number | Sum of prompt + completion |
+| `durationMs` | number | Session duration in ms |
+| `messageCount` | number | Number of messages |
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "sessionId": "j57a..."
+}
+```
+
+### POST /sync/message
+
+Create or update a message within a session. The session is identified by `sessionExternalId` and will be auto-created if it does not exist.
+
+**Request body:**
+
+```json
+{
+  "sessionExternalId": "unique-session-id-from-your-tool",
+  "externalId": "unique-message-id",
+  "role": "assistant",
+  "parts": [
+    {
+      "type": "text",
+      "content": "Here's how to fix the redirect issue..."
+    },
+    {
+      "type": "tool-call",
+      "toolName": "edit_file",
+      "args": "{\"path\": \"src/auth.ts\", \"content\": \"...\"}"
+    }
+  ],
+  "model": "claude-sonnet-4-20250514",
+  "promptTokens": 0,
+  "completionTokens": 450,
+  "durationMs": 3200
+}
+```
+
+**Required fields:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `sessionExternalId` | string | The `externalId` of the parent session |
+| `externalId` | string | Unique message ID for dedup |
+| `role` | string | One of: "user", "assistant", "system", "tool", "unknown" |
+
+**Optional fields:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `parts` | array | Array of message part objects |
+| `model` | string | Model used for this message |
+| `promptTokens` | number | Input tokens for this message |
+| `completionTokens` | number | Output tokens for this message |
+| `durationMs` | number | Time to generate the response |
+
+**Part types:**
+
+| Type | Fields | Description |
+| --- | --- | --- |
+| `text` | `content` | Plain text content |
+| `tool-call` | `toolName`, `args` | A tool/function call |
+| `tool-result` | `toolName`, `content` | Result returned by a tool |
+
+### POST /sync/batch
+
+Sync multiple sessions and messages in a single request. Preferred for bulk operations to reduce write conflicts.
+
+**Request body:**
+
+```json
+{
+  "sessions": [
+    { "externalId": "s1", "source": "opencode", "promptTokens": 100, "completionTokens": 50, "cost": 0.001 }
+  ],
+  "messages": [
+    { "sessionExternalId": "s1", "externalId": "m1", "role": "user", "parts": [{"type": "text", "content": "Hello"}] }
+  ]
+}
+```
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "sessions": { "inserted": 1, "updated": 0 },
+  "messages": { "inserted": 1, "updated": 0 }
+}
+```
+
+## Query endpoints
+
+### GET /api/sessions
+
+List sessions for the authenticated user.
+
+**Query parameters:**
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| `limit` | number | 50 | Max sessions to return (1-200) |
+| `cursor` | string | null | Pagination cursor from previous response |
+| `source` | string | all | Filter by source plugin |
+
+**Response:**
 
 ```json
 {
   "sessions": [
     {
-      "_id": "session_123",
-      "title": "Session title",
+      "_id": "j57a...",
+      "title": "Fix login redirect",
       "source": "opencode",
-      "model": "gpt-4o",
+      "model": "claude-sonnet-4-20250514",
       "messageCount": 12,
-      "promptTokens": 1500,
-      "completionTokens": 800,
-      "totalTokens": 2300,
-      "cost": 0.023,
+      "promptTokens": 3200,
+      "completionTokens": 1800,
+      "totalTokens": 5000,
+      "cost": 0.037,
       "createdAt": 1706140800000
     }
   ],
-  "cursor": "next_page_cursor"
+  "cursor": "eyJ..."
 }
 ```
 
-### Get Session
+### GET /api/sessions/:id
 
-```http
-GET /api/sessions/:id
-```
+Get a single session with all its messages.
 
-Response:
+**Response:**
 
 ```json
 {
-  "_id": "session_123",
-  "title": "Session title",
+  "_id": "j57a...",
+  "title": "Fix login redirect",
   "source": "opencode",
-  "model": "gpt-4o",
+  "model": "claude-sonnet-4-20250514",
   "messages": [
     {
       "role": "user",
-      "content": "User message",
-      "tokens": 50
+      "textContent": "I'm seeing a redirect loop...",
+      "promptTokens": 150,
+      "completionTokens": 0,
+      "createdAt": 1706140800000
     },
     {
       "role": "assistant",
-      "content": "Assistant response",
-      "tokens": 150
+      "textContent": "The issue is in your AuthProvider...",
+      "promptTokens": 0,
+      "completionTokens": 450,
+      "createdAt": 1706140803000
     }
   ]
 }
 ```
 
-### Sync Session
+## Search endpoints
 
-```http
-POST /sync/session
-```
+### POST /search
 
-Request body:
+Search across all sessions using full-text or semantic search.
 
-```json
-{
-  "externalId": "unique_session_id",
-  "source": "opencode",
-  "title": "Optional title",
-  "model": "gpt-4o",
-  "promptTokens": 1500,
-  "completionTokens": 800,
-  "cost": 0.023
-}
-```
-
-### Sync Message
-
-```http
-POST /sync/message
-```
-
-Request body:
+**Request body (full-text):**
 
 ```json
 {
-  "sessionExternalId": "session_id",
-  "externalId": "message_id",
-  "role": "user",
-  "parts": [
-    {
-      "type": "text",
-      "content": "Message content"
-    }
-  ],
-  "model": "gpt-4o",
-  "promptTokens": 50,
-  "completionTokens": 0
-}
-```
-
-## Search
-
-### Full-Text Search
-
-```http
-POST /search
-```
-
-Request body:
-
-```json
-{
-  "query": "search terms",
+  "query": "redirect loop authentication",
   "type": "fulltext",
   "limit": 10
 }
 ```
 
-### Semantic Search
+Full-text search matches against `sessions.searchableText`, which contains the session title and all message content. Results are ranked by relevance.
 
-```http
-POST /search
-```
-
-Request body:
+**Request body (semantic):**
 
 ```json
 {
-  "query": "natural language question",
+  "query": "How do I handle OAuth callback errors?",
   "type": "semantic",
   "limit": 10
 }
 ```
 
-## Export
+Semantic search converts the query to a 1536-dimension embedding using OpenAI's `text-embedding-3-small` model and performs a vector similarity search against `sessionEmbeddings`. Results are ranked by cosine similarity.
 
-### Export Sessions
+**Response:**
 
-```http
-GET /api/export
+```json
+{
+  "results": [
+    {
+      "sessionId": "j57a...",
+      "title": "Fix OAuth redirect",
+      "score": 0.87,
+      "snippet": "...the callback URL needs to match..."
+    }
+  ]
+}
 ```
 
-Query parameters:
+## Export endpoints
 
-| Parameter  | Type   | Description                 |
-| ---------- | ------ | --------------------------- |
-| format     | string | deepeval, openai, or text   |
-| sessionIds | string | Comma-separated session IDs |
+### GET /api/export
 
-## Health
+Export sessions in evaluation framework formats.
 
-### Health Check
+**Query parameters:**
 
-```http
-GET /health
+| Param | Type | Description |
+| --- | --- | --- |
+| `format` | string | Required. One of: `deepeval`, `openai`, `text` |
+| `sessionIds` | string | Comma-separated session IDs. If omitted, exports all eval-ready sessions. |
+| `status` | string | Filter by eval status: `golden`, `correct`, `incorrect`, `needs_review` |
+| `limit` | number | Max sessions to export |
+
+**Response:** The response is the exported file content with the appropriate Content-Type header (`application/json` for DeepEval/OpenAI, `text/plain` for text format).
+
+## Context endpoint
+
+### GET /api/context
+
+Retrieve relevant session context for RAG (Retrieval-Augmented Generation) pipelines. Returns the most relevant session snippets for a given query.
+
+**Query parameters:**
+
+| Param | Type | Description |
+| --- | --- | --- |
+| `q` | string | Natural language query |
+| `limit` | number | Max results (default: 5) |
+
+**Response:**
+
+```json
+{
+  "context": [
+    {
+      "sessionId": "j57a...",
+      "title": "Set up Convex auth",
+      "content": "The relevant portion of the conversation...",
+      "score": 0.91
+    }
+  ]
+}
 ```
 
-Response:
+Use this endpoint to inject past session knowledge into your AI prompts.
+
+## Health endpoint
+
+### GET /health
+
+Public endpoint (no auth required). Returns the API status.
+
+**Response:**
 
 ```json
 {
@@ -184,3 +350,37 @@ Response:
   "version": "1.0.0"
 }
 ```
+
+## Error responses
+
+All endpoints return errors in this format:
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "Invalid or missing API key"
+}
+```
+
+Common HTTP status codes:
+
+| Code | Meaning |
+| --- | --- |
+| 200 | Success |
+| 400 | Bad request (invalid parameters) |
+| 401 | Unauthorized (missing or invalid API key) |
+| 404 | Resource not found |
+| 429 | Rate limited |
+| 500 | Server error |
+
+## Rate limits
+
+The API enforces rate limits per API key. Current limits:
+
+| Endpoint | Limit |
+| --- | --- |
+| `/sync/*` | 100 requests/minute |
+| `/api/*` | 60 requests/minute |
+| `/search` | 30 requests/minute |
+
+If you hit a rate limit, the response includes a `Retry-After` header with the number of seconds to wait.

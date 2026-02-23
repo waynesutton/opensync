@@ -1,54 +1,167 @@
 ---
 title: "Sessions View"
-description: "Browse and manage your AI coding sessions"
+description: "Browse, filter, search, and manage your AI coding sessions"
 ---
 
 # Sessions View
 
-The sessions view displays all your synced AI coding sessions in a list format.
+The Sessions view is the primary interface for browsing your synced coding sessions. It displays a filterable, searchable, sortable list of every session from every connected tool.
 
-## Session Card
+## Session data model
 
-Each session card shows:
+Every session in OpenSync is stored with this structure:
 
-| Field    | Description                                             |
-| -------- | ------------------------------------------------------- |
-| Title    | Auto-generated from the first user message              |
-| Source   | Plugin that synced the session (OpenCode, Claude, etc.) |
-| Model    | AI model used (claude-3-5-sonnet, gpt-4o, etc.)         |
-| Messages | Number of messages in the conversation                  |
-| Tokens   | Total tokens used (prompt + completion)                 |
-| Cost     | Estimated cost based on model pricing                   |
-| Created  | Timestamp of session creation                           |
+| Field | Type | Description |
+| --- | --- | --- |
+| `title` | string | Auto-generated from the first user message. Can be edited. |
+| `externalId` | string | Unique ID from the originating tool. Used for dedup during sync. |
+| `source` | string | Plugin identifier: "opencode", "claude-code", "codex-cli", "cursor", etc. |
+| `model` | string | AI model name (e.g., "claude-sonnet-4-20250514", "gpt-4o", "o3-mini"). |
+| `provider` | string | Model provider (e.g., "anthropic", "openai"). |
+| `projectPath` | string | Absolute path to the project directory. |
+| `projectName` | string | Last segment of the project path. |
+| `promptTokens` | number | Total input tokens across all messages. |
+| `completionTokens` | number | Total output tokens across all messages. |
+| `totalTokens` | number | Sum of prompt and completion tokens. |
+| `cost` | number | Estimated USD cost based on model pricing. |
+| `messageCount` | number | Number of messages in the conversation. |
+| `durationMs` | number | Total session duration in milliseconds. |
+| `isPublic` | boolean | Whether the session has a public share link. |
+| `publicSlug` | string | URL slug for the public view (if enabled). |
+| `searchableText` | string | Concatenated text from title and messages, used for full-text search. |
+| `summary` | string | AI-generated session summary (if available). |
 
-## Viewing a Session
+## Browsing sessions
 
-Click any session to open the detail view:
+Sessions are listed in reverse chronological order by default. Each card in the list shows the title, source icon, model, message count, token count, cost, and time ago.
 
-- **Conversation view** - Full message history with syntax highlighting
-- **Message metadata** - Token counts per message
-- **Copy options** - Copy as markdown or plain text
-- **Export** - Download in various formats
+Pagination loads 25 sessions at a time. Scroll to the bottom to load more.
 
-## Session Actions
+## Filtering
 
-Available actions for each session:
+Use the filter bar above the session list to narrow results.
 
-- **View** - Open the full session
-- **Copy** - Copy session content as markdown
-- **Export** - Download as JSON, JSONL, or text
-- **Delete** - Permanently delete the session
+### By source
 
-<Warning title="Deletion is permanent">
-  Deleted sessions cannot be recovered. Export important sessions before
-  deleting.
-</Warning>
+Click the source dropdown to select one or more tools:
+
+- OpenCode
+- Claude Code
+- Codex CLI
+- Cursor
+- Factory Droid
+- Pi
+
+Only sources that have at least one session appear in the dropdown.
+
+### By date range
+
+Select a preset or custom date range:
+
+| Preset | Range |
+| --- | --- |
+| Today | Sessions created since midnight |
+| Last 7 days | Sessions from the past week |
+| Last 30 days | Sessions from the past month |
+| All time | No date filter |
+
+### By search
+
+The search input runs a full-text query against `sessions.searchableText`. This field contains the session title concatenated with all message text content.
+
+Search is prefix-matched, so typing "refact" will find sessions containing "refactoring".
 
 ## Sorting
 
-Sessions can be sorted by:
+Click the column headers to sort by:
 
-- **Date** - Most recent first (default)
-- **Tokens** - Highest token count first
-- **Cost** - Highest cost first
-- **Messages** - Most messages first
+| Column | Default direction | What it sorts |
+| --- | --- | --- |
+| Date | Descending (newest first) | `sessions.createdAt` |
+| Tokens | Descending (most first) | `sessions.totalTokens` |
+| Cost | Descending (highest first) | `sessions.cost` |
+| Messages | Descending (most first) | `sessions.messageCount` |
+
+## Session detail view
+
+Click a session card to open its detail panel. The detail view has these sections:
+
+### Conversation
+
+The full message history rendered in a chat layout. Each message shows:
+
+- **Role badge** (User, Assistant, System, Tool)
+- **Text content** with syntax highlighting for code blocks
+- **Token count** per message (prompt tokens for user messages, completion tokens for assistant messages)
+- **Timestamp** relative to session start
+
+Tool messages display the tool name and output. System messages are collapsed by default.
+
+### Message parts
+
+Each message can have multiple parts stored in the `parts` table. Parts represent distinct content blocks:
+
+| Part type | Description |
+| --- | --- |
+| `text` | Plain text content |
+| `tool-call` | A function call with name and arguments |
+| `tool-result` | The output returned by a tool |
+
+Parts are displayed in order within each message.
+
+### Session metadata
+
+A sidebar panel shows:
+
+- Source and model
+- Project name and path
+- Total tokens (prompt/completion breakdown)
+- Cost estimate
+- Duration
+- Created and last updated timestamps
+- Eval status (if tagged)
+
+## Session actions
+
+### Copy
+
+The **Copy** button copies the entire conversation as formatted markdown, suitable for pasting into documentation or sharing.
+
+### Export
+
+Export a single session in these formats:
+
+- **DeepEval JSON** for the DeepEval evaluation framework
+- **OpenAI Evals JSONL** for OpenAI's evals format
+- **Plain text** for human reading
+
+See [Evals Export](/dashboard/evals) for details on each format.
+
+### Share
+
+Toggle **Public** to generate a public URL for the session. Anyone with the link can view the conversation. The URL uses the `publicSlug` field.
+
+Public sessions are read-only. Viewers cannot modify or delete them.
+
+### Delete
+
+Permanently deletes the session and all associated messages, message parts, and embeddings. This cannot be undone.
+
+<Warning title="Deletion is permanent">
+  Deleted sessions and their messages, parts, and embeddings are permanently removed from the database. Export important sessions before deleting.
+</Warning>
+
+## Bulk actions
+
+Select multiple sessions using the checkboxes on the left side of each card, then use the bulk action toolbar:
+
+- **Export selected** downloads all selected sessions in your chosen format
+- **Delete selected** permanently removes all selected sessions
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Evals Export" href="/dashboard/evals" description="Tag and export sessions for evaluation" />
+  <Card title="Context Search" href="/dashboard/context" description="Find sessions with semantic search" />
+  <Card title="API Reference" href="/api/endpoints" description="Access sessions programmatically" />
+</CardGroup>

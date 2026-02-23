@@ -93,7 +93,44 @@ React frontend application.
 
 ## docs/
 
-Documentation files.
+### Mintlify documentation (docs.opensync.dev)
+
+MDX documentation pages served by Mintlify.
+
+| File                                | Description                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `docs.json`                         | Mintlify configuration: theme, navigation groups, anchors, colors, footer socials                    |
+| `index.mdx`                         | Landing page with CardGroup links to all major sections, supported tools table                       |
+| `getting-started/hosted.mdx`        | Hosted version setup: features, supported tools, step-by-step guide, what gets synced, privacy       |
+| `getting-started/requirements.mdx`  | Self-hosting requirements: cloud vs local deployment, Convex/WorkOS roles, architecture overview     |
+| `getting-started/quick-start.mdx`   | 5-minute deploy guide with one-click buttons for Convex, Netlify, Vercel                             |
+| `dashboard/overview.mdx`            | Dashboard overview: summary cards, session list fields, filters, real-time updates, schema mapping   |
+| `dashboard/sessions.mdx`            | Sessions view: data model, filtering, sorting, detail view, message parts, bulk actions              |
+| `dashboard/evals.mdx`               | Evals: workflow, labels, metadata fields, export formats (DeepEval/OpenAI/text), API export          |
+| `dashboard/analytics.mdx`           | Analytics: summary metrics, cost calculation with pricing table, token breakdown, trend charts        |
+| `dashboard/context.mdx`             | Context search: embeddings, full-text vs semantic, dashboard usage, API examples, RAG use cases      |
+| `plugins/opencode-sync.mdx`         | OpenCode plugin: setup, commands, syncing internals, schema mapping, troubleshooting                 |
+| `plugins/claude-code-sync.mdx`      | Claude Code plugin: setup, commands, syncing internals, session data mapping, troubleshooting        |
+| `plugins/codex-sync.mdx`            | Codex CLI plugin: setup, commands, supported models with pricing, troubleshooting                    |
+| `plugins/cursor-sync.mdx`           | Cursor plugin: setup, commands, supported models, what gets synced, privacy notes                    |
+| `api/authentication.mdx`            | API authentication: key generation, usage, rate limits, revocation                                   |
+| `api/endpoints.mdx`                 | Full API reference: sync, query, search, export, context, health endpoints with request/response     |
+| `api/errors.mdx`                    | Error handling: response format, HTTP status codes, retry strategy with code examples                |
+| `search/fulltext.mdx`               | Full-text search: indexing, syntax, ranking, API usage, comparison with semantic                     |
+| `search/semantic.mdx`               | Semantic search: embedding model, storage schema, examples, requirements, comparison                 |
+| `search/hybrid.mdx`                 | Hybrid search: scoring formula, use cases, RAG pipeline example, comparison table                    |
+| `auth/workos.mdx`                   | WorkOS AuthKit: auth flow, user provisioning, redirect URIs, CORS, troubleshooting                   |
+| `auth/api-keys.mdx`                 | API key management: generation, format, storage, revocation, security practices                      |
+| `hosting/convex.mdx`                | Convex backend: deploy, schema tables, indexes, HTTP endpoints, monitoring, scaling                  |
+| `hosting/netlify.mdx`               | Frontend hosting: Netlify/Vercel deploy with build settings and environment variables                 |
+| `hosting/env.mdx`                   | Environment variable reference: required/optional vars, setting per platform                         |
+| `fork/guide.mdx`                    | Fork guide: clone, setup, local dev, deploy, syncing upstream updates                                |
+| `fork/customize.mdx`                | Customization: branding, colors, adding sources, custom fields, API extensions                       |
+| `fork/contribute.mdx`               | Contributing: bug reports, PRs, code style, commit conventions                                       |
+| `troubleshooting/common-issues.mdx` | Common issues: auth, sync, search, deployment, performance troubleshooting                           |
+| `troubleshooting/faq.mdx`           | FAQ: supported tools, data storage, migration, cost calculation, deletion, contributing              |
+
+### Internal documentation (docs/ markdown)
 
 | File                            | Description                                                                                                                                                                                                                                                                                                            |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

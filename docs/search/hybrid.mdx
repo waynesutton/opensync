@@ -1,89 +1,132 @@
 ---
 title: "Hybrid Search"
-description: "Combine full-text and semantic search for best results"
+description: "Combine full-text and semantic search for the best retrieval results"
 ---
 
 # Hybrid Search
 
-Combine full-text and semantic search for optimal retrieval.
+Hybrid search runs both full-text and semantic search in parallel, then merges the results. This gives you exact keyword matches alongside conceptually related content, producing the most comprehensive results.
 
-## How It Works
+## How it works
 
-Hybrid search runs both full-text and semantic search, then combines the results:
+1. Your query is sent to both search engines simultaneously.
+2. **Full-text search** matches against `sessions.searchableText` using Convex's search indexes.
+3. **Semantic search** converts the query to an embedding and matches against `sessionEmbeddings` using cosine similarity.
+4. Results from both are merged using a weighted scoring formula.
+5. Sessions that appear in both result sets receive a boost.
 
-1. **Full-text results** - Exact keyword matches
-2. **Semantic results** - Conceptually similar content
-3. **Combined ranking** - Weighted merge of both result sets
-
-## Scoring
-
-Results are scored using a weighted combination:
+### Scoring formula
 
 ```
-final_score = (0.5 * fulltext_score) + (0.5 * semantic_score)
+final_score = (weight_fulltext * fulltext_score) + (weight_semantic * semantic_score) + overlap_boost
 ```
 
-Sessions appearing in both result sets get boosted scores.
+Default weights:
 
-## Using the API
+| Weight | Value | Description |
+| --- | --- | --- |
+| `weight_fulltext` | 0.5 | Weight for keyword match score |
+| `weight_semantic` | 0.5 | Weight for embedding similarity score |
+| `overlap_boost` | 0.1 | Bonus for sessions appearing in both result sets |
+
+Sessions that match both keyword terms and semantic meaning rank highest.
+
+## When to use hybrid search
+
+| Scenario | Recommended search |
+| --- | --- |
+| You know the exact function name | Full-text |
+| You want to describe a concept | Semantic |
+| You want comprehensive results | Hybrid |
+| Building a RAG pipeline | Hybrid |
+| Debugging a specific error message | Full-text |
+| Finding similar past solutions | Semantic |
+
+Hybrid search is the default recommendation for RAG and context injection workflows because it catches both exact matches and related content.
+
+## Using in the dashboard
+
+The Context tab in the dashboard supports a hybrid mode:
+
+1. Open the **Context** tab.
+2. Select **Hybrid** as the search type.
+3. Enter your query.
+4. Results show combined rankings with scores from both engines.
+
+## Using via API
 
 ```bash
-curl -X POST "https://your-url.convex.site/search" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+curl -X POST "https://polished-penguin-622.convex.site/search" \
+  -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "authentication middleware",
+    "query": "authentication middleware Express",
     "type": "hybrid",
     "limit": 10
   }'
 ```
 
-## Use Cases
+Response:
 
-### RAG Pipelines
-
-Hybrid search is ideal for Retrieval-Augmented Generation:
-
-```javascript
-// Retrieve relevant context
-const context = await search({
-  query: userQuestion,
-  type: "hybrid",
-  limit: 5,
-});
-
-// Inject into prompt
-const prompt = `
-Context from past sessions:
-${context.map((c) => c.snippet).join("\n")}
-
-User question: ${userQuestion}
-`;
+```json
+{
+  "results": [
+    {
+      "sessionId": "j57a...",
+      "title": "Express Auth Middleware",
+      "snippet": "...configuring passport.js middleware...",
+      "score": 0.94,
+      "matchedIn": ["fulltext", "semantic"]
+    },
+    {
+      "sessionId": "m23c...",
+      "title": "Secure API routes",
+      "snippet": "...adding authentication checks to Express routes...",
+      "score": 0.81,
+      "matchedIn": ["semantic"]
+    }
+  ]
+}
 ```
 
-### Knowledge Base
+The `matchedIn` field indicates which search engine(s) found the result.
 
-Build a searchable knowledge base from your coding sessions:
+## Use case: RAG pipeline
 
-```javascript
-// Search for solutions
-const solutions = await search({
-  query: "fix TypeScript error TS2345",
-  type: "hybrid",
-  limit: 3,
-});
+Hybrid search is ideal for Retrieval-Augmented Generation because it retrieves both precise matches (from full-text) and conceptually related context (from semantic):
+
+```bash
+# Fetch relevant context from past sessions
+curl "https://polished-penguin-622.convex.site/api/context?q=handle+auth+errors&limit=5" \
+  -H "Authorization: Bearer osk_your_key"
 ```
+
+The `/api/context` endpoint uses hybrid search internally and returns results formatted for LLM prompt injection.
+
+### Example RAG flow
+
+1. User asks a question in your application.
+2. Your backend queries `/api/context` with the user's question.
+3. The top results are injected into the system prompt.
+4. The LLM responds with knowledge from your past sessions.
+
+This turns your OpenSync session history into a searchable knowledge base.
 
 ## Comparison
 
-| Feature               | Full-Text | Semantic   | Hybrid     |
-| --------------------- | --------- | ---------- | ---------- |
-| Exact matches         | Excellent | Poor       | Good       |
-| Conceptual similarity | Poor      | Excellent  | Excellent  |
-| Speed                 | Fast      | Slower     | Medium     |
-| Cost                  | Free      | OpenAI API | OpenAI API |
+| Feature | Full-text | Semantic | Hybrid |
+| --- | --- | --- | --- |
+| Exact keyword matches | Excellent | Poor | Good |
+| Conceptual similarity | Poor | Excellent | Excellent |
+| Speed | Fast | Moderate | Moderate |
+| Cost | Free | OpenAI API | OpenAI API |
+| Best for | Specific terms | Natural language | Comprehensive retrieval |
 
-<Tip title="When to use hybrid">
-  Use hybrid search when you want the best of both worlds: exact keyword matches
-  AND conceptually related content.
-</Tip>
+## Requirements
+
+Hybrid search requires:
+
+- OpenAI API key (for the semantic component)
+- Embeddings generated for your sessions
+
+If no OpenAI key is configured, hybrid search falls back to full-text only.

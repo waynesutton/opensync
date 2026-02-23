@@ -5,106 +5,182 @@ description: "Sync sessions from OpenCode to OpenSync"
 
 # OpenCode Plugin
 
-Sync your OpenCode sessions to OpenSync automatically.
+The `opencode-sync-plugin` syncs your [OpenCode](https://opencode.ai) sessions to OpenSync automatically. Every session, message, and token count is pushed to your dashboard in real time.
+
+**Source identifier:** `opencode`
 
 ## Installation
 
-Install the plugin globally:
+Install globally with npm:
 
 ```bash
 npm install -g opencode-sync-plugin
 ```
 
-Or with yarn:
+Or with bun:
 
 ```bash
-yarn global add opencode-sync-plugin
+bun install -g opencode-sync-plugin
 ```
 
-## Configuration
-
-### Login
-
-Connect the plugin to your OpenSync account:
+Verify the installation:
 
 ```bash
-opencode-sync login
+opencode-sync --version
 ```
 
-You'll be prompted for:
+## Setup
 
-- **Convex URL** - Your OpenSync backend URL
-- **API Key** - Your API key from Settings
+<Steps>
+  <Step title="Generate an API key">
+    Log in to [opensync.dev](https://www.opensync.dev), go to **Settings**, and click **Generate API Key**. Copy the key (starts with `osk_`).
+  </Step>
+  <Step title="Run login">
+    ```bash
+    opencode-sync login
+    ```
 
-### Config File
+    Enter your Convex URL and API key when prompted:
 
-Configuration is stored in `~/.opencode-sync/config.json`:
+    - **Convex URL**: `https://polished-penguin-622.convex.cloud` (for hosted) or your self-hosted URL
+    - **API Key**: The key you copied from Settings
+  </Step>
+  <Step title="Verify the connection">
+    ```bash
+    opencode-sync status
+    ```
+
+    You should see `Connected: true` with your Convex URL.
+  </Step>
+</Steps>
+
+## Config file
+
+Credentials are stored in `~/.opencode-sync/config.json`:
 
 ```json
 {
-  "convexUrl": "https://your-deployment.convex.cloud",
+  "convexUrl": "https://polished-penguin-622.convex.cloud",
   "apiKey": "osk_..."
 }
 ```
 
+This file is created by the `login` command and removed by `logout`.
+
 ## Commands
 
-### status
+### opencode-sync login
 
-Check connection and sync status:
+Stores your Convex URL and API key. Prompts interactively if values are not provided as flags.
 
-```bash
-opencode-sync status
-```
+### opencode-sync status
 
-Output:
+Shows connection state and sync statistics:
 
 ```
 Connected: true
-Convex URL: https://your-deployment.convex.cloud
+Convex URL: https://polished-penguin-622.convex.cloud
 Sessions synced: 42
 Last sync: 2 minutes ago
 ```
 
-### sync
+### opencode-sync sync
 
-Manually trigger a sync:
+Manually triggers a sync of all sessions. Useful after a network interruption or if you notice missing sessions.
 
 ```bash
 opencode-sync sync
 ```
 
 <Info>
-  Sessions sync automatically as you work. Manual sync is rarely needed.
+  Sessions sync automatically as you work. You only need to run manual sync if something got out of step.
 </Info>
 
-### logout
+### opencode-sync logout
 
-Disconnect and clear credentials:
+Removes stored credentials from `~/.opencode-sync/config.json`.
 
 ```bash
 opencode-sync logout
 ```
 
-## How Syncing Works
+## How syncing works
 
-1. OpenCode writes session data to `~/.opencode/sessions/`
-2. The plugin watches this directory for changes
-3. New and updated sessions are synced to OpenSync
-4. Synced sessions appear in your dashboard within seconds
+1. OpenCode stores session data in `~/.opencode/sessions/` as JSON files.
+2. The plugin reads session and message data from this directory.
+3. Each session is pushed to the `/sync/session` HTTP endpoint on your Convex deployment.
+4. Each message within the session is pushed to `/sync/message`.
+5. The plugin uses `externalId` for deduplication, so re-syncing the same session is safe.
+
+### What gets synced
+
+| Data | Source | Mapped to |
+| --- | --- | --- |
+| Session metadata | OpenCode session JSON | `sessions` table |
+| Messages | OpenCode message entries | `messages` table |
+| Message parts | Text, tool calls, tool results | `parts` table |
+| Token counts | Per-message and per-session | `promptTokens`, `completionTokens` |
+| Cost | Calculated from model pricing | `sessions.cost` |
+| Project path | Working directory from OpenCode | `sessions.projectPath` |
+| Model name | Model identifier from each message | `sessions.model` |
+
+### URL normalization
+
+The plugin converts your Convex URL from `.convex.cloud` to `.convex.site` for HTTP endpoints:
+
+```
+https://polished-penguin-622.convex.cloud
+  becomes
+https://polished-penguin-622.convex.site
+```
+
+This happens automatically. You always enter the `.convex.cloud` URL during login.
 
 ## Troubleshooting
 
 ### Plugin not syncing
 
-1. Check status: `opencode-sync status`
-2. Verify API key is valid in Settings
-3. Check network connectivity
+1. Run `opencode-sync status` to check the connection.
+2. Verify your API key is still valid in the dashboard Settings.
+3. Check that OpenCode is writing to `~/.opencode/sessions/`.
+4. Try `opencode-sync sync` to force a manual sync.
 
 ### Sessions missing
 
-OpenCode may need to be restarted to flush session data.
+- OpenCode may buffer session data. Wait a few seconds after ending a session, then run `opencode-sync sync`.
+- Check that the session directory (`~/.opencode/sessions/`) contains JSON files.
 
 ### Permission errors
 
-Ensure you have read access to `~/.opencode/sessions/`
+The plugin needs read access to `~/.opencode/sessions/`. On macOS, this is usually granted automatically. On Linux, check file permissions:
+
+```bash
+ls -la ~/.opencode/sessions/
+```
+
+### Network errors
+
+If you see `ECONNREFUSED` or timeout errors:
+
+- Verify your Convex deployment is running (`GET /health` on your Convex site URL should return `{"status": "ok"}`).
+- Check your firewall or proxy settings.
+- For self-hosted deployments, ensure the Convex URL is correct.
+
+## Updating
+
+Update to the latest version:
+
+```bash
+npm update -g opencode-sync-plugin
+```
+
+## Uninstalling
+
+Remove the plugin and its config:
+
+```bash
+opencode-sync logout
+npm uninstall -g opencode-sync-plugin
+```
+
+This removes credentials but does not delete your synced sessions from the dashboard.

@@ -8,6 +8,26 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Mintlify Docs In-Depth Rewrite)
+
+- [x] Migrated mint.json to docs.json with new Mintlify schema
+  - Created docs.json with $schema, theme, navigation groups, anchors, correct GitHub URLs
+  - Created index.mdx landing page serving docs.opensync.dev root
+  - Resolved Git divergence (local docs.json + index.mdx vs remote color/appearance changes) via merge
+- [x] Fixed old /docs#anchor links returning 404 on Mintlify
+  - Updated README.md, ONE-CLICK-DEPLOY.md, and Login.tsx to point to new Mintlify page paths
+  - Fixed /docs/fork/contribute link in troubleshooting FAQ
+  - Added Pi and Factory Droid to supported tools in FAQ
+- [x] Comprehensive in-depth documentation rewrite (29 MDX pages)
+  - Rewrote getting-started: hosted.mdx (features, setup steps, what gets synced), requirements.mdx (cloud vs local, architecture)
+  - Rewrote dashboard: overview.mdx (schema mapping, filters), sessions.mdx (data model, parts, bulk actions), evals.mdx (workflow, labels, export formats), analytics.mdx (cost formula, pricing table, trends), context.mdx (embeddings, RAG, API examples)
+  - Rewrote plugins: opencode-sync.mdx, claude-code-sync.mdx, codex-sync.mdx, cursor-sync.mdx (all with setup, commands, syncing internals, troubleshooting, supported models)
+  - Rewrote api: endpoints.mdx (full sync/query/search/export reference with request/response bodies)
+  - Rewrote search: fulltext.mdx, semantic.mdx, hybrid.mdx (indexing, embedding model, scoring, comparison)
+  - Rewrote auth: workos.mdx (auth flow, provisioning, redirect URIs, troubleshooting)
+  - Rewrote hosting: convex.mdx (schema tables, indexes, HTTP endpoints, monitoring)
+  - Reviewed and verified depth of: quick-start.mdx, api-keys.mdx, authentication.mdx, errors.mdx, env.mdx, netlify.mdx, guide.mdx, customize.mdx, contribute.mdx, common-issues.mdx, faq.mdx
+
 ## Recently Completed (Documentation Migration to Mintlify)
 
 - [x] Migrated all in-app documentation to Mintlify at docs.opensync.dev

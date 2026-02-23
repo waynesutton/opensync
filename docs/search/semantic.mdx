@@ -1,59 +1,111 @@
 ---
 title: "Semantic Search"
-description: "Search sessions using AI-powered meaning matching"
+description: "Search sessions using AI-powered meaning matching with vector embeddings"
 ---
 
 # Semantic Search
 
-Find conceptually similar content using AI embeddings.
+Semantic search finds sessions based on meaning rather than exact keywords. It uses vector embeddings to match your query against session content, returning results that are conceptually similar even when they use different words.
 
-## How It Works
+## How it works
 
-1. Your query is converted to a vector embedding using OpenAI
-2. The embedding is compared against session embeddings
-3. Results are ranked by semantic similarity
+1. When a session is synced, OpenSync generates a 1536-dimension vector embedding from the session's searchable text using OpenAI's `text-embedding-3-small` model.
+2. The embedding is stored in the `sessionEmbeddings` table alongside a text hash for change detection.
+3. When you search, your query is also converted to an embedding using the same model.
+4. Convex's vector search compares the query embedding against all stored embeddings using cosine similarity.
+5. Results are ranked by similarity score (0.0 to 1.0, where 1.0 is identical).
 
-## Example
+### Embedding model
 
-Query:
+| Model | Dimensions | Cost | Notes |
+| --- | --- | --- | --- |
+| text-embedding-3-small | 1536 | $0.02 per 1M tokens | Default model used by OpenSync |
+
+The cost is negligible. A typical session produces 2K-10K tokens of searchable text. At $0.02 per million tokens, embedding 1000 sessions costs less than a penny.
+
+### What gets embedded
+
+Session embeddings are generated from `sessions.searchableText`, which concatenates:
+
+- Session title
+- All user message text
+- All assistant message text
+
+Tool call names and results are not included in the embedding. Only human-readable text is vectorized.
+
+### Embedding storage
+
+Each embedding is stored with these fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `sessionId` | Id | Reference to the parent session |
+| `embedding` | float[1536] | The vector embedding |
+| `textHash` | string | SHA-256 hash of the source text |
+| `createdAt` | number | Timestamp of generation |
+
+The `textHash` field enables idempotency. If a session is re-synced with the same text content, the embedding is not regenerated.
+
+### Message-level embeddings
+
+In addition to session-level embeddings, OpenSync generates embeddings for individual messages. These are stored in the `messageEmbeddings` table and enable finer-grained search within specific conversations.
+
+## Examples
+
+### Natural language question
 
 ```
-how to handle user login
+How do I fix CORS errors in a Convex HTTP endpoint?
 ```
 
-Returns sessions about authentication, even if they don't contain those exact words. Results might include discussions about:
+Returns sessions discussing CORS configuration, HTTP endpoint setup, and related error handling, even if they never use the exact phrase "CORS errors."
 
-- OAuth implementation
-- Session management
-- JWT tokens
-- Password hashing
+### Conceptual search
+
+```
+patterns for handling database migrations
+```
+
+Returns sessions about schema changes, data backfilling, and migration strategies across different tools and frameworks.
+
+### Problem-based search
+
+```
+my React component re-renders too often
+```
+
+Returns sessions about performance optimization, memoization, and state management, even if the conversations used terms like "useCallback" or "useMemo" rather than "re-renders."
 
 ## Requirements
 
-Semantic search requires:
+Semantic search requires an OpenAI API key:
 
-- OpenAI API key configured
-- Embeddings generated for sessions
-
-<Info>
-  Embeddings are generated automatically when sessions sync. Older sessions may
-  need to be re-indexed.
-</Info>
-
-## Using in the Dashboard
-
-1. Go to **Context** in the navigation
-2. Enter a natural language question
-3. Results show conceptually similar sessions
-
-## Using the API
+- **Hosted version**: Already configured. No action needed.
+- **Self-hosted**: Set the `OPENAI_API_KEY` environment variable on your Convex deployment.
 
 ```bash
-curl -X POST "https://your-url.convex.site/search" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
+npx convex env set OPENAI_API_KEY sk-...
+```
+
+Without an OpenAI key, semantic search is disabled and sessions will not have embeddings generated.
+
+## Using in the dashboard
+
+1. Go to the **Context** tab in the sidebar.
+2. Select **Semantic** as the search type.
+3. Type a natural language query.
+4. Results appear ranked by similarity score.
+
+Each result shows the session title, a content snippet, and the similarity score (higher is better).
+
+## Using via API
+
+```bash
+curl -X POST "https://polished-penguin-622.convex.site/search" \
+  -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "how do I implement authentication",
+    "query": "how do I implement authentication with OAuth",
     "type": "semantic",
     "limit": 10
   }'
@@ -65,26 +117,35 @@ Response:
 {
   "results": [
     {
-      "sessionId": "session_456",
-      "title": "OAuth Setup Guide",
-      "snippet": "Setting up OAuth with passport.js...",
+      "sessionId": "j57a...",
+      "title": "OAuth Setup with WorkOS",
+      "snippet": "Setting up the OAuth callback handler...",
       "score": 0.89
+    },
+    {
+      "sessionId": "k82b...",
+      "title": "Fix login redirect loop",
+      "snippet": "The auth middleware was redirecting before the token was set...",
+      "score": 0.82
     }
   ]
 }
 ```
 
-## Embedding Model
+## Tips
 
-OpenSync uses `text-embedding-3-small` by default:
+- **Ask questions naturally.** Semantic search works best with complete questions or descriptions, not individual keywords.
+- **Be specific about the domain.** "How to handle auth in a Next.js app" performs better than "auth."
+- **Embedding latency.** Newly synced sessions may take a few seconds to appear in semantic search results while embeddings are generated asynchronously.
+- **Score threshold.** Results with scores below 0.5 are typically not relevant. The dashboard hides very low-scoring results automatically.
 
-| Model                  | Dimensions | Cost            |
-| ---------------------- | ---------- | --------------- |
-| text-embedding-3-small | 1536       | $0.02/1M tokens |
+## Comparison with full-text
 
-## Best Practices
+| Aspect | Full-text | Semantic |
+| --- | --- | --- |
+| Best for | Exact terms, function names, error codes | Conceptual questions, problem descriptions |
+| Speed | Faster (index lookup) | Slightly slower (embedding + vector search) |
+| Cost | No additional cost | OpenAI embedding cost ($0.02/1M tokens) |
+| Requires | Nothing extra | OpenAI API key |
 
-<Tip title="Semantic search tips">
-  - Ask questions naturally, as you would to a colleague - Be specific about the
-  problem or concept - Combine with date filters to find recent solutions
-</Tip>
+For combining both approaches, see [Hybrid Search](/search/hybrid).

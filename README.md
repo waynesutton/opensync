@@ -4,7 +4,7 @@ Dashboards for OpenCode, Claude Code, Codex, Cursor, Factory Droid and more.
 
 Cloud-synced dashboards that track session activity, tool usage, and token spend. Build eval datasets across projects.
 
-[Website](https://www.opensync.dev/) | [Docs](https://www.opensync.dev/docs) | [Dashboard](https://www.opensync.dev/)
+[Website](https://www.opensync.dev/) | [Docs](https://docs.opensync.dev) | [Dashboard](https://www.opensync.dev/)
 
 ## OpenSync Ecosystems
 
@@ -22,12 +22,12 @@ Cloud-synced dashboards that track session activity, tool usage, and token spend
 
 | Feature                                                 | Description                                    |
 | ------------------------------------------------------- | ---------------------------------------------- |
-| [Sync](https://www.opensync.dev/docs#hosted-features)   | Sessions sync in real time as you work         |
-| [Search](https://www.opensync.dev/docs#search)          | Full text, semantic, and hybrid search         |
-| [Private](https://www.opensync.dev/docs#auth)           | Your data stays in your account                |
-| [Tag](https://www.opensync.dev/docs#dashboard-evals)    | Organize sessions with custom labels for evals |
-| [Export](https://www.opensync.dev/docs#dashboard-evals) | DeepEval JSON, OpenAI Evals JSONL, plain text  |
-| [Delete](https://www.opensync.dev/docs#hosted-features) | Your data, your control                        |
+| [Sync](https://docs.opensync.dev/getting-started/hosted)   | Sessions sync in real time as you work         |
+| [Search](https://docs.opensync.dev/search/fulltext)        | Full text, semantic, and hybrid search         |
+| [Private](https://docs.opensync.dev/auth/workos)           | Your data stays in your account                |
+| [Tag](https://docs.opensync.dev/dashboard/evals)           | Organize sessions with custom labels for evals |
+| [Export](https://docs.opensync.dev/dashboard/evals)        | DeepEval JSON, OpenAI Evals JSONL, plain text  |
+| [Delete](https://docs.opensync.dev/getting-started/hosted) | Your data, your control                        |
 
 ## Quick start
 
@@ -38,7 +38,7 @@ Cloud-synced dashboards that track session activity, tool usage, and token spend
 3. Install a sync plugin (see below)
 4. Start coding
 
-[Full setup guide](https://www.opensync.dev/docs#hosted)
+[Full setup guide](https://docs.opensync.dev/getting-started/hosted)
 
 ### Install sync plugins
 
@@ -57,7 +57,7 @@ Add to your `opencode.json`:
 }
 ```
 
-[OpenCode plugin docs](https://www.opensync.dev/docs#opencode-plugin)
+[OpenCode plugin docs](https://docs.opensync.dev/plugins/opencode-sync)
 
 **For Claude Code:**
 
@@ -66,7 +66,7 @@ npm install -g claude-code-sync
 claude-code-sync login
 ```
 
-[Claude Code plugin docs](https://www.opensync.dev/docs#claude-plugin)
+[Claude Code plugin docs](https://docs.opensync.dev/plugins/claude-code-sync)
 
 **For Codex CLI:**
 
@@ -75,7 +75,7 @@ npm install -g codex-sync
 codex-sync login
 ```
 
-[Codex CLI plugin docs](https://www.opensync.dev/docs#codex-plugin)
+[Codex CLI plugin docs](https://docs.opensync.dev/plugins/codex-sync)
 
 **For Cursor:**
 
@@ -84,7 +84,7 @@ npm install -g cursor-sync-plugin
 cursor-sync login
 ```
 
-[Cursor plugin docs](https://www.opensync.dev/docs#cursor-plugin)
+[Cursor plugin docs](https://docs.opensync.dev/plugins/cursor-sync)
 
 **For Pi:**
 
@@ -94,7 +94,7 @@ npm install -g pi-opensync-plugin
 
 Then run `/opensync:config` in pi to configure the extension.
 
-[Pi plugin docs](https://www.opensync.dev/docs#pi-plugin)
+[Pi plugin docs](https://github.com/joshuadavidthomas/pi-opensync-plugin)
 
 ## Self hosting
 
@@ -109,7 +109,7 @@ npx convex dev
 
 Requires Convex, WorkOS, and OpenAI accounts.
 
-[Self hosting guide](https://www.opensync.dev/docs#hosting) | [Fork guide](https://www.opensync.dev/docs#fork) | [install.md](install.md)
+[Self hosting guide](https://docs.opensync.dev/hosting/convex) | [Fork guide](https://docs.opensync.dev/fork/guide) | [install.md](install.md)
 
 ### One-click deploy
 
@@ -126,12 +126,12 @@ Four views for managing your sessions:
 
 | View                                                           | What it does                                       |
 | -------------------------------------------------------------- | -------------------------------------------------- |
-| [Overview](https://www.opensync.dev/docs#dashboard-overview)   | Usage stats, token charts, recent sessions         |
-| [Sessions](https://www.opensync.dev/docs#dashboard-sessions)   | Filter, search, and manage all sessions            |
-| [Evals](https://www.opensync.dev/docs#dashboard-evals)         | Mark sessions as eval-ready, export datasets       |
-| [Analytics](https://www.opensync.dev/docs#dashboard-analytics) | Model comparison, project breakdown, cost tracking |
+| [Overview](https://docs.opensync.dev/dashboard/overview)   | Usage stats, token charts, recent sessions         |
+| [Sessions](https://docs.opensync.dev/dashboard/sessions)   | Filter, search, and manage all sessions            |
+| [Evals](https://docs.opensync.dev/dashboard/evals)         | Mark sessions as eval-ready, export datasets       |
+| [Analytics](https://docs.opensync.dev/dashboard/analytics) | Model comparison, project breakdown, cost tracking |
 
-[Context search](https://www.opensync.dev/docs#dashboard-context) lets you find relevant sessions for RAG and context engineering.
+[Context search](https://docs.opensync.dev/dashboard/context) lets you find relevant sessions for RAG and context engineering.
 
 ## API
 
@@ -146,7 +146,7 @@ All endpoints require authentication. Generate an API key in Settings.
 | `GET /api/context?q=` | Get context for LLM |
 | `GET /api/export?id=` | Export session      |
 
-[Full API reference](https://www.opensync.dev/docs#api)
+[Full API reference](https://docs.opensync.dev/api/endpoints)
 
 ## Tech stack
 

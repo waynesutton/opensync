@@ -1,96 +1,162 @@
 ---
 title: "Convex Backend"
-description: "Deploy the Convex backend"
+description: "Deploy and manage the Convex backend for OpenSync"
 ---
 
 # Convex Backend
 
-OpenSync uses Convex for its real-time backend, database, and serverless functions.
+OpenSync's entire backend runs on [Convex](https://convex.dev). There is no separate server, no Docker containers, and no infrastructure to manage. Convex provides the database, serverless functions, real-time subscriptions, HTTP endpoints, file storage, and scheduled jobs.
 
-## One-Click Deploy
+## One-click deploy
 
-The fastest way to deploy:
+The fastest way to set up the backend:
 
 [![Deploy to Convex](https://convex.dev/button.svg)](https://convex.dev/new?template=waynesutton/opensync)
 
 This creates:
 
-- A new Convex project
-- All required tables and indexes
-- Serverless functions for the API
-- Real-time subscriptions
+- A new Convex project linked to your account
+- All database tables with their schemas and indexes
+- Serverless functions for queries, mutations, and actions
+- HTTP endpoints for the sync API (`/sync/session`, `/sync/message`, `/sync/batch`, `/search`, etc.)
+- Search indexes for full-text search
+- Vector indexes for semantic search
+- Scheduled function support for background embedding generation
 
-## Manual Deploy
+## Manual deploy
 
-### 1. Install Convex CLI
+### 1. Install the Convex CLI
 
 ```bash
 npm install -g convex
 ```
 
-### 2. Clone and Deploy
+### 2. Clone and initialize
 
 ```bash
 git clone https://github.com/waynesutton/opensync
 cd opensync
+npm install
 npx convex dev
 ```
 
-On first run, you'll be prompted to:
+On first run, the CLI prompts you to:
 
-1. Create a Convex account (or sign in)
-2. Create a new project
+1. Sign in to your Convex account (or create one).
+2. Create a new project.
+3. Push the schema, functions, and indexes.
 
-### 3. Deploy to Production
+`npx convex dev` runs in watch mode. It pushes changes to your development deployment every time you save a file in the `convex/` directory.
+
+### 3. Set environment variables
+
+```bash
+npx convex env set WORKOS_API_KEY sk_your_key
+npx convex env set WORKOS_CLIENT_ID client_your_id
+npx convex env set OPENAI_API_KEY sk-your-key  # Optional, for semantic search
+```
+
+### 4. Deploy to production
 
 ```bash
 npx convex deploy
 ```
 
-## Environment Variables
+This pushes your functions and schema to the production deployment. Production deployments have a separate URL from development.
 
-Set these in the Convex dashboard or via CLI:
+## Database schema
 
-```bash
-# WorkOS (required for auth)
-npx convex env set WORKOS_API_KEY sk_...
-npx convex env set WORKOS_CLIENT_ID client_...
+The Convex backend defines these tables:
 
-# OpenAI (optional, for semantic search)
-npx convex env set OPENAI_API_KEY sk-...
-```
+| Table | Purpose | Key fields |
+| --- | --- | --- |
+| `users` | User accounts | `workosId`, `email`, `name`, `apiKey` |
+| `sessions` | AI coding sessions | `userId`, `externalId`, `source`, `model`, `totalTokens`, `cost` |
+| `messages` | Messages within sessions | `sessionId`, `externalId`, `role`, `textContent` |
+| `parts` | Message content blocks | `messageId`, `type` (text, tool-call, tool-result) |
+| `sessionEmbeddings` | Vector embeddings for sessions | `sessionId`, `embedding` (1536-dim), `textHash` |
+| `messageEmbeddings` | Vector embeddings for messages | `messageId`, `embedding` (1536-dim) |
+| `apiLogs` | API request logs | `userId`, `endpoint`, `statusCode` |
+| `dailyWrapped` | Daily activity summaries | `userId`, `date`, stats |
+| `docPages` | Documentation page metadata | `slug`, `title`, `content` |
+| `docEmbeddings` | Documentation search embeddings | `docPageId`, `embedding` |
 
-## Convex Dashboard
+### Indexes
 
-Access your Convex dashboard at [dashboard.convex.dev](https://dashboard.convex.dev):
+Key indexes defined in the schema:
 
-- View and edit data
-- Monitor function calls
-- Check logs and errors
-- Manage environment variables
+| Table | Index | Fields | Purpose |
+| --- | --- | --- | --- |
+| `sessions` | `by_user` | `userId` | List sessions for a user |
+| `sessions` | `by_user_external` | `userId`, `externalId` | Dedup during sync |
+| `sessions` | `by_user_and_source` | `userId`, `source` | Filter by tool |
+| `messages` | `by_session` | `sessionId` | List messages in a session |
+| `messages` | `by_external_id` | `externalId` | Dedup during sync |
 
-## Database Schema
+Search indexes enable full-text search on `sessions.searchableText`. Vector indexes enable cosine similarity search on `sessionEmbeddings.embedding`.
 
-Key tables:
+## HTTP endpoints
 
-| Table             | Purpose                          |
-| ----------------- | -------------------------------- |
-| users             | User accounts                    |
-| sessions          | AI coding sessions               |
-| messages          | Session messages                 |
-| parts             | Message parts (text, code, etc.) |
-| apiKeys           | API key hashes                   |
-| sessionEmbeddings | Vector embeddings                |
+The sync API is defined in `convex/http.ts`. These are the endpoints that plugins call:
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/sync/session` | POST | Create or update a session |
+| `/sync/message` | POST | Create or update a message |
+| `/sync/batch` | POST | Bulk sync sessions and messages |
+| `/search` | POST | Full-text, semantic, or hybrid search |
+| `/health` | GET | Health check (no auth required) |
+| `/api/sessions` | GET | List sessions |
+| `/api/sessions/:id` | GET | Get session with messages |
+| `/api/export` | GET | Export sessions in eval formats |
+| `/api/context` | GET | Get context for RAG |
+
+All endpoints except `/health` require an `Authorization: Bearer osk_...` header.
+
+## Convex dashboard
+
+Access your project at [dashboard.convex.dev](https://dashboard.convex.dev):
+
+- **Data** tab: Browse and edit documents in any table
+- **Functions** tab: See all deployed functions, their execution logs, and errors
+- **Logs** tab: Real-time function execution logs with timing and error details
+- **Settings** tab: Environment variables, deployment URLs, and project configuration
 
 ## Scaling
 
-Convex automatically scales:
+Convex handles scaling automatically:
 
-- **Serverless** - Functions scale to zero
-- **Real-time** - WebSocket connections managed automatically
-- **Database** - Storage scales with usage
+| Aspect | How it scales |
+| --- | --- |
+| Functions | Scale to zero when idle, scale up under load |
+| Database | Storage grows with usage, no provisioning needed |
+| Real-time | WebSocket connections managed by Convex infrastructure |
+| HTTP endpoints | Handle concurrent requests without configuration |
 
-<Info>
-  Convex free tier includes 1M function calls/month, sufficient for most
-  personal use.
-</Info>
+The free tier includes 1 million function calls per month, which is sufficient for most individual developers. Teams with higher usage can upgrade through the Convex dashboard.
+
+## Monitoring
+
+### Function logs
+
+Check `dashboard.convex.dev` > **Logs** for:
+
+- Function execution times
+- Error stack traces
+- Write conflict retries
+- Scheduled function results
+
+### Common issues
+
+**Write conflicts**: If you see retry logs for mutations, check the [write conflict patterns](/troubleshooting/common-issues) documentation. OpenSync's mutations are designed to be idempotent, but rapid syncing from multiple plugins can occasionally trigger retries.
+
+**Slow queries**: Queries that scan many documents without using an index will be slow. All OpenSync queries use indexes by design, but custom modifications should follow the same pattern.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" href="/hosting/env" description="Set up all required configuration" />
+  <Card title="WorkOS Auth" href="/auth/workos" description="Configure authentication" />
+  <Card title="Frontend Hosting" href="/hosting/netlify" description="Deploy the dashboard UI" />
+  <Card title="Fork Guide" href="/fork/guide" description="Customize your deployment" />
+</CardGroup>

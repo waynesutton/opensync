@@ -627,7 +627,7 @@ export function LoginPage() {
                 >
                   This is the cloud version. Run 100% local with{" "}
                   <a
-                    href="/docs#requirements"
+                    href="https://docs.opensync.dev/getting-started/requirements"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`underline underline-offset-2 transition-colors ${

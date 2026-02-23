@@ -1,94 +1,154 @@
 ---
 title: "WorkOS AuthKit"
-description: "Set up authentication with WorkOS AuthKit"
+description: "Set up authentication with WorkOS AuthKit for OpenSync"
 ---
 
 # WorkOS AuthKit
 
-OpenSync uses WorkOS AuthKit for authentication, providing enterprise-grade auth with minimal setup.
+OpenSync uses [WorkOS AuthKit](https://workos.com/docs/authkit) for authentication. AuthKit provides enterprise-grade auth with GitHub, Google, and email sign-in out of the box, plus optional SAML SSO and MFA for teams that need it.
 
 ## Features
 
 <CardGroup cols={2}>
-  <Card
-    title="Social Login"
-    description="Google, GitHub, Microsoft, and more"
-  />
-  <Card title="Magic Links" description="Passwordless email authentication" />
-  <Card title="SSO" description="SAML and OIDC for enterprise" />
-  <Card title="MFA" description="Multi-factor authentication" />
+  <Card title="Social Login" description="GitHub and Google sign-in with zero configuration beyond API keys" />
+  <Card title="Email/Password" description="Built-in email authentication with secure password handling" />
+  <Card title="SSO" description="SAML and OIDC support for enterprise teams (WorkOS paid plan)" />
+  <Card title="MFA" description="Multi-factor authentication for additional security (WorkOS paid plan)" />
 </CardGroup>
+
+## How auth works in OpenSync
+
+1. User clicks "Sign in" on the OpenSync dashboard.
+2. The frontend redirects to WorkOS AuthKit's hosted authentication page.
+3. User signs in with GitHub, Google, or email.
+4. WorkOS redirects back to OpenSync with a session token.
+5. The frontend exchanges the token for a Convex auth session.
+6. Convex's auth middleware validates the token on every query and mutation.
+7. On first sign-in, a user record is auto-provisioned in the Convex `users` table.
+
+### User provisioning
+
+When a user signs in for the first time, OpenSync creates a record in the `users` table with:
+
+| Field | Source | Description |
+| --- | --- | --- |
+| `workosId` | WorkOS subject ID | Unique identifier for the user across sessions |
+| `email` | WorkOS profile | Email address from the auth provider |
+| `name` | WorkOS profile | Display name from the auth provider |
+| `avatarUrl` | WorkOS profile | Profile photo URL (if available) |
+| `createdAt` | System | Timestamp of account creation |
+| `updatedAt` | System | Timestamp of last profile update |
 
 ## Setup
 
-### 1. Create WorkOS Account
+### 1. Create a WorkOS account
 
-Sign up at [workos.com](https://workos.com) and create a new project.
+Sign up at [workos.com](https://workos.com) and create a new project (or use an existing one).
+
+WorkOS offers a generous free tier with 1 million monthly active users, which is more than enough for personal use and small teams.
 
 ### 2. Configure AuthKit
 
 In the WorkOS dashboard:
 
-1. Go to **AuthKit** > **Configuration**
-2. Enable desired authentication methods
-3. Add your redirect URIs:
-   - `https://your-app.com/callback`
-   - `http://localhost:5173/callback` (for development)
+1. Go to **AuthKit** > **Authentication**.
+2. Enable **GitHub** and **Google** under Social Login (or whichever providers you want).
+3. Go to **AuthKit** > **Redirects**.
+4. Add your redirect URIs:
 
-### 3. Set Environment Variables
+| Environment | Redirect URI |
+| --- | --- |
+| Production | `https://your-app.com/callback` |
+| Development | `http://localhost:5173/callback` |
+| Preview deployments | `https://deploy-preview-*.netlify.app/callback` |
+
+The callback path (`/callback`) is where WorkOS redirects after authentication.
+
+### 3. Get your credentials
+
+From the WorkOS dashboard, copy:
+
+- **API Key** (starts with `sk_`)
+- **Client ID** (starts with `client_`)
+
+### 4. Set environment variables
+
+**On Convex (backend):**
 
 ```bash
-# WorkOS credentials
-WORKOS_API_KEY=sk_...
-WORKOS_CLIENT_ID=client_...
-WORKOS_COOKIE_PASSWORD=a-secure-32-character-or-longer-password
+npx convex env set WORKOS_API_KEY sk_your_api_key
+npx convex env set WORKOS_CLIENT_ID client_your_client_id
 ```
 
-<Warning title="Cookie password">
-  The cookie password must be at least 32 characters. Generate one with: ```bash
-  openssl rand -base64 32 ```
+**On your frontend hosting (Netlify/Vercel):**
+
+```bash
+VITE_WORKOS_CLIENT_ID=client_your_client_id
+WORKOS_COOKIE_PASSWORD=a-random-string-at-least-32-characters-long
+```
+
+<Warning title="Cookie password requirements">
+  `WORKOS_COOKIE_PASSWORD` must be at least 32 characters. Generate one with:
+
+  ```bash
+  openssl rand -base64 32
+  ```
 </Warning>
 
-### 4. Configure Convex
+### 5. Configure Convex auth
 
-Add WorkOS configuration to your Convex environment:
+OpenSync's Convex backend uses the `@workos-inc/authkit-js` integration. The auth configuration is defined in `convex/auth.config.ts`. No changes are needed for standard setups. Convex validates the WorkOS JWT on every function call automatically.
 
-```bash
-npx convex env set WORKOS_API_KEY sk_...
-npx convex env set WORKOS_CLIENT_ID client_...
-```
+## User management
 
-## User Management
+### Viewing users
 
-WorkOS handles user management automatically:
+Users who have signed in appear in the Convex dashboard under the `users` table. Each user has:
 
-- Users are created on first login
-- User data syncs to Convex `users` table
-- Sessions are managed securely
+- A unique `workosId` tied to their WorkOS account
+- Email, name, and avatar from their auth provider
+- API key fields (if they've generated one in Settings)
+- Timestamps for creation and last update
 
-## CORS Configuration
+### Enabled agents
 
-For production deployments, add your domain to WorkOS CORS settings:
+Each user has an optional `enabledAgents` field (array of strings) that controls which sync plugins they've activated. This is managed through the Settings page in the dashboard.
 
-1. Go to **AuthKit** > **Redirects**
-2. Add your production URL
-3. Save changes
+## CORS configuration
+
+For production deployments, your domain must be registered in WorkOS:
+
+1. Go to **AuthKit** > **Redirects** in the WorkOS dashboard.
+2. Add your production URL (e.g., `https://your-app.com/callback`).
+3. Save.
 
 <Info>
-  CORS errors during login usually mean your redirect URI isn't configured in
-  WorkOS.
+  CORS errors during login ("blocked by CORS policy") almost always mean your redirect URI is not configured in WorkOS. Add the exact URL including the `/callback` path.
 </Info>
 
 ## Troubleshooting
 
 ### "Invalid redirect URI"
 
-Ensure your callback URL is added in WorkOS dashboard under **Redirects**.
+Your callback URL is not registered in WorkOS. Go to **AuthKit** > **Redirects** and add the exact URL your app redirects to.
 
-### "Cookie not set"
+### "Cookie not set" or auth loop
 
-Check that `WORKOS_COOKIE_PASSWORD` is at least 32 characters.
+`WORKOS_COOKIE_PASSWORD` is missing or shorter than 32 characters. Regenerate it and redeploy.
 
 ### "User not created in Convex"
 
-Verify the auto-provision setting is enabled in your Convex auth config.
+Check that the auto-provision logic in `convex/auth.config.ts` is enabled. On first sign-in, the Convex auth middleware should create a user record automatically. If the `users` table is empty after a successful login, check the Convex function logs for errors.
+
+### Sign-in works locally but not in production
+
+1. Verify that the production redirect URI is in WorkOS.
+2. Check that `VITE_WORKOS_CLIENT_ID` is set on the hosting platform.
+3. Confirm `WORKOS_API_KEY` and `WORKOS_CLIENT_ID` are set in Convex production environment.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API Keys" href="/auth/api-keys" description="Generate keys for plugin authentication" />
+  <Card title="Environment Variables" href="/hosting/env" description="Complete variable reference" />
+</CardGroup>

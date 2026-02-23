@@ -5,59 +5,101 @@ description: "Navigate and use the OpenSync dashboard"
 
 # Dashboard Overview
 
-The OpenSync dashboard provides a central view of all your AI coding sessions across different tools.
+The OpenSync dashboard is a single-page React application that provides a central view of all your AI coding sessions across tools. It updates in real time using Convex subscriptions, so new sessions and messages appear without refreshing.
 
-## Navigation
-
-The dashboard includes several main sections:
+## Main sections
 
 <CardGroup cols={2}>
   <Card
     title="Sessions"
-    href="/docs#dashboard-sessions"
-    description="View and search all synced sessions"
+    href="/dashboard/sessions"
+    description="Browse, filter, search, and manage all synced sessions"
+  />
+  <Card
+    title="Evals"
+    href="/dashboard/evals"
+    description="Tag sessions with quality labels and export evaluation datasets"
   />
   <Card
     title="Analytics"
-    href="/docs#dashboard-analytics"
-    description="Token usage, costs, and trends"
+    href="/dashboard/analytics"
+    description="Token usage, model breakdown, cost tracking, and trend charts"
   />
   <Card
-    title="Context"
-    href="/docs#dashboard-context"
-    description="Semantic search across all sessions"
+    title="Context Search"
+    href="/dashboard/context"
+    description="Semantic and full-text search across all session content"
   />
   <Card
     title="Settings"
-    href="/docs#auth-api-keys"
-    description="API keys and account settings"
+    href="/auth/api-keys"
+    description="API key management, enabled agents, and account settings"
   />
 </CardGroup>
 
-## Session List
+## Overview cards
 
-The main sessions list shows:
+The dashboard landing page shows summary statistics at the top:
 
-- **Session title** - Auto-generated from the first prompt
-- **Source** - Which tool the session came from (OpenCode, Claude, Codex, Cursor)
-- **Model** - The AI model used
-- **Tokens** - Total tokens (prompt + completion)
-- **Cost** - Estimated cost based on model pricing
-- **Time** - When the session was created
+| Card | What it shows | Data source |
+| --- | --- | --- |
+| Total Sessions | Count of all sessions for your account | `sessions` table, filtered by `userId` |
+| Total Tokens | Sum of `promptTokens + completionTokens` across all sessions | Aggregated from `sessions.totalTokens` |
+| Total Cost | Sum of estimated USD cost across all sessions | Aggregated from `sessions.cost` |
+| Active Sources | Count of distinct `source` values across your sessions | Distinct values of `sessions.source` |
+
+These numbers update in real time as new sessions are synced.
+
+## Session list
+
+Below the summary cards, you see a paginated list of your sessions sorted by creation time (most recent first). Each session card shows:
+
+| Field | Description | Schema field |
+| --- | --- | --- |
+| Title | Auto-generated from the first user message | `sessions.title` |
+| Source | Plugin that synced the session (e.g., "opencode", "claude-code") | `sessions.source` |
+| Model | AI model used (e.g., "claude-sonnet-4-20250514", "gpt-4o") | `sessions.model` |
+| Messages | Number of messages in the conversation | `sessions.messageCount` |
+| Tokens | Total tokens (prompt + completion) | `sessions.totalTokens` |
+| Cost | Estimated USD cost based on model pricing tables | `sessions.cost` |
+| Created | Timestamp of session start | `sessions.createdAt` |
+| Project | Project name extracted from the working directory | `sessions.projectName` |
 
 ## Filters
 
-Filter sessions by:
+The filter bar lets you narrow the session list:
 
-- **Source** - Filter by tool (OpenCode, Claude Code, Codex, Cursor)
-- **Date range** - Filter by time period
-- **Search** - Full-text search across all session content
+- **Source filter** selects sessions from a specific tool (OpenCode, Claude Code, Codex CLI, Cursor). Maps to the `sessions.source` field.
+- **Date range** filters sessions by their `createdAt` timestamp. Presets include Today, Last 7 Days, Last 30 Days, and All Time.
+- **Search** does a full-text search across `sessions.searchableText`, which is built from the concatenation of session title and message content.
+- **Eval status** (on the Evals tab) filters by the `sessions.evalStatus` field: golden, correct, incorrect, or needs_review.
 
-## Session Details
+## Session detail view
 
-Click any session to view:
+Click any session to open the detail panel. This shows:
 
-- Complete conversation history
-- Message-by-message token counts
-- Copy as markdown
-- Export options
+- **Full conversation** with each message displayed in a chat-like layout. User messages appear on the right, assistant messages on the left.
+- **Message metadata** including per-message token counts (`messages.promptTokens`, `messages.completionTokens`) and duration.
+- **Tool calls** are shown inline when the message role is "tool". The tool name and result are displayed.
+- **Copy button** copies the entire conversation as markdown.
+- **Export buttons** for DeepEval JSON, OpenAI Evals JSONL, and plain text.
+- **Delete** permanently removes the session and all its messages and parts.
+
+## Real-time updates
+
+The dashboard uses Convex's real-time subscription model. When a plugin syncs a new session or message, the dashboard updates automatically. There is no polling. The Convex client maintains a WebSocket connection and pushes changes as they happen.
+
+This means you can start a coding session in your terminal and watch the session appear in the dashboard within seconds.
+
+## Dark mode
+
+The dashboard supports light and dark modes. Toggle between them using the theme switcher in the header. The preference is saved per browser and follows your system setting by default.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Sessions View" href="/dashboard/sessions" description="Detailed guide to managing sessions" />
+  <Card title="Analytics" href="/dashboard/analytics" description="Understanding your usage data" />
+  <Card title="Context Search" href="/dashboard/context" description="Finding sessions with semantic search" />
+  <Card title="Evals Export" href="/dashboard/evals" description="Building evaluation datasets" />
+</CardGroup>

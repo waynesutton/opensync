@@ -223,9 +223,9 @@ This happens when WorkOS CORS is not configured:
 
 ## Next steps
 
-- [Full setup guide](https://www.opensync.dev/docs#hosting) for detailed configuration
-- [Plugin development guide](https://www.opensync.dev/docs#plugins) to build your own sync plugin
-- [API reference](https://www.opensync.dev/docs#api) for programmatic access
+- [Full setup guide](https://docs.opensync.dev/hosting/convex) for detailed configuration
+- [Plugin development guide](https://docs.opensync.dev/plugins/opencode-sync) to build your own sync plugin
+- [API reference](https://docs.opensync.dev/api/endpoints) for programmatic access
 - [install.md](install.md) for local development setup
 
 ## Need help?
