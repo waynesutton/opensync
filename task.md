@@ -8,6 +8,32 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Batch Deletion System - Issue #30)
+
+- [x] Fixed "Too many reads in a single function execution" error in deleteUserData
+  - Root cause: deleteUserData used collect() on all related tables, exceeding 4096 read limit
+  - Solution: Implemented paginated batch deletion with BATCH_SIZE=200
+- [x] Added deletion status tracking to users schema
+  - deletionStatus: "pending" | "in_progress" | "completed" | "failed"
+  - deletionStartedAt, deletionCompletedAt, deletionError timestamps
+  - deletionProgress: counts per table (sessions, messages, parts, embeddings, apiLogs, dailyWrapped)
+- [x] Created batch deletion mutations for each table type
+  - deletePartsBatch, deleteMessagesBatch, deleteSessionsBatch
+  - deleteSessionEmbeddingsBatch, deleteMessageEmbeddingsBatch
+  - deleteDailyWrappedBatch, deleteApiLogsBatch, deleteUserRecord
+- [x] Created orchestrateBatchDeletion internalAction
+  - Coordinates table-by-table deletion in correct order
+  - Updates progress counters after each batch
+  - Handles errors gracefully with status updates
+- [x] Updated public mutations to use batch system
+  - deleteAllData: initiates batch deletion, returns immediately
+  - deleteAccount: initiates batch deletion then deletes WorkOS account
+- [x] Updated me query to return deletion status fields
+- [x] Added reactive UI progress tracking in Settings.tsx
+  - Shows deletion progress with counts per table
+  - Success/error messages with auto-clear
+  - Disables delete buttons during deletion
+
 ## Recently Completed (Mintlify Docs In-Depth Rewrite)
 
 - [x] Migrated mint.json to docs.json with new Mintlify schema

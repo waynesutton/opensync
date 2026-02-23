@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "OpenSync",
+  "description": "Sync and analyze your AI coding sessions across tools",
   "logo": {
     "light": "/logo-light.svg",
     "dark": "/logo-dark.svg",
@@ -9,20 +10,28 @@
   },
   "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#9b9b9b",
+    "primary": "#EB5601",
     "light": "#faf8f5",
     "dark": "#0E0E0E"
   },
+  "navbar": {
+    "links": [
+      {
+        "label": "Dashboard",
+        "href": "https://opensync.dev"
+      },
+      {
+        "type": "github",
+        "href": "https://github.com/waynesutton/opensync"
+      }
+    ]
+  },
   "navigation": {
-    "anchors": [
-      { "anchor": "Dashboard", "url": "https://opensync.dev" },
-      { "anchor": "GitHub", "url": "https://github.com/waynesutton/opensync" }
-    ],
-    "pages": ["index"],
     "groups": [
       {
         "group": "Getting Started",
         "pages": [
+          "index",
           "getting-started/hosted",
           "getting-started/requirements",
           "getting-started/quick-start"
@@ -95,8 +104,10 @@
       }
     ]
   },
-  "footerSocials": {
-    "github": "https://github.com/waynesutton/opensync"
+  "footer": {
+    "socials": {
+      "github": "https://github.com/waynesutton/opensync"
+    }
   },
   "appearance": {
     "default": "system"

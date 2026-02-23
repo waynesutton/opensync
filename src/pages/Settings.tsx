@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../lib/auth";
@@ -33,6 +33,8 @@ import {
   FileText,
   Shield,
   Bot,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 // Convex URL from environment
@@ -172,6 +174,24 @@ export function SettingsPage() {
   const deleteAllData = useMutation(api.users.deleteAllData);
   const deleteAccount = useAction(api.users.deleteAccount);
   const updateEnabledAgents = useMutation(api.users.updateEnabledAgents);
+  const clearDeletionStatus = useMutation(api.users.clearDeletionStatus);
+
+  // Reactive deletion status from currentUser
+  const isDeletionInProgress =
+    currentUser?.deletionStatus === "pending" ||
+    currentUser?.deletionStatus === "in_progress";
+  const isDeletionCompleted = currentUser?.deletionStatus === "completed";
+  const isDeletionFailed = currentUser?.deletionStatus === "failed";
+
+  // Auto-clear deletion status after completion
+  useEffect(() => {
+    if (isDeletionCompleted) {
+      const timer = setTimeout(() => {
+        clearDeletionStatus();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isDeletionCompleted, clearDeletionStatus]);
 
   // Compute enabled agents with defaults for backward compatibility
   const enabledAgents = currentUser?.enabledAgents ?? DEFAULT_ENABLED_AGENTS;
@@ -217,13 +237,17 @@ export function SettingsPage() {
     }
   };
 
-  // Delete all synced data (keeps account)
+  // Delete all synced data (keeps account) - starts batch deletion
   const handleDeleteData = async () => {
     setIsDeleting(true);
     setDeleteError(null);
     try {
-      await deleteAllData();
+      const result = await deleteAllData();
       setShowDeleteDataModal(false);
+      if (!result.started) {
+        setDeleteError(result.message);
+      }
+      // The UI will now reactively show progress via currentUser.deletionStatus
     } catch (error) {
       setDeleteError(
         error instanceof Error ? error.message : "Failed to delete data",
@@ -233,17 +257,15 @@ export function SettingsPage() {
     }
   };
 
-  // Delete account and all data
+  // Delete account and all data - starts batch deletion then deletes WorkOS account
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     setDeleteError(null);
     try {
       const result = await deleteAccount();
-      if (result.deleted) {
-        // Account deleted successfully
-        // Don't call signOut() - it causes a redirect to WorkOS logout URL
-        // Instead, redirect directly to homepage
-        // The auth state will update automatically since the user no longer exists
+      if (result.started) {
+        // Account deletion started
+        // Redirect to homepage as user will be signed out
         window.location.href = "/";
       } else {
         setDeleteError(result.error || "Failed to delete account");
@@ -1077,6 +1099,86 @@ export function SettingsPage() {
                   </div>
                 )}
 
+                {/* Deletion failed message */}
+                {isDeletionFailed && currentUser?.deletionError && (
+                  <div className="p-3 rounded border border-red-500/50 bg-red-500/10">
+                    <div className="flex items-center gap-2">
+                      <XCircle className="h-4 w-4 text-red-400" />
+                      <p className="text-sm text-red-400">
+                        Deletion failed: {currentUser.deletionError}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Deletion completed message */}
+                {isDeletionCompleted && (
+                  <div className="p-3 rounded border border-emerald-500/50 bg-emerald-500/10">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-emerald-400" />
+                      <p className="text-sm text-emerald-400">
+                        All data deleted successfully
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Deletion in progress */}
+                {isDeletionInProgress && currentUser?.deletionProgress && (
+                  <div
+                    className={cn(
+                      "p-4 rounded border",
+                      t.bgSecondary,
+                      t.borderLight,
+                    )}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                      <p className={cn("text-sm font-medium", t.textSecondary)}>
+                        Deleting data...
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>Sessions:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.sessions}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>Messages:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.messages}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>Parts:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.parts}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>API Logs:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.apiLogs}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>Session Embeddings:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.sessionEmbeddings}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={t.textDim}>Message Embeddings:</span>
+                        <span className={t.textSubtle}>
+                          {currentUser.deletionProgress.messageEmbeddings}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Delete synced data */}
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -1090,10 +1192,10 @@ export function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setShowDeleteDataModal(true)}
-                    disabled={isDeleting}
+                    disabled={isDeleting || isDeletionInProgress}
                     className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-red-500/50 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                   >
-                    {isDeleting ? (
+                    {isDeleting || isDeletionInProgress ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <Trash2 className="h-3 w-3" />
@@ -1117,10 +1219,10 @@ export function SettingsPage() {
                   </div>
                   <button
                     onClick={() => setShowDeleteAccountModal(true)}
-                    disabled={isDeleting}
+                    disabled={isDeleting || isDeletionInProgress}
                     className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-red-600 text-white hover:bg-red-500 transition-colors disabled:opacity-50"
                   >
-                    {isDeleting ? (
+                    {isDeleting || isDeletionInProgress ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
                       <Trash2 className="h-3 w-3" />

@@ -8,6 +8,28 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Batch deletion system with reactive UI progress tracking (fixes #30)
+  - Paginated batch deletion to stay under Convex 4096 read limit
+  - New internalAction orchestrateBatchDeletion coordinates table-by-table deletion
+  - Separate batch mutations for parts, messages, sessions, embeddings, dailyWrapped, apiLogs
+  - Deletion status tracking fields on users table (deletionStatus, deletionProgress, deletionError)
+  - Real-time progress display in Settings Danger Zone showing counts per table
+  - Success/error notifications with auto-clear after completion
+  - Buttons disabled during deletion to prevent duplicate operations
+
+### Fixed
+
+- Fixed "Too many reads in a single function execution (limit: 4096)" error in deleteUserData
+  - Replaced collect() calls with paginated take(200) batches
+  - Each batch mutation handles one table type with proper indexing
+  - Progress counters update in real-time via Convex reactivity
+
+---
+
+## Previous Unreleased
+
+### Added
+
 - Comprehensive Mintlify documentation rewrite with in-depth technical content
   - Created docs.json (replacing mint.json) with new Mintlify schema, navigation groups, and correct GitHub URLs
   - Created index.mdx landing page with CardGroup links to all documentation sections

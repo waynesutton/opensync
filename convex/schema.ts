@@ -15,6 +15,30 @@ export default defineSchema({
     apiKeyCreatedAt: v.optional(v.number()),
     // Enabled AI coding agents for source filter dropdown
     enabledAgents: v.optional(v.array(v.string())),
+    // Deletion status tracking for batch deletion progress
+    deletionStatus: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("in_progress"),
+        v.literal("completed"),
+        v.literal("failed"),
+      ),
+    ),
+    deletionStartedAt: v.optional(v.number()),
+    deletionCompletedAt: v.optional(v.number()),
+    deletionError: v.optional(v.string()),
+    // Tracks deletion progress counts
+    deletionProgress: v.optional(
+      v.object({
+        sessions: v.number(),
+        messages: v.number(),
+        parts: v.number(),
+        sessionEmbeddings: v.number(),
+        messageEmbeddings: v.number(),
+        dailyWrapped: v.number(),
+        apiLogs: v.number(),
+      }),
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

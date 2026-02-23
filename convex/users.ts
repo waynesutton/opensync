@@ -1,7 +1,17 @@
 import { v } from "convex/values";
-import { mutation, query, internalMutation, action } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalMutation,
+  internalAction,
+  action,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
 import { nanoid } from "nanoid";
+import { Id } from "./_generated/dataModel";
+
+// Batch size to stay under 4096 read limit
+const BATCH_SIZE = 200;
 
 // Get current user from auth
 export const me = query({
@@ -15,8 +25,29 @@ export const me = query({
       hasApiKey: v.boolean(),
       enabledAgents: v.optional(v.array(v.string())),
       createdAt: v.number(),
+      // Deletion status for reactive UI
+      deletionStatus: v.optional(
+        v.union(
+          v.literal("pending"),
+          v.literal("in_progress"),
+          v.literal("completed"),
+          v.literal("failed"),
+        ),
+      ),
+      deletionProgress: v.optional(
+        v.object({
+          sessions: v.number(),
+          messages: v.number(),
+          parts: v.number(),
+          sessionEmbeddings: v.number(),
+          messageEmbeddings: v.number(),
+          dailyWrapped: v.number(),
+          apiLogs: v.number(),
+        }),
+      ),
+      deletionError: v.optional(v.string()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -32,7 +63,9 @@ export const me = query({
     // Normalize enabledAgents: convert "cursor" -> "cursor-sync" and deduplicate
     let normalizedAgents = user.enabledAgents;
     if (normalizedAgents) {
-      normalizedAgents = normalizedAgents.map((a) => (a === "cursor" ? "cursor-sync" : a));
+      normalizedAgents = normalizedAgents.map((a) =>
+        a === "cursor" ? "cursor-sync" : a,
+      );
       normalizedAgents = [...new Set(normalizedAgents)];
     }
 
@@ -44,6 +77,9 @@ export const me = query({
       hasApiKey: !!user.apiKey,
       enabledAgents: normalizedAgents,
       createdAt: user.createdAt,
+      deletionStatus: user.deletionStatus,
+      deletionProgress: user.deletionProgress,
+      deletionError: user.deletionError,
     };
   },
 });
@@ -246,19 +282,18 @@ export const getByWorkosId = internalMutation({
   },
 });
 
-// Delete all user data (keeps account intact)
-// Deletes: parts, messages, sessionEmbeddings, messageEmbeddings, dailyWrapped, sessions, apiLogs
+// ============================================================================
+// BATCH DELETION SYSTEM
+// Uses paginated batches to avoid "too many reads" error (limit: 4096)
+// ============================================================================
+
+// Start batch deletion process (keeps account intact)
 export const deleteAllData = mutation({
   args: {},
-  returns: v.object({ deleted: v.boolean(), counts: v.object({
-    sessions: v.number(),
-    messages: v.number(),
-    parts: v.number(),
-    sessionEmbeddings: v.number(),
-    messageEmbeddings: v.number(),
-    dailyWrapped: v.number(),
-    apiLogs: v.number(),
-  })}),
+  returns: v.object({
+    started: v.boolean(),
+    message: v.string(),
+  }),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Not authenticated");
@@ -270,143 +305,538 @@ export const deleteAllData = mutation({
 
     if (!user) throw new Error("User not found");
 
-    // Delete all user data using the internal helper
-    const counts = await deleteUserData(ctx, user._id);
-
-    return { deleted: true, counts };
-  },
-});
-
-// Internal: delete all user data (used by deleteAccount action)
-export const deleteAllDataInternal = internalMutation({
-  args: { userId: v.id("users"), deleteUser: v.boolean() },
-  returns: v.object({
-    sessions: v.number(),
-    messages: v.number(),
-    parts: v.number(),
-    sessionEmbeddings: v.number(),
-    messageEmbeddings: v.number(),
-    dailyWrapped: v.number(),
-    apiLogs: v.number(),
-  }),
-  handler: async (ctx, { userId, deleteUser }) => {
-    const counts = await deleteUserData(ctx, userId);
-    
-    // Optionally delete the user record itself
-    if (deleteUser) {
-      await ctx.db.delete(userId);
+    // Prevent starting if deletion is already in progress
+    if (
+      user.deletionStatus === "pending" ||
+      user.deletionStatus === "in_progress"
+    ) {
+      return {
+        started: false,
+        message: "Deletion already in progress",
+      };
     }
 
-    return counts;
+    // Mark deletion as pending
+    await ctx.db.patch(user._id, {
+      deletionStatus: "pending" as const,
+      deletionStartedAt: Date.now(),
+      deletionCompletedAt: undefined,
+      deletionError: undefined,
+      deletionProgress: {
+        sessions: 0,
+        messages: 0,
+        parts: 0,
+        sessionEmbeddings: 0,
+        messageEmbeddings: 0,
+        dailyWrapped: 0,
+        apiLogs: 0,
+      },
+    });
+
+    // Schedule background batch deletion
+    await ctx.scheduler.runAfter(0, internal.users.orchestrateBatchDeletion, {
+      userId: user._id,
+      deleteUser: false,
+    });
+
+    return {
+      started: true,
+      message: "Data deletion started. Progress will be shown in real-time.",
+    };
   },
 });
 
-// Helper function to delete all user data with parallel deletes for performance
-async function deleteUserData(ctx: any, userId: any) {
-  const counts = {
-    sessions: 0,
-    messages: 0,
-    parts: 0,
-    sessionEmbeddings: 0,
-    messageEmbeddings: 0,
-    dailyWrapped: 0,
-    apiLogs: 0,
-  };
+// Internal orchestrating action that runs batch deletions
+export const orchestrateBatchDeletion = internalAction({
+  args: {
+    userId: v.id("users"),
+    deleteUser: v.boolean(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { userId, deleteUser }) => {
+    // Mark as in progress
+    await ctx.runMutation(internal.users.updateDeletionStatus, {
+      userId,
+      status: "in_progress",
+    });
 
-  // Get all sessions for this user
-  const sessions = await ctx.db
-    .query("sessions")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .collect();
+    try {
+      // 1. Delete parts in batches (deepest child records)
+      let hasMoreParts = true;
+      while (hasMoreParts) {
+        const result = await ctx.runMutation(
+          internal.users.deletePartsBatch,
+          { userId },
+        );
+        hasMoreParts = result.hasMore;
+      }
 
-  // Collect all message IDs and part IDs first, then delete in parallel
-  const allMessageIds: any[] = [];
-  const allPartIds: any[] = [];
+      // 2. Delete messages in batches
+      let hasMoreMessages = true;
+      while (hasMoreMessages) {
+        const result = await ctx.runMutation(
+          internal.users.deleteMessagesBatch,
+          { userId },
+        );
+        hasMoreMessages = result.hasMore;
+      }
 
-  for (const session of sessions) {
-    const messages = await ctx.db
-      .query("messages")
-      .withIndex("by_session", (q: any) => q.eq("sessionId", session._id))
-      .collect();
+      // 3. Delete sessions in batches
+      let hasMoreSessions = true;
+      while (hasMoreSessions) {
+        const result = await ctx.runMutation(
+          internal.users.deleteSessionsBatch,
+          { userId },
+        );
+        hasMoreSessions = result.hasMore;
+      }
 
-    for (const message of messages) {
-      allMessageIds.push(message._id);
+      // 4. Delete session embeddings in batches
+      let hasMoreSessionEmbeddings = true;
+      while (hasMoreSessionEmbeddings) {
+        const result = await ctx.runMutation(
+          internal.users.deleteSessionEmbeddingsBatch,
+          { userId },
+        );
+        hasMoreSessionEmbeddings = result.hasMore;
+      }
 
-      const parts = await ctx.db
-        .query("parts")
-        .withIndex("by_message", (q: any) => q.eq("messageId", message._id))
-        .collect();
+      // 5. Delete message embeddings in batches
+      let hasMoreMessageEmbeddings = true;
+      while (hasMoreMessageEmbeddings) {
+        const result = await ctx.runMutation(
+          internal.users.deleteMessageEmbeddingsBatch,
+          { userId },
+        );
+        hasMoreMessageEmbeddings = result.hasMore;
+      }
 
-      for (const part of parts) {
-        allPartIds.push(part._id);
+      // 6. Delete daily wrapped in batches
+      let hasMoreDailyWrapped = true;
+      while (hasMoreDailyWrapped) {
+        const result = await ctx.runMutation(
+          internal.users.deleteDailyWrappedBatch,
+          { userId },
+        );
+        hasMoreDailyWrapped = result.hasMore;
+      }
+
+      // 7. Delete API logs in batches
+      let hasMoreApiLogs = true;
+      while (hasMoreApiLogs) {
+        const result = await ctx.runMutation(
+          internal.users.deleteApiLogsBatch,
+          { userId },
+        );
+        hasMoreApiLogs = result.hasMore;
+      }
+
+      // 8. Optionally delete the user record
+      if (deleteUser) {
+        await ctx.runMutation(internal.users.deleteUserRecord, { userId });
+      } else {
+        // Mark deletion as completed
+        await ctx.runMutation(internal.users.updateDeletionStatus, {
+          userId,
+          status: "completed",
+        });
+      }
+    } catch (error) {
+      // Mark deletion as failed
+      await ctx.runMutation(internal.users.updateDeletionStatus, {
+        userId,
+        status: "failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+
+    return null;
+  },
+});
+
+// Update deletion status (internal)
+export const updateDeletionStatus = internalMutation({
+  args: {
+    userId: v.id("users"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    error: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, { userId, status, error }) => {
+    const updates: Record<string, unknown> = { deletionStatus: status };
+
+    if (status === "completed") {
+      updates.deletionCompletedAt = Date.now();
+    }
+    if (error) {
+      updates.deletionError = error;
+    }
+
+    await ctx.db.patch(userId, updates);
+    return null;
+  },
+});
+
+// Batch delete parts (delete parts from user's sessions' messages)
+export const deletePartsBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    // Get a batch of sessions to find their messages
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(20);
+
+    if (sessions.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    let totalDeleted = 0;
+
+    // For each session, get messages and delete their parts
+    for (const session of sessions) {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+        .take(10);
+
+      for (const message of messages) {
+        const parts = await ctx.db
+          .query("parts")
+          .withIndex("by_message", (q) => q.eq("messageId", message._id))
+          .take(BATCH_SIZE);
+
+        if (parts.length > 0) {
+          await Promise.all(parts.map((p) => ctx.db.delete(p._id)));
+          totalDeleted += parts.length;
+        }
       }
     }
-  }
 
-  // Delete parts in parallel (child records first)
-  if (allPartIds.length > 0) {
-    await Promise.all(allPartIds.map((id) => ctx.db.delete(id)));
-    counts.parts = allPartIds.length;
-  }
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          parts: user.deletionProgress.parts + totalDeleted,
+        },
+      });
+    }
 
-  // Delete messages in parallel
-  if (allMessageIds.length > 0) {
-    await Promise.all(allMessageIds.map((id) => ctx.db.delete(id)));
-    counts.messages = allMessageIds.length;
-  }
+    // Check if there are more parts to delete
+    const checkSession = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
 
-  // Delete sessions in parallel
-  if (sessions.length > 0) {
-    await Promise.all(sessions.map((s: any) => ctx.db.delete(s._id)));
-    counts.sessions = sessions.length;
-  }
+    if (!checkSession) {
+      return { deleted: totalDeleted, hasMore: false };
+    }
 
-  // Delete session embeddings in parallel
-  const sessionEmbeddings = await ctx.db
-    .query("sessionEmbeddings")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .collect();
+    const checkMessage = await ctx.db
+      .query("messages")
+      .withIndex("by_session", (q) => q.eq("sessionId", checkSession._id))
+      .first();
 
-  if (sessionEmbeddings.length > 0) {
-    await Promise.all(sessionEmbeddings.map((e: any) => ctx.db.delete(e._id)));
-    counts.sessionEmbeddings = sessionEmbeddings.length;
-  }
+    if (!checkMessage) {
+      return { deleted: totalDeleted, hasMore: false };
+    }
 
-  // Delete message embeddings in parallel
-  const messageEmbeddings = await ctx.db
-    .query("messageEmbeddings")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .collect();
+    const moreParts = await ctx.db
+      .query("parts")
+      .withIndex("by_message", (q) => q.eq("messageId", checkMessage._id))
+      .first();
 
-  if (messageEmbeddings.length > 0) {
-    await Promise.all(messageEmbeddings.map((e: any) => ctx.db.delete(e._id)));
-    counts.messageEmbeddings = messageEmbeddings.length;
-  }
+    return { deleted: totalDeleted, hasMore: moreParts !== null };
+  },
+});
 
-  // Delete daily wrapped images in parallel
-  const dailyWrappeds = await ctx.db
-    .query("dailyWrapped")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .collect();
+// Batch delete messages
+export const deleteMessagesBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    // Get a batch of sessions
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(50);
 
-  if (dailyWrappeds.length > 0) {
-    await Promise.all(dailyWrappeds.map((d: any) => ctx.db.delete(d._id)));
-    counts.dailyWrapped = dailyWrappeds.length;
-  }
+    if (sessions.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
 
-  // Delete API logs in parallel
-  const apiLogs = await ctx.db
-    .query("apiLogs")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
-    .collect();
+    let totalDeleted = 0;
 
-  if (apiLogs.length > 0) {
-    await Promise.all(apiLogs.map((l: any) => ctx.db.delete(l._id)));
-    counts.apiLogs = apiLogs.length;
-  }
+    // Delete messages for each session
+    for (const session of sessions) {
+      const messages = await ctx.db
+        .query("messages")
+        .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+        .take(BATCH_SIZE);
 
-  return counts;
-}
+      if (messages.length > 0) {
+        await Promise.all(messages.map((m) => ctx.db.delete(m._id)));
+        totalDeleted += messages.length;
+      }
+    }
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          messages: user.deletionProgress.messages + totalDeleted,
+        },
+      });
+    }
+
+    // Check if there are more messages
+    const checkSession = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!checkSession) {
+      return { deleted: totalDeleted, hasMore: false };
+    }
+
+    const moreMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_session", (q) => q.eq("sessionId", checkSession._id))
+      .first();
+
+    return { deleted: totalDeleted, hasMore: moreMessages !== null };
+  },
+});
+
+// Batch delete sessions
+export const deleteSessionsBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    const sessions = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH_SIZE);
+
+    if (sessions.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    await Promise.all(sessions.map((s) => ctx.db.delete(s._id)));
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          sessions: user.deletionProgress.sessions + sessions.length,
+        },
+      });
+    }
+
+    // Check if more exist
+    const more = await ctx.db
+      .query("sessions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return { deleted: sessions.length, hasMore: more !== null };
+  },
+});
+
+// Batch delete session embeddings
+export const deleteSessionEmbeddingsBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    const embeddings = await ctx.db
+      .query("sessionEmbeddings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH_SIZE);
+
+    if (embeddings.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    await Promise.all(embeddings.map((e) => ctx.db.delete(e._id)));
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          sessionEmbeddings:
+            user.deletionProgress.sessionEmbeddings + embeddings.length,
+        },
+      });
+    }
+
+    const more = await ctx.db
+      .query("sessionEmbeddings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return { deleted: embeddings.length, hasMore: more !== null };
+  },
+});
+
+// Batch delete message embeddings
+export const deleteMessageEmbeddingsBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    const embeddings = await ctx.db
+      .query("messageEmbeddings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH_SIZE);
+
+    if (embeddings.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    await Promise.all(embeddings.map((e) => ctx.db.delete(e._id)));
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          messageEmbeddings:
+            user.deletionProgress.messageEmbeddings + embeddings.length,
+        },
+      });
+    }
+
+    const more = await ctx.db
+      .query("messageEmbeddings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return { deleted: embeddings.length, hasMore: more !== null };
+  },
+});
+
+// Batch delete daily wrapped
+export const deleteDailyWrappedBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    const wrapped = await ctx.db
+      .query("dailyWrapped")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH_SIZE);
+
+    if (wrapped.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    await Promise.all(wrapped.map((w) => ctx.db.delete(w._id)));
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          dailyWrapped: user.deletionProgress.dailyWrapped + wrapped.length,
+        },
+      });
+    }
+
+    const more = await ctx.db
+      .query("dailyWrapped")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return { deleted: wrapped.length, hasMore: more !== null };
+  },
+});
+
+// Batch delete API logs
+export const deleteApiLogsBatch = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.object({ deleted: v.number(), hasMore: v.boolean() }),
+  handler: async (ctx, { userId }) => {
+    const logs = await ctx.db
+      .query("apiLogs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(BATCH_SIZE);
+
+    if (logs.length === 0) {
+      return { deleted: 0, hasMore: false };
+    }
+
+    await Promise.all(logs.map((l) => ctx.db.delete(l._id)));
+
+    // Update progress
+    const user = await ctx.db.get(userId);
+    if (user?.deletionProgress) {
+      await ctx.db.patch(userId, {
+        deletionProgress: {
+          ...user.deletionProgress,
+          apiLogs: user.deletionProgress.apiLogs + logs.length,
+        },
+      });
+    }
+
+    const more = await ctx.db
+      .query("apiLogs")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return { deleted: logs.length, hasMore: more !== null };
+  },
+});
+
+// Delete the user record itself
+export const deleteUserRecord = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { userId }) => {
+    await ctx.db.delete(userId);
+    return null;
+  },
+});
+
+// Clear deletion status (for UI reset after completion)
+export const clearDeletionStatus = mutation({
+  args: {},
+  returns: v.null(),
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_workos_id", (q) => q.eq("workosId", identity.subject))
+      .first();
+
+    if (!user) throw new Error("User not found");
+
+    await ctx.db.patch(user._id, {
+      deletionStatus: undefined,
+      deletionStartedAt: undefined,
+      deletionCompletedAt: undefined,
+      deletionError: undefined,
+      deletionProgress: undefined,
+    });
+
+    return null;
+  },
+});
 
 // Internal query to get user info for deletion
 export const getUserForDeletion = internalMutation({
@@ -433,43 +863,65 @@ export const getUserForDeletion = internalMutation({
   },
 });
 
-// Delete account action - deletes Convex data first, then WorkOS account
-// This ensures data is deleted even if WorkOS has side effects (session invalidation)
+// Delete account action - starts batch deletion, then deletes WorkOS account
+// Uses background batch deletion to avoid "too many reads" error
 // Calls WorkOS API: DELETE /user_management/users/{user_id}
 export const deleteAccount = action({
   args: {},
-  returns: v.object({ deleted: v.boolean(), error: v.optional(v.string()) }),
-  handler: async (ctx): Promise<{ deleted: boolean; error?: string }> => {
+  returns: v.object({
+    started: v.boolean(),
+    message: v.string(),
+    error: v.optional(v.string()),
+  }),
+  handler: async (
+    ctx,
+  ): Promise<{ started: boolean; message: string; error?: string }> => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      return { deleted: false, error: "Not authenticated" };
+      return {
+        started: false,
+        message: "Authentication required",
+        error: "Not authenticated",
+      };
     }
 
     // Get the user record
-    const user: { _id: any; workosId: string } | null = await ctx.runMutation(
-      internal.users.getUserForDeletion,
-      { workosId: identity.subject }
-    );
+    const user: { _id: Id<"users">; workosId: string } | null =
+      await ctx.runMutation(internal.users.getUserForDeletion, {
+        workosId: identity.subject,
+      });
 
     if (!user) {
-      return { deleted: false, error: "User not found" };
+      return {
+        started: false,
+        message: "User not found",
+        error: "User not found",
+      };
     }
 
     // Get the WorkOS API key
     const workosApiKey = process.env.WORKOS_API_KEY;
     if (!workosApiKey) {
-      return { deleted: false, error: "WorkOS API key not configured" };
+      return {
+        started: false,
+        message: "Configuration error",
+        error: "WorkOS API key not configured",
+      };
     }
 
     try {
-      // IMPORTANT: Delete Convex data FIRST before WorkOS
-      // WorkOS deletion may invalidate sessions and cause redirects
-      await ctx.runMutation(internal.users.deleteAllDataInternal, {
+      // Mark deletion as pending with progress tracking
+      await ctx.runMutation(internal.users.initiateDeletion, {
+        userId: user._id,
+      });
+
+      // Start the background batch deletion (which will also delete user record)
+      await ctx.scheduler.runAfter(0, internal.users.orchestrateBatchDeletion, {
         userId: user._id,
         deleteUser: true,
       });
 
-      // Now delete from WorkOS
+      // Delete from WorkOS immediately (this invalidates the session)
       // API Reference: https://workos.com/docs/reference/authkit/user/delete
       const response: Response = await fetch(
         `https://api.workos.com/user_management/users/${user.workosId}`,
@@ -478,22 +930,48 @@ export const deleteAccount = action({
           headers: {
             Authorization: `Bearer ${workosApiKey}`,
           },
-        }
+        },
       );
 
       // 204 = success (no content), 404 = user already deleted
       if (!response.ok && response.status !== 404) {
-        // Note: Convex data is already deleted at this point
-        // Log the error but still consider it a success since data is gone
         console.error(`WorkOS deletion failed: ${response.status}`);
       }
 
-      return { deleted: true };
+      return {
+        started: true,
+        message: "Account deletion started. You will be signed out.",
+      };
     } catch (error) {
       return {
-        deleted: false,
+        started: false,
+        message: "Failed to delete account",
         error: `Failed to delete account: ${error instanceof Error ? error.message : String(error)}`,
       };
     }
+  },
+});
+
+// Internal mutation to initiate deletion with status tracking
+export const initiateDeletion = internalMutation({
+  args: { userId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { userId }) => {
+    await ctx.db.patch(userId, {
+      deletionStatus: "pending" as const,
+      deletionStartedAt: Date.now(),
+      deletionCompletedAt: undefined,
+      deletionError: undefined,
+      deletionProgress: {
+        sessions: 0,
+        messages: 0,
+        parts: 0,
+        sessionEmbeddings: 0,
+        messageEmbeddings: 0,
+        dailyWrapped: 0,
+        apiLogs: 0,
+      },
+    });
+    return null;
   },
 });
