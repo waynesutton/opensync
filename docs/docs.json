@@ -9,7 +9,7 @@
   },
   "favicon": "/favicon.svg",
   "colors": {
-    "primary": "#EB5601",
+    "primary": "#9b9b9b",
     "light": "#faf8f5",
     "dark": "#0E0E0E"
   },
@@ -96,5 +96,8 @@
   },
   "footerSocials": {
     "github": "https://github.com/waynesutton/opensync"
+  },
+  "appearance": {
+    "default": "system"
   }
 }
