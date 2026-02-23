@@ -8,6 +8,13 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Netlify Build Fix - Theme Property)
+
+- [x] Fixed Netlify build error: `t.bg` property does not exist on theme classes
+  - Root cause: Dashboard.tsx line 1395 used `t.bg` but theme classes only have `bgPrimary`
+  - Fix: Changed `t.bg` to `t.bgPrimary` in session detail container className
+  - TypeScript and Netlify build now pass
+
 ## Recently Completed (Issue #13 - Mobile Scrolling Fix)
 
 - [x] Fixed mobile scrolling in session detail view (GitHub #13)

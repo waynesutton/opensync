@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed Netlify build error: `t.bg` property does not exist on theme classes
+  - Changed `t.bg` to `t.bgPrimary` in Dashboard.tsx session detail container (line 1395)
+  - Theme classes use `bgPrimary` not `bg` for primary background color
+
 - Fixed mobile scrolling in session detail view (fixes #13)
   - Added `overscroll-contain`, `touch-pan-y`, and `WebkitOverflowScrolling: 'touch'` to messages container
   - Session detail uses absolute positioning on mobile with background color to cover session list

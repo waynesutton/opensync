@@ -88,7 +88,7 @@ React frontend application.
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `auth.tsx`  | Auth wrapper for WorkOS AuthKit with useAuth hook, session rehydration, and token refresh handling                                                                                                                                                                      |
 | `utils.ts`  | Utility functions (cn for classnames)                                                                                                                                                                                                                                   |
-| `theme.tsx` | Theme context with page-specific defaults (PAGE_THEME_DEFAULTS config), useTheme and usePageTheme hooks, dark/tan mode toggle with localStorage persistence                                                                                                             |
+| `theme.tsx` | Theme context with page-specific defaults (PAGE_THEME_DEFAULTS config), useTheme and usePageTheme hooks, dark/tan mode toggle with localStorage persistence. getThemeClasses returns bgPrimary, bgSecondary, bgCard, bgHover (no bare `bg` property)                    |
 | `source.ts` | Source utilities: getSourceLabel (OC/CC/FD/CX/CR/PI labels, handles cursor alias), getSourceColorClass (themed badge colors for OpenCode/Claude Code/Factory Droid/Codex CLI/Cursor/Pi with purple for codex-cli, violet for cursor-sync/cursor, orange #f97316 for pi) |
 
 ## docs/

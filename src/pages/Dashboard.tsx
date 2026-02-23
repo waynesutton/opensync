@@ -1392,7 +1392,7 @@ function SessionsView({
 
       {/* Session detail - full width on mobile, uses absolute positioning on mobile for proper scrolling */}
       {selectedSession && (
-        <div className={cn("absolute inset-0 lg:relative lg:inset-auto h-full min-h-0 w-full lg:w-1/2 flex flex-col overflow-hidden z-10 lg:z-auto", t.bg)}>
+        <div className={cn("absolute inset-0 lg:relative lg:inset-auto h-full min-h-0 w-full lg:w-1/2 flex flex-col overflow-hidden z-10 lg:z-auto", t.bgPrimary)}>
           {/* Detail header */}
           <div className={cn("px-4 py-3 border-b flex items-center justify-between", t.border)}>
             <div className="flex items-center gap-3 min-w-0">
