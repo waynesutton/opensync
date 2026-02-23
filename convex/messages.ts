@@ -53,8 +53,6 @@ export const upsert = internalMutation({
 
     // Store session data we need for later (avoid re-reading)
     let sessionId: Id<"sessions">;
-    let sessionPromptTokens: number;
-    let sessionCompletionTokens: number;
     let sessionMessageCount: number;
     let sessionSearchableText: string | undefined;
 
@@ -84,14 +82,10 @@ export const upsert = internalMutation({
         updatedAt: now,
       });
       // Use defaults since we just created it
-      sessionPromptTokens = 0;
-      sessionCompletionTokens = 0;
       sessionMessageCount = 0;
       sessionSearchableText = undefined;
     } else {
       sessionId = session._id;
-      sessionPromptTokens = session.promptTokens;
-      sessionCompletionTokens = session.completionTokens;
       sessionMessageCount = session.messageCount;
       sessionSearchableText = session.searchableText;
     }
@@ -174,12 +168,10 @@ export const upsert = internalMutation({
       const sessionUpdate: Record<string, unknown> = { updatedAt: now };
 
       if (shouldUpdateSessionStats) {
-        const newPromptTokens = sessionPromptTokens + (args.promptTokens || 0);
-        const newCompletionTokens = sessionCompletionTokens + (args.completionTokens || 0);
+        // Only update messageCount. Session tokens are set exclusively by
+        // session-level sync (the authoritative source). Never accumulate
+        // per-message tokens onto the session to avoid double-counting.
         sessionUpdate.messageCount = sessionMessageCount + 1;
-        sessionUpdate.promptTokens = newPromptTokens;
-        sessionUpdate.completionTokens = newCompletionTokens;
-        sessionUpdate.totalTokens = newPromptTokens + newCompletionTokens;
       }
 
       if (newSearchableText) {
@@ -252,8 +244,6 @@ export const batchUpsert = internalMutation({
         .first();
 
       // Track session stats for batch update
-      let sessionPromptTokens = 0;
-      let sessionCompletionTokens = 0;
       let sessionMessageCount = 0;
       let sessionSearchableText = "";
       let sessionId: Id<"sessions">;
@@ -286,8 +276,6 @@ export const batchUpsert = internalMutation({
         });
       } else {
         sessionId = session._id;
-        sessionPromptTokens = session.promptTokens;
-        sessionCompletionTokens = session.completionTokens;
         sessionMessageCount = session.messageCount;
         sessionSearchableText = session.searchableText || "";
       }
@@ -304,11 +292,10 @@ export const batchUpsert = internalMutation({
 
             // Early return for dedup
             if (existing && now - existing.createdAt < MESSAGE_DEDUP_MS) {
-              return { action: "skipped" as const, tokens: { prompt: 0, completion: 0 }, text: "" };
+              return { action: "skipped" as const, text: "" };
             }
 
             let messageId: Id<"messages">;
-            let addedTokens = { prompt: 0, completion: 0 };
 
             if (existing) {
               // Update existing
@@ -330,7 +317,7 @@ export const batchUpsert = internalMutation({
                 await Promise.all(existingParts.map((p) => ctx.db.delete(p._id)));
               }
 
-              return { action: "updated" as const, tokens: { prompt: 0, completion: 0 }, text: "" };
+              return { action: "updated" as const, text: "" };
             }
 
             // Insert new message
@@ -345,10 +332,6 @@ export const batchUpsert = internalMutation({
               durationMs: msg.durationMs,
               createdAt: now,
             });
-            addedTokens = {
-              prompt: msg.promptTokens || 0,
-              completion: msg.completionTokens || 0,
-            };
 
             // Insert parts in parallel
             if (msg.parts && msg.parts.length > 0) {
@@ -379,25 +362,21 @@ export const batchUpsert = internalMutation({
                 .join(" ");
             }
 
-            return { action: "inserted" as const, tokens: addedTokens, text: textContent };
+            return { action: "inserted" as const, text: textContent };
           } catch (e) {
-            return { action: "error" as const, error: `${msg.externalId}: ${e}`, tokens: { prompt: 0, completion: 0 }, text: "" };
+            return { action: "error" as const, error: `${msg.externalId}: ${e}`, text: "" };
           }
         })
       );
 
       // Aggregate results for session update
       let newMessages = 0;
-      let totalPromptTokens = 0;
-      let totalCompletionTokens = 0;
       const textParts: Array<string> = [];
 
       for (const result of results) {
         if (result.action === "inserted") {
           inserted++;
           newMessages++;
-          totalPromptTokens += result.tokens.prompt;
-          totalCompletionTokens += result.tokens.completion;
           if (result.text) textParts.push(result.text);
         } else if (result.action === "updated") {
           updated++;
@@ -408,19 +387,16 @@ export const batchUpsert = internalMutation({
         }
       }
 
-      // Single session update for all new messages
+      // Single session update for all new messages. Only messageCount and searchableText.
+      // Session tokens are set exclusively by session-level sync (the authoritative source).
+      // Never accumulate per-message tokens onto the session to avoid double-counting.
       if (newMessages > 0 || textParts.length > 0) {
-        const newPromptTotal = sessionPromptTokens + totalPromptTokens;
-        const newCompletionTotal = sessionCompletionTokens + totalCompletionTokens;
         const newSearchable = textParts.length > 0
           ? `${sessionSearchableText} ${textParts.join(" ")}`.slice(0, 10000)
           : sessionSearchableText;
 
         await ctx.db.patch(sessionId, {
           messageCount: sessionMessageCount + newMessages,
-          promptTokens: newPromptTotal,
-          completionTokens: newCompletionTotal,
-          totalTokens: newPromptTotal + newCompletionTotal,
           searchableText: newSearchable || undefined,
           updatedAt: now,
         });
