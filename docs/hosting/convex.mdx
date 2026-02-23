@@ -1,0 +1,96 @@
+---
+title: "Convex Backend"
+description: "Deploy the Convex backend"
+---
+
+# Convex Backend
+
+OpenSync uses Convex for its real-time backend, database, and serverless functions.
+
+## One-Click Deploy
+
+The fastest way to deploy:
+
+[![Deploy to Convex](https://convex.dev/button.svg)](https://convex.dev/new?template=waynesutton/opensync)
+
+This creates:
+
+- A new Convex project
+- All required tables and indexes
+- Serverless functions for the API
+- Real-time subscriptions
+
+## Manual Deploy
+
+### 1. Install Convex CLI
+
+```bash
+npm install -g convex
+```
+
+### 2. Clone and Deploy
+
+```bash
+git clone https://github.com/waynesutton/opensync
+cd opensync
+npx convex dev
+```
+
+On first run, you'll be prompted to:
+
+1. Create a Convex account (or sign in)
+2. Create a new project
+
+### 3. Deploy to Production
+
+```bash
+npx convex deploy
+```
+
+## Environment Variables
+
+Set these in the Convex dashboard or via CLI:
+
+```bash
+# WorkOS (required for auth)
+npx convex env set WORKOS_API_KEY sk_...
+npx convex env set WORKOS_CLIENT_ID client_...
+
+# OpenAI (optional, for semantic search)
+npx convex env set OPENAI_API_KEY sk-...
+```
+
+## Convex Dashboard
+
+Access your Convex dashboard at [dashboard.convex.dev](https://dashboard.convex.dev):
+
+- View and edit data
+- Monitor function calls
+- Check logs and errors
+- Manage environment variables
+
+## Database Schema
+
+Key tables:
+
+| Table             | Purpose                          |
+| ----------------- | -------------------------------- |
+| users             | User accounts                    |
+| sessions          | AI coding sessions               |
+| messages          | Session messages                 |
+| parts             | Message parts (text, code, etc.) |
+| apiKeys           | API key hashes                   |
+| sessionEmbeddings | Vector embeddings                |
+
+## Scaling
+
+Convex automatically scales:
+
+- **Serverless** - Functions scale to zero
+- **Real-time** - WebSocket connections managed automatically
+- **Database** - Storage scales with usage
+
+<Info>
+  Convex free tier includes 1M function calls/month, sufficient for most
+  personal use.
+</Info>

@@ -1,0 +1,102 @@
+---
+title: "Fork Guide"
+description: "Self-host OpenSync from your own fork"
+---
+
+# Fork Guide
+
+Self-host OpenSync by forking the repository and deploying your own instance.
+
+## Why Fork?
+
+- **Data ownership** - Keep all data in your own Convex instance
+- **Customization** - Modify features to fit your workflow
+- **Privacy** - Run entirely on your infrastructure
+- **Learning** - Study and modify the codebase
+
+## Quick Fork
+
+<Steps>
+  <Step title="Fork on GitHub">
+    Visit
+    [github.com/waynesutton/opensync](https://github.com/waynesutton/opensync)
+    and click **Fork**.
+  </Step>
+  <Step title="Clone locally">
+    ```bash git clone https://github.com/YOUR_USERNAME/opensync cd opensync ```
+  </Step>
+  <Step title="Install dependencies">```bash npm install ```</Step>
+  <Step title="Start Convex">
+    ```bash npx convex dev ``` This creates a new Convex project linked to your
+    account.
+  </Step>
+  <Step title="Start frontend">```bash npm run dev ```</Step>
+</Steps>
+
+## Project Structure
+
+```
+opensync/
+├── convex/           # Convex backend
+│   ├── schema.ts     # Database schema
+│   ├── http.ts       # HTTP endpoints
+│   ├── sessions.ts   # Session functions
+│   └── ...
+├── src/              # React frontend
+│   ├── pages/        # Page components
+│   ├── components/   # UI components
+│   └── ...
+├── docs/             # Documentation (MDX)
+└── scripts/          # Build scripts
+```
+
+## Local Development
+
+### Backend + Frontend
+
+Run both in separate terminals:
+
+```bash
+# Terminal 1: Convex backend
+npx convex dev
+
+# Terminal 2: Vite frontend
+npm run dev
+```
+
+### Environment Setup
+
+Create `.env.local`:
+
+```bash
+VITE_CONVEX_URL=https://your-convex-deployment.convex.cloud
+```
+
+## Deploy Your Fork
+
+### Backend
+
+```bash
+npx convex deploy
+```
+
+### Frontend
+
+Deploy to Netlify or Vercel with your repository.
+
+## Syncing Updates
+
+Keep your fork updated with upstream:
+
+```bash
+# Add upstream remote
+git remote add upstream https://github.com/waynesutton/opensync
+
+# Fetch and merge updates
+git fetch upstream
+git merge upstream/main
+```
+
+<Tip title="Stay updated">
+  Watch the repository for releases to get notified of important updates.
+</Tip>

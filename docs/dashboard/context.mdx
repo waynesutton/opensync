@@ -1,0 +1,87 @@
+---
+title: "Context Search"
+description: "Search across sessions with semantic and full-text search"
+---
+
+# Context Search
+
+Find relevant context from past sessions using semantic and full-text search.
+
+## Search Types
+
+<CardGroup cols={2}>
+  <Card title="Full-Text Search" description="Match exact words and phrases" />
+  <Card
+    title="Semantic Search"
+    description="Find similar concepts and meaning"
+  />
+</CardGroup>
+
+## How It Works
+
+### Full-Text Search
+
+Matches exact terms in session content:
+
+```
+authentication middleware
+```
+
+Returns sessions containing "authentication" and "middleware".
+
+### Semantic Search
+
+Uses AI embeddings to find conceptually similar content:
+
+```
+how to handle user login
+```
+
+Returns sessions about authentication, even if they don't contain those exact words.
+
+## Using Context Search
+
+<Steps>
+  <Step title="Navigate to Context">
+    Click **Context** in the navigation menu
+  </Step>
+  <Step title="Enter your query">
+    Type a question or keywords in the search box
+  </Step>
+  <Step title="Review results">
+    Results show matching sessions ranked by relevance
+  </Step>
+  <Step title="Copy context">
+    Click **Copy** to copy relevant context for use in prompts
+  </Step>
+</Steps>
+
+## API Access
+
+Use the search API for programmatic access:
+
+```bash
+# Full-text search
+curl -X POST "https://your-convex.convex.site/search" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "authentication", "type": "fulltext"}'
+
+# Semantic search
+curl -X POST "https://your-convex.convex.site/search" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "how to handle login", "type": "semantic"}'
+```
+
+## Use Cases
+
+- **RAG pipelines** - Inject relevant context into prompts
+- **Knowledge retrieval** - Find past solutions to similar problems
+- **Documentation** - Search through coding conversations
+- **Learning** - Review how you solved problems before
+
+<Tip title="Combine with prompts">
+  Use context search results to provide relevant background when starting new
+  coding sessions.
+</Tip>

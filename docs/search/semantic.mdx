@@ -1,0 +1,90 @@
+---
+title: "Semantic Search"
+description: "Search sessions using AI-powered meaning matching"
+---
+
+# Semantic Search
+
+Find conceptually similar content using AI embeddings.
+
+## How It Works
+
+1. Your query is converted to a vector embedding using OpenAI
+2. The embedding is compared against session embeddings
+3. Results are ranked by semantic similarity
+
+## Example
+
+Query:
+
+```
+how to handle user login
+```
+
+Returns sessions about authentication, even if they don't contain those exact words. Results might include discussions about:
+
+- OAuth implementation
+- Session management
+- JWT tokens
+- Password hashing
+
+## Requirements
+
+Semantic search requires:
+
+- OpenAI API key configured
+- Embeddings generated for sessions
+
+<Info>
+  Embeddings are generated automatically when sessions sync. Older sessions may
+  need to be re-indexed.
+</Info>
+
+## Using in the Dashboard
+
+1. Go to **Context** in the navigation
+2. Enter a natural language question
+3. Results show conceptually similar sessions
+
+## Using the API
+
+```bash
+curl -X POST "https://your-url.convex.site/search" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "how do I implement authentication",
+    "type": "semantic",
+    "limit": 10
+  }'
+```
+
+Response:
+
+```json
+{
+  "results": [
+    {
+      "sessionId": "session_456",
+      "title": "OAuth Setup Guide",
+      "snippet": "Setting up OAuth with passport.js...",
+      "score": 0.89
+    }
+  ]
+}
+```
+
+## Embedding Model
+
+OpenSync uses `text-embedding-3-small` by default:
+
+| Model                  | Dimensions | Cost            |
+| ---------------------- | ---------- | --------------- |
+| text-embedding-3-small | 1536       | $0.02/1M tokens |
+
+## Best Practices
+
+<Tip title="Semantic search tips">
+  - Ask questions naturally, as you would to a colleague - Be specific about the
+  problem or concept - Combine with date filters to find recent solutions
+</Tip>

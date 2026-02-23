@@ -1,0 +1,81 @@
+---
+title: "API Authentication"
+description: "Authenticate API requests with API keys"
+---
+
+# API Authentication
+
+All API requests require authentication using an API key.
+
+## Getting an API Key
+
+<Steps>
+  <Step title="Sign in">Sign in to your OpenSync dashboard</Step>
+  <Step title="Open Settings">
+    Click your profile icon and select **Settings**
+  </Step>
+  <Step title="Generate Key">Click **Generate API Key**</Step>
+  <Step title="Copy the key">
+    Copy and securely store your API key. It won't be shown again.
+  </Step>
+</Steps>
+
+## Using Your API Key
+
+Include your API key in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  https://your-deployment.convex.site/api/sessions
+```
+
+## API Key Format
+
+API keys follow the format:
+
+```
+osk_[random-string]
+```
+
+Example: `osk_7a8b9c0d1e2f3g4h5i6j7k8l9m0n`
+
+## Security Best Practices
+
+<Warning title="Keep your API key secure">
+  - Never commit API keys to version control - Use environment variables to
+  store keys - Rotate keys if they may be compromised - Use separate keys for
+  different environments
+</Warning>
+
+### Environment Variables
+
+```bash
+# .env file
+OPENSYNC_API_KEY=osk_your_api_key_here
+```
+
+```javascript
+// In your code
+const apiKey = process.env.OPENSYNC_API_KEY;
+```
+
+## Rate Limits
+
+| Plan | Requests/minute | Requests/day |
+| ---- | --------------- | ------------ |
+| Free | 60              | 1,000        |
+| Pro  | 300             | 10,000       |
+
+<Info>
+  Contact us if you need higher limits for your use case.
+</Info>
+
+## Revoking Keys
+
+To revoke an API key:
+
+1. Go to **Settings** in the dashboard
+2. Find the key you want to revoke
+3. Click **Revoke**
+
+Revoked keys immediately stop working.

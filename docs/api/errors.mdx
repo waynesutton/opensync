@@ -1,0 +1,127 @@
+---
+title: "Error Handling"
+description: "API error codes and handling"
+---
+
+# Error Handling
+
+The API uses standard HTTP status codes and returns JSON error responses.
+
+## Error Response Format
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid or missing API key"
+  }
+}
+```
+
+## HTTP Status Codes
+
+| Code | Description                               |
+| ---- | ----------------------------------------- |
+| 200  | Success                                   |
+| 400  | Bad Request - Invalid parameters          |
+| 401  | Unauthorized - Invalid or missing API key |
+| 403  | Forbidden - Insufficient permissions      |
+| 404  | Not Found - Resource doesn't exist        |
+| 429  | Too Many Requests - Rate limit exceeded   |
+| 500  | Internal Server Error                     |
+
+## Common Error Codes
+
+### UNAUTHORIZED
+
+```json
+{
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Invalid or missing API key"
+  }
+}
+```
+
+**Solution:** Check that your API key is valid and included in the Authorization header.
+
+### INVALID_REQUEST
+
+```json
+{
+  "error": {
+    "code": "INVALID_REQUEST",
+    "message": "Missing required field: sessionExternalId"
+  }
+}
+```
+
+**Solution:** Check the request body includes all required fields.
+
+### NOT_FOUND
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Session not found"
+  }
+}
+```
+
+**Solution:** Verify the session ID exists and belongs to your account.
+
+### RATE_LIMITED
+
+```json
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Rate limit exceeded. Retry after 60 seconds."
+  }
+}
+```
+
+**Solution:** Reduce request frequency or contact us for higher limits.
+
+## Handling Errors in Code
+
+```javascript
+async function fetchSessions() {
+  const response = await fetch("https://your-url.convex.site/api/sessions", {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`API Error: ${error.error.code} - ${error.error.message}`);
+  }
+
+  return response.json();
+}
+```
+
+## Retry Strategy
+
+For transient errors (5xx, rate limits), implement exponential backoff:
+
+```javascript
+async function fetchWithRetry(url, options, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    const response = await fetch(url, options);
+
+    if (response.ok) return response.json();
+
+    if (response.status === 429 || response.status >= 500) {
+      const delay = Math.pow(2, i) * 1000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+
+    throw new Error(`Request failed: ${response.status}`);
+  }
+  throw new Error("Max retries exceeded");
+}
+```

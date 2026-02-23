@@ -1,0 +1,124 @@
+---
+title: "Common Issues"
+description: "Solutions to common problems"
+---
+
+# Common Issues
+
+Solutions to frequently encountered problems.
+
+## Authentication Issues
+
+### "Invalid redirect URI"
+
+**Cause:** Your callback URL isn't configured in WorkOS.
+
+**Solution:**
+
+1. Go to WorkOS Dashboard > AuthKit > Redirects
+2. Add your callback URL (e.g., `https://your-app.com/callback`)
+3. For development, add `http://localhost:5173/callback`
+
+### "Cookie not set"
+
+**Cause:** `WORKOS_COOKIE_PASSWORD` is missing or too short.
+
+**Solution:**
+Ensure the password is at least 32 characters:
+
+```bash
+openssl rand -base64 32
+```
+
+### "User not created"
+
+**Cause:** Auto-provision may not be configured.
+
+**Solution:**
+Check that Convex auth config includes auto-provision settings.
+
+## Sync Issues
+
+### Plugin shows "Not connected"
+
+**Cause:** Invalid or missing API key.
+
+**Solution:**
+
+1. Generate a new API key in Settings
+2. Run `plugin-name login` again with the new key
+
+### Sessions not appearing
+
+**Cause:** Sessions may not be syncing.
+
+**Solution:**
+
+1. Check plugin status: `plugin-name status`
+2. Try manual sync: `plugin-name sync`
+3. Verify the source tool is writing sessions
+
+### Duplicate sessions
+
+**Cause:** Session IDs may have changed.
+
+**Solution:**
+
+1. This usually resolves itself
+2. If persistent, clear and re-sync
+
+## Search Issues
+
+### Semantic search not working
+
+**Cause:** OpenAI API key not configured.
+
+**Solution:**
+
+```bash
+npx convex env set OPENAI_API_KEY sk-...
+```
+
+### No search results
+
+**Cause:** Search index may be empty.
+
+**Solution:**
+
+1. Ensure sessions exist in the database
+2. Check that searchableText is populated
+3. Wait for embeddings to generate
+
+## Deployment Issues
+
+### Convex deploy fails
+
+**Cause:** Schema or function errors.
+
+**Solution:**
+
+1. Run `npx convex dev` to see errors locally
+2. Fix TypeScript errors
+3. Ensure schema is valid
+
+### Frontend shows blank page
+
+**Cause:** Missing environment variables.
+
+**Solution:**
+
+1. Check browser console for errors
+2. Verify `VITE_CONVEX_URL` is set
+3. Ensure Convex is deployed and running
+
+## Performance Issues
+
+### Slow loading
+
+**Cause:** Large number of sessions or messages.
+
+**Solution:**
+
+1. Use pagination (default behavior)
+2. Add filters to reduce data fetched
+3. Check Convex dashboard for slow queries

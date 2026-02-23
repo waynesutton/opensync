@@ -1,0 +1,118 @@
+---
+title: "Cursor Plugin"
+description: "Sync sessions from Cursor to OpenSync"
+---
+
+# Cursor Plugin
+
+Sync your Cursor AI sessions to OpenSync.
+
+## Installation
+
+Install the plugin globally:
+
+```bash
+npm install -g cursor-sync-plugin
+```
+
+Or with yarn:
+
+```bash
+yarn global add cursor-sync-plugin
+```
+
+## Configuration
+
+### Login
+
+Connect the plugin to your OpenSync account:
+
+```bash
+cursor-sync login
+```
+
+You'll be prompted for:
+
+- **Convex URL** - Your OpenSync backend URL
+- **API Key** - Your API key from Settings
+
+### Config File
+
+Configuration is stored in `~/.cursor-sync/config.json`:
+
+```json
+{
+  "convexUrl": "https://your-deployment.convex.cloud",
+  "apiKey": "osk_..."
+}
+```
+
+## Commands
+
+### status
+
+Check connection and sync status:
+
+```bash
+cursor-sync status
+```
+
+Output:
+
+```
+Connected: true
+Convex URL: https://your-deployment.convex.cloud
+Sessions synced: 67
+Last sync: 30 seconds ago
+```
+
+### sync
+
+Manually trigger a sync:
+
+```bash
+cursor-sync sync
+```
+
+### logout
+
+Disconnect and clear credentials:
+
+```bash
+cursor-sync logout
+```
+
+## How Syncing Works
+
+1. Cursor stores conversation data in its workspace
+2. The plugin reads Cursor's agent transcripts
+3. Sessions sync to OpenSync with full context
+4. Supports all models available in Cursor
+
+## What Gets Synced
+
+| Data         | Included |
+| ------------ | -------- |
+| Prompts      | Yes      |
+| Responses    | Yes      |
+| Model used   | Yes      |
+| Token counts | Yes      |
+| File context | Limited  |
+| Tool calls   | Yes      |
+
+<Info>
+  File contents referenced in conversations are not synced to protect sensitive
+  code.
+</Info>
+
+## Troubleshooting
+
+### Sessions not syncing
+
+1. Ensure Cursor is closed before syncing
+2. Check plugin status: `cursor-sync status`
+3. Verify the Cursor data directory is accessible
+
+### Partial sessions
+
+Large sessions may be truncated. This is normal for very long conversations.

@@ -1,0 +1,110 @@
+---
+title: "OpenCode Plugin"
+description: "Sync sessions from OpenCode to OpenSync"
+---
+
+# OpenCode Plugin
+
+Sync your OpenCode sessions to OpenSync automatically.
+
+## Installation
+
+Install the plugin globally:
+
+```bash
+npm install -g opencode-sync-plugin
+```
+
+Or with yarn:
+
+```bash
+yarn global add opencode-sync-plugin
+```
+
+## Configuration
+
+### Login
+
+Connect the plugin to your OpenSync account:
+
+```bash
+opencode-sync login
+```
+
+You'll be prompted for:
+
+- **Convex URL** - Your OpenSync backend URL
+- **API Key** - Your API key from Settings
+
+### Config File
+
+Configuration is stored in `~/.opencode-sync/config.json`:
+
+```json
+{
+  "convexUrl": "https://your-deployment.convex.cloud",
+  "apiKey": "osk_..."
+}
+```
+
+## Commands
+
+### status
+
+Check connection and sync status:
+
+```bash
+opencode-sync status
+```
+
+Output:
+
+```
+Connected: true
+Convex URL: https://your-deployment.convex.cloud
+Sessions synced: 42
+Last sync: 2 minutes ago
+```
+
+### sync
+
+Manually trigger a sync:
+
+```bash
+opencode-sync sync
+```
+
+<Info>
+  Sessions sync automatically as you work. Manual sync is rarely needed.
+</Info>
+
+### logout
+
+Disconnect and clear credentials:
+
+```bash
+opencode-sync logout
+```
+
+## How Syncing Works
+
+1. OpenCode writes session data to `~/.opencode/sessions/`
+2. The plugin watches this directory for changes
+3. New and updated sessions are synced to OpenSync
+4. Synced sessions appear in your dashboard within seconds
+
+## Troubleshooting
+
+### Plugin not syncing
+
+1. Check status: `opencode-sync status`
+2. Verify API key is valid in Settings
+3. Check network connectivity
+
+### Sessions missing
+
+OpenCode may need to be restarted to flush session data.
+
+### Permission errors
+
+Ensure you have read access to `~/.opencode/sessions/`

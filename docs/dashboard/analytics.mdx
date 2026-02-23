@@ -1,0 +1,65 @@
+---
+title: "Analytics"
+description: "Track token usage, costs, and trends"
+---
+
+# Analytics
+
+The analytics page provides insights into your AI coding usage.
+
+## Metrics
+
+<CardGroup cols={2}>
+  <Card title="Total Sessions" description="Number of sessions synced" />
+  <Card
+    title="Total Tokens"
+    description="Combined prompt and completion tokens"
+  />
+  <Card title="Total Cost" description="Estimated cost across all models" />
+  <Card title="Average Session" description="Average tokens per session" />
+</CardGroup>
+
+## Usage by Source
+
+See breakdown by tool:
+
+| Source      | Sessions | Tokens | Cost |
+| ----------- | -------- | ------ | ---- |
+| OpenCode    | -        | -      | -    |
+| Claude Code | -        | -      | -    |
+| Codex CLI   | -        | -      | -    |
+| Cursor      | -        | -      | -    |
+
+## Usage by Model
+
+Track which models you use most:
+
+| Model             | Sessions | Tokens | Cost |
+| ----------------- | -------- | ------ | ---- |
+| claude-3-5-sonnet | -        | -      | -    |
+| gpt-4o            | -        | -      | -    |
+| gpt-4o-mini       | -        | -      | -    |
+
+## Cost Calculation
+
+Costs are estimated based on published model pricing:
+
+| Model             | Input (per 1M) | Output (per 1M) |
+| ----------------- | -------------- | --------------- |
+| claude-3-5-sonnet | $3.00          | $15.00          |
+| gpt-4o            | $2.50          | $10.00          |
+| gpt-4o-mini       | $0.15          | $0.60           |
+
+<Info>
+  Cost estimates are approximations. Actual costs may vary based on your
+  provider agreements and usage tiers.
+</Info>
+
+## Time Range
+
+Filter analytics by:
+
+- **Today** - Current day
+- **7 days** - Last week
+- **30 days** - Last month
+- **All time** - Complete history

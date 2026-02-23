@@ -1,0 +1,143 @@
+---
+title: "Customization"
+description: "Customize your OpenSync fork"
+---
+
+# Customization
+
+Customize your OpenSync fork to fit your needs.
+
+## Branding
+
+### App Name
+
+Update in `index.html`:
+
+```html
+<title>Your App Name</title>
+```
+
+And in the header component:
+
+```tsx
+// src/components/Header.tsx
+<span>Your App Name</span>
+```
+
+### Colors
+
+Modify Tailwind config:
+
+```javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: "#your-color",
+        // ...
+      },
+    },
+  },
+};
+```
+
+### Logo
+
+Replace the logo files in `public/`:
+
+- `logo.svg` - Main logo
+- `favicon.ico` - Browser favicon
+
+## Features
+
+### Add New Source
+
+To add a new plugin source:
+
+1. Update schema to accept the new source:
+
+```typescript
+// convex/schema.ts
+source: v.union(
+  v.literal("opencode"),
+  v.literal("claude-code"),
+  v.literal("codex-cli"),
+  v.literal("cursor"),
+  v.literal("your-source"), // Add new source
+),
+```
+
+2. Deploy schema changes:
+
+```bash
+npx convex deploy
+```
+
+3. Create a sync plugin that uses the new source identifier.
+
+### Custom Fields
+
+Add custom fields to sessions:
+
+```typescript
+// convex/schema.ts
+sessions: defineTable({
+  // ... existing fields
+  customField: v.optional(v.string()),
+});
+```
+
+### Disable Features
+
+Comment out or remove features you don't need:
+
+```tsx
+// src/App.tsx
+// Remove routes you don't need
+<Route path="/context" element={/* ... */} />
+```
+
+## API Extensions
+
+### Add Custom Endpoint
+
+```typescript
+// convex/http.ts
+http.route({
+  path: "/custom-endpoint",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    // Your custom logic
+    return new Response(JSON.stringify({ ok: true }));
+  }),
+});
+```
+
+### Custom Mutations
+
+```typescript
+// convex/custom.ts
+export const myCustomMutation = mutation({
+  args: {
+    /* ... */
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Your logic
+    return null;
+  },
+});
+```
+
+## Documentation
+
+Customize docs for your fork:
+
+1. Edit MDX files in `docs/`
+2. Update `_meta.json` for navigation
+3. Add your own sections
+
+<Info>
+  Documentation changes take effect immediately in development.
+</Info>

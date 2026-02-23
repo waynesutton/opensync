@@ -1,0 +1,95 @@
+---
+title: "Full-Text Search"
+description: "Search sessions using exact text matching"
+---
+
+# Full-Text Search
+
+Search across all session content using exact text matching.
+
+## How It Works
+
+Full-text search uses Convex's built-in search indexes to find sessions containing your search terms.
+
+```
+authentication middleware express
+```
+
+This query returns sessions containing "authentication", "middleware", and "express".
+
+## Search Syntax
+
+### Basic Search
+
+Search for any word:
+
+```
+authentication
+```
+
+### Multiple Terms
+
+All terms must match (AND):
+
+```
+react hooks useState
+```
+
+### Phrase Search
+
+Match exact phrases (coming soon):
+
+```
+"error handling"
+```
+
+## Search Fields
+
+Full-text search indexes the following fields:
+
+| Field          | Description                     |
+| -------------- | ------------------------------- |
+| messages       | All user and assistant messages |
+| title          | Session title                   |
+| searchableText | Combined text from all parts    |
+
+## Using in the Dashboard
+
+1. Go to any sessions list
+2. Use the search box at the top
+3. Results update in real-time
+
+## Using the API
+
+```bash
+curl -X POST "https://your-url.convex.site/search" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "authentication middleware",
+    "type": "fulltext",
+    "limit": 10
+  }'
+```
+
+Response:
+
+```json
+{
+  "results": [
+    {
+      "sessionId": "session_123",
+      "title": "Express Auth Setup",
+      "snippet": "...setting up authentication middleware...",
+      "score": 0.95
+    }
+  ]
+}
+```
+
+## Best Practices
+
+<Tip title="Search tips">
+  - Use specific, unique terms for better results - Include technical terms
+  (function names, libraries) - Combine with source filters for narrower results
+</Tip>

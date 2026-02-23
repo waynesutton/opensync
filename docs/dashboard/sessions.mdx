@@ -1,0 +1,54 @@
+---
+title: "Sessions View"
+description: "Browse and manage your AI coding sessions"
+---
+
+# Sessions View
+
+The sessions view displays all your synced AI coding sessions in a list format.
+
+## Session Card
+
+Each session card shows:
+
+| Field    | Description                                             |
+| -------- | ------------------------------------------------------- |
+| Title    | Auto-generated from the first user message              |
+| Source   | Plugin that synced the session (OpenCode, Claude, etc.) |
+| Model    | AI model used (claude-3-5-sonnet, gpt-4o, etc.)         |
+| Messages | Number of messages in the conversation                  |
+| Tokens   | Total tokens used (prompt + completion)                 |
+| Cost     | Estimated cost based on model pricing                   |
+| Created  | Timestamp of session creation                           |
+
+## Viewing a Session
+
+Click any session to open the detail view:
+
+- **Conversation view** - Full message history with syntax highlighting
+- **Message metadata** - Token counts per message
+- **Copy options** - Copy as markdown or plain text
+- **Export** - Download in various formats
+
+## Session Actions
+
+Available actions for each session:
+
+- **View** - Open the full session
+- **Copy** - Copy session content as markdown
+- **Export** - Download as JSON, JSONL, or text
+- **Delete** - Permanently delete the session
+
+<Warning title="Deletion is permanent">
+  Deleted sessions cannot be recovered. Export important sessions before
+  deleting.
+</Warning>
+
+## Sorting
+
+Sessions can be sorted by:
+
+- **Date** - Most recent first (default)
+- **Tokens** - Highest token count first
+- **Cost** - Highest cost first
+- **Messages** - Most messages first

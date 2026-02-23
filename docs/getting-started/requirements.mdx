@@ -1,0 +1,59 @@
+---
+title: "Self-Hosting Requirements"
+description: "What you need to self-host OpenSync"
+---
+
+# Self-Hosting Requirements
+
+OpenSync can be deployed in two ways: cloud deployment with managed services, or 100% local deployment.
+
+## Cloud Deployment
+
+For standard deployment with cloud services:
+
+| Service                                                        | Purpose                        | Required |
+| -------------------------------------------------------------- | ------------------------------ | -------- |
+| [Convex](https://convex.dev)                                   | Real-time database and backend | Yes      |
+| [WorkOS](https://workos.com)                                   | Authentication (AuthKit)       | Yes      |
+| [OpenAI](https://platform.openai.com)                          | Embeddings for semantic search | Optional |
+| [Netlify](https://netlify.com) or [Vercel](https://vercel.com) | Frontend hosting               | Yes      |
+
+<Info title="Free tiers available">
+  All services have generous free tiers. Convex free tier includes 1M function
+  calls/month. WorkOS free tier includes 1M MAUs.
+</Info>
+
+## 100% Local Deployment
+
+For air-gapped or privacy-focused deployments:
+
+| Component  | Local Alternative                                |
+| ---------- | ------------------------------------------------ |
+| Database   | Convex self-hosted (coming soon) or local SQLite |
+| Auth       | Local auth provider or disable auth              |
+| Embeddings | Local models via Ollama                          |
+| Frontend   | Any static server                                |
+
+<Warning title="Local deployment">
+  100% local deployment requires additional configuration. See the [Fork &
+  Self-Host](/docs#fork) section for details.
+</Warning>
+
+## Environment Variables
+
+Required environment variables for cloud deployment:
+
+```bash
+# Convex
+VITE_CONVEX_URL=https://your-deployment.convex.cloud
+
+# WorkOS (for authentication)
+WORKOS_API_KEY=sk_...
+WORKOS_CLIENT_ID=client_...
+WORKOS_COOKIE_PASSWORD=a-32-character-or-longer-secret
+
+# OpenAI (optional, for semantic search)
+OPENAI_API_KEY=sk-...
+```
+
+See the [Environment Variables](/docs#hosting-env) section for complete setup instructions.

@@ -1,0 +1,63 @@
+---
+title: "Dashboard Overview"
+description: "Navigate and use the OpenSync dashboard"
+---
+
+# Dashboard Overview
+
+The OpenSync dashboard provides a central view of all your AI coding sessions across different tools.
+
+## Navigation
+
+The dashboard includes several main sections:
+
+<CardGroup cols={2}>
+  <Card
+    title="Sessions"
+    href="/docs#dashboard-sessions"
+    description="View and search all synced sessions"
+  />
+  <Card
+    title="Analytics"
+    href="/docs#dashboard-analytics"
+    description="Token usage, costs, and trends"
+  />
+  <Card
+    title="Context"
+    href="/docs#dashboard-context"
+    description="Semantic search across all sessions"
+  />
+  <Card
+    title="Settings"
+    href="/docs#auth-api-keys"
+    description="API keys and account settings"
+  />
+</CardGroup>
+
+## Session List
+
+The main sessions list shows:
+
+- **Session title** - Auto-generated from the first prompt
+- **Source** - Which tool the session came from (OpenCode, Claude, Codex, Cursor)
+- **Model** - The AI model used
+- **Tokens** - Total tokens (prompt + completion)
+- **Cost** - Estimated cost based on model pricing
+- **Time** - When the session was created
+
+## Filters
+
+Filter sessions by:
+
+- **Source** - Filter by tool (OpenCode, Claude Code, Codex, Cursor)
+- **Date range** - Filter by time period
+- **Search** - Full-text search across all session content
+
+## Session Details
+
+Click any session to view:
+
+- Complete conversation history
+- Message-by-message token counts
+- Copy as markdown
+- Export options

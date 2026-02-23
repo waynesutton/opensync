@@ -3,12 +3,14 @@ import { action, internalAction } from "./_generated/server";
 import { internal, components } from "./_generated/api";
 import { RAG } from "@convex-dev/rag";
 import { openai } from "@ai-sdk/openai";
-import type { EmbeddingModelV1, LanguageModelV1 } from "@ai-sdk/provider";
+import type { EmbeddingModelV2, LanguageModelV2 } from "@ai-sdk/provider";
 
 // Initialize RAG with user namespace filtering
-// Type cast needed due to AI SDK v3 -> v1 model type mismatch
+// Type cast needed due to AI SDK model type mismatch
 const rag = new RAG(components.rag, {
-  textEmbeddingModel: openai.embedding("text-embedding-3-small") as unknown as EmbeddingModelV1<string>,
+  textEmbeddingModel: openai.embedding(
+    "text-embedding-3-small",
+  ) as unknown as EmbeddingModelV2<string>,
   embeddingDimension: 1536,
   filterNames: ["userId"],
 });
@@ -28,9 +30,7 @@ export const indexSession = internalAction({
     await rag.add(ctx, {
       namespace: `user_${data.session.userId}`,
       text: data.textContent,
-      filterValues: [
-        { name: "userId", value: data.session.userId.toString() },
-      ],
+      filterValues: [{ name: "userId", value: data.session.userId.toString() }],
     });
 
     return null;
@@ -99,14 +99,16 @@ export const generateWithContext = action({
     // Generate response using RAG's generateText with proper API signature
     // Type cast needed due to AI SDK v3 -> v1 model type mismatch
     const { text } = await rag.generateText(ctx, {
-      model: openai("gpt-4o-mini") as unknown as LanguageModelV1,
+      model: openai("gpt-4o-mini") as unknown as LanguageModelV2,
       search: {
         namespace: `user_${user._id}`,
         limit: 5,
         vectorScoreThreshold: 0.5,
       },
       prompt: query,
-      system: systemPrompt || "You are a helpful coding assistant. Use the provided context from previous coding sessions to answer questions.",
+      system:
+        systemPrompt ||
+        "You are a helpful coding assistant. Use the provided context from previous coding sessions to answer questions.",
     });
 
     return { text, contextUsed: !!context };

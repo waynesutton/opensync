@@ -1,0 +1,77 @@
+---
+title: "FAQ"
+description: "Frequently asked questions"
+---
+
+# Frequently Asked Questions
+
+Common questions about OpenSync.
+
+<FaqItem question="What is OpenSync?">
+  OpenSync is an open-source platform for syncing and viewing your AI coding
+  sessions from various tools like OpenCode, Claude Code, Codex CLI, and Cursor.
+  It provides a unified dashboard to track, search, and export your AI
+  conversations.
+</FaqItem>
+
+<FaqItem question="Is OpenSync free?">
+  Yes, OpenSync is open-source and free to self-host. The hosted version at
+  opensync.dev offers a free tier with generous limits. Premium features may be
+  added in the future.
+</FaqItem>
+
+<FaqItem question="What tools are supported?">
+Currently supported:
+- OpenCode
+- Claude Code
+- Codex CLI
+- Cursor
+
+More plugins are in development. You can also create your own using the sync API.
+
+</FaqItem>
+
+<FaqItem question="Where is my data stored?">
+  - **Hosted version:** Data is stored in our Convex deployment, secured by
+  WorkOS authentication - **Self-hosted:** Data is stored in your own Convex
+  instance, under your control
+</FaqItem>
+
+<FaqItem question="How do I migrate from hosted to self-hosted?">
+Currently, there's no automated migration. You would need to:
+1. Deploy your own instance
+2. Configure plugins to sync to your new instance
+3. Future sessions will sync there
+
+Existing sessions cannot be exported from the hosted version yet.
+
+</FaqItem>
+
+<FaqItem question="Can I use OpenSync without authentication?">
+  No, authentication is required to secure your sessions. WorkOS AuthKit is the
+  default auth provider, but you could modify the code to use a different
+  provider.
+</FaqItem>
+
+<FaqItem question="How is cost calculated?">
+  Costs are estimated based on published model pricing: - Token counts are
+  provided by the source tools - Prices are looked up from a pricing table -
+  Actual costs may vary based on your provider agreements
+</FaqItem>
+
+<FaqItem question="Can I delete my data?">
+  Yes: - **Individual sessions:** Delete from the session detail page - **All
+  data:** Contact support for hosted, or delete your Convex deployment for
+  self-hosted
+</FaqItem>
+
+<FaqItem question="How do I report a bug?">
+  Open an issue on [GitHub](https://github.com/waynesutton/opensync/issues)
+  with: - Clear description of the problem - Steps to reproduce - Expected vs
+  actual behavior - Environment details (browser, OS, plugin version)
+</FaqItem>
+
+<FaqItem question="How can I contribute?">
+  See our [Contributing guide](/docs/fork/contribute). We welcome: - Bug reports
+  - Feature requests - Pull requests - Documentation improvements
+</FaqItem>

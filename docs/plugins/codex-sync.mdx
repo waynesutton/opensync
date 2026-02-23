@@ -1,0 +1,113 @@
+---
+title: "Codex CLI Plugin"
+description: "Sync sessions from Codex CLI to OpenSync"
+---
+
+# Codex CLI Plugin
+
+Sync your OpenAI Codex CLI sessions to OpenSync.
+
+## Installation
+
+Install the plugin globally:
+
+```bash
+npm install -g codex-sync
+```
+
+Or with yarn:
+
+```bash
+yarn global add codex-sync
+```
+
+## Configuration
+
+### Login
+
+Connect the plugin to your OpenSync account:
+
+```bash
+codex-sync login
+```
+
+You'll be prompted for:
+
+- **Convex URL** - Your OpenSync backend URL
+- **API Key** - Your API key from Settings
+
+### Config File
+
+Configuration is stored in `~/.codex-sync/config.json`:
+
+```json
+{
+  "convexUrl": "https://your-deployment.convex.cloud",
+  "apiKey": "osk_..."
+}
+```
+
+## Commands
+
+### status
+
+Check connection and sync status:
+
+```bash
+codex-sync status
+```
+
+Output:
+
+```
+Connected: true
+Convex URL: https://your-deployment.convex.cloud
+Sessions synced: 15
+Last sync: 1 minute ago
+```
+
+### sync
+
+Manually trigger a sync:
+
+```bash
+codex-sync sync
+```
+
+### logout
+
+Disconnect and clear credentials:
+
+```bash
+codex-sync logout
+```
+
+## How Syncing Works
+
+1. Codex CLI writes JSONL logs to `~/.codex/`
+2. The plugin parses these logs for session data
+3. Sessions sync to OpenSync with model and token info
+4. Supports GPT-4, GPT-4o, and other OpenAI models
+
+## Supported Models
+
+| Model       | Synced |
+| ----------- | ------ |
+| gpt-4o      | Yes    |
+| gpt-4o-mini | Yes    |
+| gpt-4-turbo | Yes    |
+| gpt-4       | Yes    |
+| o1-preview  | Yes    |
+| o1-mini     | Yes    |
+
+## Troubleshooting
+
+### No sessions syncing
+
+1. Check Codex is writing logs: `ls ~/.codex/`
+2. Verify plugin status: `codex-sync status`
+3. Check API key is valid
+
+### Token counts missing
+
+Older Codex versions may not include token counts. Update Codex to the latest version.

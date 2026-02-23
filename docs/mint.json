@@ -1,0 +1,97 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "OpenSync",
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg",
+    "href": "https://opensync.dev"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#EB5601",
+    "light": "#faf8f5",
+    "dark": "#0E0E0E"
+  },
+  "anchors": [
+    { "name": "Dashboard", "url": "https://opensync.dev" },
+    { "name": "GitHub", "url": "https://github.com/opensync-dev/opensync" }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "getting-started/hosted",
+        "getting-started/requirements",
+        "getting-started/quick-start"
+      ]
+    },
+    {
+      "group": "Dashboard",
+      "pages": [
+        "dashboard/overview",
+        "dashboard/sessions",
+        "dashboard/evals",
+        "dashboard/analytics",
+        "dashboard/context"
+      ]
+    },
+    {
+      "group": "Plugins",
+      "pages": [
+        "plugins/opencode-sync",
+        "plugins/claude-code-sync",
+        "plugins/codex-sync",
+        "plugins/cursor-sync"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api/authentication",
+        "api/endpoints",
+        "api/errors"
+      ]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "search/fulltext",
+        "search/semantic",
+        "search/hybrid"
+      ]
+    },
+    {
+      "group": "Authentication",
+      "pages": [
+        "auth/workos",
+        "auth/api-keys"
+      ]
+    },
+    {
+      "group": "Hosting & Deploy",
+      "pages": [
+        "hosting/convex",
+        "hosting/netlify",
+        "hosting/env"
+      ]
+    },
+    {
+      "group": "Fork & Self-Host",
+      "pages": [
+        "fork/guide",
+        "fork/customize",
+        "fork/contribute"
+      ]
+    },
+    {
+      "group": "Troubleshooting",
+      "pages": [
+        "troubleshooting/common-issues",
+        "troubleshooting/faq"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/opensync-dev/opensync"
+  }
+}

@@ -1,0 +1,89 @@
+---
+title: "Hybrid Search"
+description: "Combine full-text and semantic search for best results"
+---
+
+# Hybrid Search
+
+Combine full-text and semantic search for optimal retrieval.
+
+## How It Works
+
+Hybrid search runs both full-text and semantic search, then combines the results:
+
+1. **Full-text results** - Exact keyword matches
+2. **Semantic results** - Conceptually similar content
+3. **Combined ranking** - Weighted merge of both result sets
+
+## Scoring
+
+Results are scored using a weighted combination:
+
+```
+final_score = (0.5 * fulltext_score) + (0.5 * semantic_score)
+```
+
+Sessions appearing in both result sets get boosted scores.
+
+## Using the API
+
+```bash
+curl -X POST "https://your-url.convex.site/search" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "authentication middleware",
+    "type": "hybrid",
+    "limit": 10
+  }'
+```
+
+## Use Cases
+
+### RAG Pipelines
+
+Hybrid search is ideal for Retrieval-Augmented Generation:
+
+```javascript
+// Retrieve relevant context
+const context = await search({
+  query: userQuestion,
+  type: "hybrid",
+  limit: 5,
+});
+
+// Inject into prompt
+const prompt = `
+Context from past sessions:
+${context.map((c) => c.snippet).join("\n")}
+
+User question: ${userQuestion}
+`;
+```
+
+### Knowledge Base
+
+Build a searchable knowledge base from your coding sessions:
+
+```javascript
+// Search for solutions
+const solutions = await search({
+  query: "fix TypeScript error TS2345",
+  type: "hybrid",
+  limit: 3,
+});
+```
+
+## Comparison
+
+| Feature               | Full-Text | Semantic   | Hybrid     |
+| --------------------- | --------- | ---------- | ---------- |
+| Exact matches         | Excellent | Poor       | Good       |
+| Conceptual similarity | Poor      | Excellent  | Excellent  |
+| Speed                 | Fast      | Slower     | Medium     |
+| Cost                  | Free      | OpenAI API | OpenAI API |
+
+<Tip title="When to use hybrid">
+  Use hybrid search when you want the best of both worlds: exact keyword matches
+  AND conceptually related content.
+</Tip>

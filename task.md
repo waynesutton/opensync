@@ -8,6 +8,18 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Documentation Migration to Mintlify)
+
+- [x] Migrated all in-app documentation to Mintlify at docs.opensync.dev
+  - Removed Docs.tsx (full in-app docs page with sidebar, search, TOC, markdown export)
+  - Removed src/lib/search.ts (client-side search index builder)
+  - Removed src/search-index.json (pre-built search index data)
+  - Removed src/mdx.d.ts (MDX type declarations)
+  - Added DocsRedirect component for client-side redirect to docs.opensync.dev
+  - Updated App.tsx routes: /docs, /docs/*, /docs-legacy all redirect externally
+  - Updated Sidebar.tsx docs link to point to external docs.opensync.dev
+  - Fixed Netlify build errors from removed file imports
+
 ## Recently Completed (Platform Stats Label)
 
 - [x] Added "last 1000 sessions" label to Platform Stats header

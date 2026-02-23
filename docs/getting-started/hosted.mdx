@@ -1,0 +1,96 @@
+---
+title: "Use the Hosted Version"
+description: "Start syncing sessions in under 2 minutes with opensync.dev"
+---
+
+# Use the Hosted Versions
+
+The fastest way to get started. Sign in at [opensync.dev](https://www.opensync.dev), install a plugin locally, and start syncing in under 2 minutes.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card
+    title="Sync"
+    description="Sessions sync from CLI to cloud automatically as you work"
+  />
+  <Card
+    title="Search"
+    description="Full-text and semantic search across all sessions"
+  />
+  <Card
+    title="Private"
+    description="Your data stays in your account, secured by WorkOS"
+  />
+  <Card
+    title="Export"
+    description="Export for evals in DeepEval, OpenAI, or plain text formats"
+  />
+  <Card
+    title="Delete"
+    description="Your control. Delete sessions or your entire account anytime."
+  />
+  <Card
+    title="API"
+    description="Use the REST API for RAG, context injection, and integrations"
+  />
+</CardGroup>
+
+## Install Plugins Locally
+
+Install one or more plugins globally. They run on your machine and sync to the hosted dashboard.
+
+### OpenCode
+
+```bash
+npm install -g opencode-sync-plugin
+```
+
+[View on npm](https://www.npmjs.com/package/opencode-sync-plugin)
+
+### Claude Code
+
+```bash
+npm install -g claude-code-sync
+```
+
+[View on npm](https://www.npmjs.com/package/claude-code-sync)
+
+### Codex CLI
+
+```bash
+npm install -g codex-sync
+```
+
+[View on npm](https://www.npmjs.com/package/codex-sync)
+
+### Cursor
+
+```bash
+npm install -g cursor-sync-plugin
+```
+
+[View on npm](https://www.npmjs.com/package/cursor-opensync-plugin)
+
+## Login and Sync
+
+<Steps>
+  <Step title="Sign in">
+    Sign in at [opensync.dev](https://www.opensync.dev)
+  </Step>
+  <Step title="Generate API Key">
+    Go to **Settings** and click **Generate API Key**
+  </Step>
+  <Step title="Run login command">
+    Run the login command for your plugin: ```bash opencode-sync login # or
+    claude-code-sync login # or codex-sync login # or cursor-sync login ```
+  </Step>
+  <Step title="Enter credentials">
+    Enter the **Convex URL** and **API key** when prompted
+  </Step>
+  <Step title="Start coding">Start coding. Sessions sync automatically.</Step>
+</Steps>
+
+<Info title="Hosted Convex URL">
+  `https://polished-penguin-622.convex.cloud`
+</Info>

@@ -1,0 +1,94 @@
+---
+title: "WorkOS AuthKit"
+description: "Set up authentication with WorkOS AuthKit"
+---
+
+# WorkOS AuthKit
+
+OpenSync uses WorkOS AuthKit for authentication, providing enterprise-grade auth with minimal setup.
+
+## Features
+
+<CardGroup cols={2}>
+  <Card
+    title="Social Login"
+    description="Google, GitHub, Microsoft, and more"
+  />
+  <Card title="Magic Links" description="Passwordless email authentication" />
+  <Card title="SSO" description="SAML and OIDC for enterprise" />
+  <Card title="MFA" description="Multi-factor authentication" />
+</CardGroup>
+
+## Setup
+
+### 1. Create WorkOS Account
+
+Sign up at [workos.com](https://workos.com) and create a new project.
+
+### 2. Configure AuthKit
+
+In the WorkOS dashboard:
+
+1. Go to **AuthKit** > **Configuration**
+2. Enable desired authentication methods
+3. Add your redirect URIs:
+   - `https://your-app.com/callback`
+   - `http://localhost:5173/callback` (for development)
+
+### 3. Set Environment Variables
+
+```bash
+# WorkOS credentials
+WORKOS_API_KEY=sk_...
+WORKOS_CLIENT_ID=client_...
+WORKOS_COOKIE_PASSWORD=a-secure-32-character-or-longer-password
+```
+
+<Warning title="Cookie password">
+  The cookie password must be at least 32 characters. Generate one with: ```bash
+  openssl rand -base64 32 ```
+</Warning>
+
+### 4. Configure Convex
+
+Add WorkOS configuration to your Convex environment:
+
+```bash
+npx convex env set WORKOS_API_KEY sk_...
+npx convex env set WORKOS_CLIENT_ID client_...
+```
+
+## User Management
+
+WorkOS handles user management automatically:
+
+- Users are created on first login
+- User data syncs to Convex `users` table
+- Sessions are managed securely
+
+## CORS Configuration
+
+For production deployments, add your domain to WorkOS CORS settings:
+
+1. Go to **AuthKit** > **Redirects**
+2. Add your production URL
+3. Save changes
+
+<Info>
+  CORS errors during login usually mean your redirect URI isn't configured in
+  WorkOS.
+</Info>
+
+## Troubleshooting
+
+### "Invalid redirect URI"
+
+Ensure your callback URL is added in WorkOS dashboard under **Redirects**.
+
+### "Cookie not set"
+
+Check that `WORKOS_COOKIE_PASSWORD` is at least 32 characters.
+
+### "User not created in Convex"
+
+Verify the auto-provision setting is enabled in your Convex auth config.

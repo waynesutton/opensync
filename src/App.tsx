@@ -1,12 +1,18 @@
 import { useState, useEffect, type ReactNode } from "react";
-import { Routes, Route, Navigate, Link, useLocation, useSearchParams } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  Navigate,
+  Link,
+  useLocation,
+  useSearchParams,
+} from "react-router-dom";
 import { useConvexAuth } from "convex/react";
 import { useAuth } from "./lib/auth";
 import { useAuth as useAuthKit } from "@workos-inc/authkit-react";
 import { ThemeProvider } from "./lib/theme";
 import { LoginPage } from "./pages/Login";
 import { DashboardPage } from "./pages/Dashboard";
-import { DocsPage } from "./pages/Docs";
 import { PublicSessionPage } from "./pages/PublicSession";
 import { SettingsPage } from "./pages/Settings";
 import { EvalsPage } from "./pages/Evals";
@@ -131,13 +137,28 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Redirect /docs and /docs/* to Mintlify docs site
+function DocsRedirect() {
+  useEffect(() => {
+    window.location.replace("https://docs.opensync.dev");
+  }, []);
+  return (
+    <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-500 mx-auto" />
+        <p className="mt-2 text-xs text-zinc-600">Redirecting to docs...</p>
+      </div>
+    </div>
+  );
+}
+
 // 404 page for unmatched routes
 function NotFoundPage() {
   return (
     <div className="min-h-screen bg-[#0E0E0E] flex items-center justify-center">
       <div className="text-center">
         <pre className="text-xs mb-4 text-zinc-600 whitespace-pre">
-{`
+          {`
  _  _    ___  _  _   
 | || |  / _ \\| || |  
 | || |_| | | | || |_ 
@@ -167,59 +188,63 @@ export default function App() {
     <ThemeProvider>
       <SetupIncompleteBanner />
       <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/callback" element={<CallbackHandler />} />
-      <Route path="/s/:slug" element={<PublicSessionPage />} />
-      <Route path="/docs" element={<DocsPage />} />
-      <Route path="/stats" element={<StatsPage />} />
-      <Route path="/updates" element={<UpdatesPage />} />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Profile redirects to settings (profile tab is in settings) */}
-      <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <SettingsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/evals"
-        element={
-          <ProtectedRoute>
-            <EvalsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/context"
-        element={
-          <ProtectedRoute>
-            <ContextPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Dashboard - protected */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <DashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      {/* Homepage - public, shows LoginPage with dashboard link if logged in */}
-      <Route path="/" element={<LoginPage />} />
-      {/* Catch-all 404 route */}
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/callback" element={<CallbackHandler />} />
+        <Route path="/s/:slug" element={<PublicSessionPage />} />
+        {/* Docs redirect to Mintlify (docs.opensync.dev) */}
+        <Route path="/docs" element={<DocsRedirect />} />
+        <Route path="/docs/*" element={<DocsRedirect />} />
+        {/* Legacy docs route (redirect to Mintlify) */}
+        <Route path="/docs-legacy" element={<DocsRedirect />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/updates" element={<UpdatesPage />} />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Profile redirects to settings (profile tab is in settings) */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/evals"
+          element={
+            <ProtectedRoute>
+              <EvalsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/context"
+          element={
+            <ProtectedRoute>
+              <ContextPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Dashboard - protected */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Homepage - public, shows LoginPage with dashboard link if logged in */}
+        <Route path="/" element={<LoginPage />} />
+        {/* Catch-all 404 route */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
     </ThemeProvider>
   );
 }

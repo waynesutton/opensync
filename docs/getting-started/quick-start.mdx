@@ -1,0 +1,86 @@
+---
+title: "Quick Start"
+description: "Deploy OpenSync in 5 minutes"
+---
+
+# Quick Start
+
+Get OpenSync running in 5 minutes with one-click deploy.
+
+## Deploy Backend
+
+<Steps>
+  <Step title="Deploy to Convex">
+    Click the button below to deploy the Convex backend: [![Deploy to
+    Convex](https://convex.dev/button.svg)](https://convex.dev/new?template=waynesutton/opensync)
+    This creates a new Convex project with all the required tables and
+    functions.
+  </Step>
+  <Step title="Deploy Frontend">
+    Deploy the frontend to Netlify or Vercel: [![Deploy to
+    Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/waynesutton/opensync)
+    Or use Vercel: [![Deploy with
+    Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/waynesutton/opensync)
+  </Step>
+  <Step title="Configure Environment">
+    Set the required environment variables in your hosting platform: -
+    `VITE_CONVEX_URL` - Your Convex deployment URL - `WORKOS_API_KEY` - Your
+    WorkOS API key - `WORKOS_CLIENT_ID` - Your WorkOS client ID -
+    `WORKOS_COOKIE_PASSWORD` - A secure 32+ character secret
+  </Step>
+</Steps>
+
+## Get API Key
+
+Once deployed, get your API key to connect plugins:
+
+<Steps>
+  <Step title="Sign in">Visit your deployed OpenSync instance and sign in</Step>
+  <Step title="Open Settings">
+    Click your profile icon and select **Settings**
+  </Step>
+  <Step title="Generate Key">Click **Generate API Key** and copy the key</Step>
+</Steps>
+
+<Warning title="Keep your API key secure">
+  Your API key provides full access to your sessions. Never share it publicly or
+  commit it to version control.
+</Warning>
+
+## Install Plugin
+
+Install a sync plugin globally on your machine:
+
+<CodeGroup
+  tabs={[
+    { label: "OpenCode", code: "npm install -g opencode-sync-plugin" },
+    { label: "Claude Code", code: "npm install -g claude-code-sync" },
+    { label: "Codex CLI", code: "npm install -g codex-sync" },
+    { label: "Cursor", code: "npm install -g cursor-sync-plugin" },
+  ]}
+/>
+
+Then login with your credentials:
+
+```bash
+opencode-sync login
+# Enter your Convex URL and API key when prompted
+```
+
+## Verify Setup
+
+Check that everything is working:
+
+```bash
+opencode-sync status
+```
+
+You should see:
+
+```
+Connected: true
+Convex URL: https://your-deployment.convex.cloud
+Sessions synced: 0
+```
+
+Start coding with OpenCode, Claude Code, Codex, or Cursor and your sessions will sync automatically.

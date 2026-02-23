@@ -1,0 +1,186 @@
+---
+title: "API Endpoints"
+description: "Complete API endpoint reference"
+---
+
+# API Endpoints
+
+All endpoints use the base URL: `https://your-deployment.convex.site`
+
+## Sessions
+
+### List Sessions
+
+```http
+GET /api/sessions
+```
+
+Query parameters:
+
+| Parameter | Type   | Description                                        |
+| --------- | ------ | -------------------------------------------------- |
+| limit     | number | Max sessions to return (default: 50)               |
+| cursor    | string | Pagination cursor                                  |
+| source    | string | Filter by source (opencode, claude, codex, cursor) |
+
+Response:
+
+```json
+{
+  "sessions": [
+    {
+      "_id": "session_123",
+      "title": "Session title",
+      "source": "opencode",
+      "model": "gpt-4o",
+      "messageCount": 12,
+      "promptTokens": 1500,
+      "completionTokens": 800,
+      "totalTokens": 2300,
+      "cost": 0.023,
+      "createdAt": 1706140800000
+    }
+  ],
+  "cursor": "next_page_cursor"
+}
+```
+
+### Get Session
+
+```http
+GET /api/sessions/:id
+```
+
+Response:
+
+```json
+{
+  "_id": "session_123",
+  "title": "Session title",
+  "source": "opencode",
+  "model": "gpt-4o",
+  "messages": [
+    {
+      "role": "user",
+      "content": "User message",
+      "tokens": 50
+    },
+    {
+      "role": "assistant",
+      "content": "Assistant response",
+      "tokens": 150
+    }
+  ]
+}
+```
+
+### Sync Session
+
+```http
+POST /sync/session
+```
+
+Request body:
+
+```json
+{
+  "externalId": "unique_session_id",
+  "source": "opencode",
+  "title": "Optional title",
+  "model": "gpt-4o",
+  "promptTokens": 1500,
+  "completionTokens": 800,
+  "cost": 0.023
+}
+```
+
+### Sync Message
+
+```http
+POST /sync/message
+```
+
+Request body:
+
+```json
+{
+  "sessionExternalId": "session_id",
+  "externalId": "message_id",
+  "role": "user",
+  "parts": [
+    {
+      "type": "text",
+      "content": "Message content"
+    }
+  ],
+  "model": "gpt-4o",
+  "promptTokens": 50,
+  "completionTokens": 0
+}
+```
+
+## Search
+
+### Full-Text Search
+
+```http
+POST /search
+```
+
+Request body:
+
+```json
+{
+  "query": "search terms",
+  "type": "fulltext",
+  "limit": 10
+}
+```
+
+### Semantic Search
+
+```http
+POST /search
+```
+
+Request body:
+
+```json
+{
+  "query": "natural language question",
+  "type": "semantic",
+  "limit": 10
+}
+```
+
+## Export
+
+### Export Sessions
+
+```http
+GET /api/export
+```
+
+Query parameters:
+
+| Parameter  | Type   | Description                 |
+| ---------- | ------ | --------------------------- |
+| format     | string | deepeval, openai, or text   |
+| sessionIds | string | Comma-separated session IDs |
+
+## Health
+
+### Health Check
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0"
+}
+```

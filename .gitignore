@@ -26,7 +26,7 @@ dist/
 # Logs
 *.log
 
-# Documentation (internal)
-docs/
+# Internal documentation (setup guides, PRDs, marketing)
+docs-internal/
 
 # Disabled pages (kept for reference, no files currently disabled)

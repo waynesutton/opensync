@@ -1,0 +1,75 @@
+---
+title: "Evals Export"
+description: "Export sessions for AI evaluation frameworks"
+---
+
+# Evals Export
+
+Export your sessions in formats compatible with popular AI evaluation frameworks.
+
+## Supported Formats
+
+<CardGroup cols={3}>
+  <Card title="DeepEval" description="JSONL format for DeepEval framework" />
+  <Card title="OpenAI Evals" description="JSONL format for OpenAI evals" />
+  <Card title="Plain Text" description="Human-readable text format" />
+</CardGroup>
+
+## DeepEval Format
+
+Export for use with [DeepEval](https://github.com/confident-ai/deepeval):
+
+```json
+{
+  "input": "User prompt here",
+  "actual_output": "Assistant response here",
+  "context": ["Previous context..."],
+  "retrieval_context": []
+}
+```
+
+## OpenAI Evals Format
+
+Export for use with [OpenAI Evals](https://github.com/openai/evals):
+
+```json
+{
+  "messages": [
+    { "role": "user", "content": "User prompt" },
+    { "role": "assistant", "content": "Assistant response" }
+  ]
+}
+```
+
+## How to Export
+
+<Steps>
+  <Step title="Select sessions">
+    From the sessions list, select the sessions you want to export using the
+    checkboxes.
+  </Step>
+  <Step title="Click Export">Click the **Export** button in the toolbar.</Step>
+  <Step title="Choose format">
+    Select your desired format (DeepEval, OpenAI, or Plain Text).
+  </Step>
+  <Step title="Download">The export file will download automatically.</Step>
+</Steps>
+
+## Bulk Export
+
+To export all sessions:
+
+1. Use the **Select All** checkbox
+2. Or use the API endpoint for programmatic export:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" \
+  "https://your-convex.convex.site/api/export?format=deepeval"
+```
+
+## Use Cases
+
+- **Model evaluation** - Compare model performance across sessions
+- **Fine-tuning** - Create training data from successful sessions
+- **Quality assurance** - Review and score AI responses
+- **Benchmarking** - Track improvements over time

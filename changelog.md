@@ -8,6 +8,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Migrated all in-app documentation to Mintlify at docs.opensync.dev
+  - Removed Docs.tsx (full in-app documentation page with sidebar, search, and markdown export)
+  - Removed src/lib/search.ts (client-side search index builder for docs)
+  - Removed src/search-index.json (pre-built search index data)
+  - Removed src/mdx.d.ts (MDX type declarations)
+  - All /docs, /docs/*, and /docs-legacy routes now redirect externally to docs.opensync.dev
+  - Added DocsRedirect component in App.tsx for client-side redirect
+  - Updated Sidebar.tsx docs link to point to external docs.opensync.dev
 - Platform Stats header now displays "last 1000 sessions" label for clarity
   - Users know the leaderboard data is based on recent activity, not all-time totals
 
@@ -16,6 +24,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed Netlify build error: Stats.tsx was git-ignored causing module not found error
   - Removed src/pages/Stats.tsx from .gitignore so placeholder page is included in build
   - Updated Stats.tsx header comment to reflect it's no longer git-ignored
+- Fixed Netlify build error caused by removed Docs.tsx import references
+  - Cleaned up all imports of deleted files (search.ts, search-index.json, mdx.d.ts)
 
 ### Added
 

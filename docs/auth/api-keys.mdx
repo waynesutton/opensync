@@ -1,0 +1,99 @@
+---
+title: "API Keys"
+description: "Manage API keys for plugin authentication"
+---
+
+# API Keys
+
+API keys authenticate sync plugins and API requests to your OpenSync instance.
+
+## Generating Keys
+
+<Steps>
+  <Step title="Sign in">Sign in to your OpenSync dashboard</Step>
+  <Step title="Open Settings">
+    Click your profile icon and select **Settings**
+  </Step>
+  <Step title="Generate Key">Click **Generate API Key**</Step>
+  <Step title="Save securely">
+    Copy the key immediately. It won't be shown again.
+  </Step>
+</Steps>
+
+## Key Format
+
+API keys follow the format:
+
+```
+osk_[random-alphanumeric-string]
+```
+
+Example: `osk_7a8b9c0d1e2f3g4h5i6j7k8l9m0n`
+
+## Using Keys
+
+### In Plugins
+
+When running `plugin-name login`:
+
+```
+? Enter your API Key: osk_your_key_here
+```
+
+### In API Requests
+
+Include in the Authorization header:
+
+```bash
+curl -H "Authorization: Bearer osk_your_key" \
+  https://your-url.convex.site/api/sessions
+```
+
+## Key Storage
+
+Keys are hashed before storage:
+
+| What       | Where                            |
+| ---------- | -------------------------------- |
+| Full key   | Shown once on generation         |
+| Hashed key | Stored in Convex `apiKeys` table |
+| Key prefix | Stored for identification        |
+
+<Info>
+  We cannot recover your API key if you lose it. Generate a new one if needed.
+</Info>
+
+## Managing Keys
+
+### View Keys
+
+In Settings, see a list of your API keys with:
+
+- Key prefix (first 8 characters)
+- Creation date
+- Last used date
+
+### Revoke Keys
+
+To revoke a key:
+
+1. Find the key in Settings
+2. Click **Revoke**
+3. Confirm revocation
+
+Revoked keys immediately stop working.
+
+## Security Best Practices
+
+<Warning title="Security recommendations">
+  - Generate separate keys for development and production - Rotate keys
+  periodically - Never commit keys to version control - Use environment
+  variables to store keys - Revoke keys that may be compromised
+</Warning>
+
+## Key Limits
+
+| Plan | Max Keys  |
+| ---- | --------- |
+| Free | 5         |
+| Pro  | Unlimited |
