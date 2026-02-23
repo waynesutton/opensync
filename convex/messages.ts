@@ -27,6 +27,7 @@ export const upsert = internalMutation({
         })
       )
     ),
+    createdAt: v.optional(v.number()), // Original timestamp from source
   },
   returns: v.id("messages"),
   handler: async (ctx, args) => {
@@ -114,7 +115,8 @@ export const upsert = internalMutation({
         await Promise.all(existingParts.map((part) => ctx.db.delete(part._id)));
       }
     } else {
-      // Create new message
+      // Create new message - use provided createdAt or current time
+      const messageCreatedAt = args.createdAt ?? now;
       messageId = await ctx.db.insert("messages", {
         sessionId,
         externalId: args.externalId,
@@ -124,7 +126,7 @@ export const upsert = internalMutation({
         promptTokens: args.promptTokens,
         completionTokens: args.completionTokens,
         durationMs: args.durationMs,
-        createdAt: now,
+        createdAt: messageCreatedAt,
       });
       shouldUpdateSessionStats = true;
     }

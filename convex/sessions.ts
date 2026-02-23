@@ -307,6 +307,7 @@ export const upsert = internalMutation({
     completionTokens: v.optional(v.number()),
     cost: v.optional(v.number()),
     durationMs: v.optional(v.number()),
+    createdAt: v.optional(v.number()), // Original timestamp from source
   },
   returns: v.id("sessions"),
   handler: async (ctx, args) => {
@@ -384,7 +385,8 @@ export const upsert = internalMutation({
       return existing._id;
     }
 
-    // Insert new session
+    // Insert new session - use provided createdAt or current time
+    const sessionCreatedAt = args.createdAt ?? now;
     return await ctx.db.insert("sessions", {
       userId: args.userId,
       externalId: args.externalId,
@@ -402,7 +404,7 @@ export const upsert = internalMutation({
       isPublic: false,
       searchableText: args.title,
       messageCount: 0,
-      createdAt: now,
+      createdAt: sessionCreatedAt,
       updatedAt: now,
     });
   },

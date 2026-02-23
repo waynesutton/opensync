@@ -126,6 +126,7 @@ http.route({
         completionTokens: body.completionTokens,
         cost: body.cost,
         durationMs: body.durationMs,
+        createdAt: body.createdAt, // Original timestamp from source
       });
 
       // Schedule embedding generation
@@ -163,6 +164,7 @@ http.route({
         durationMs: body.durationMs,
         source: body.source, // Pass source for auto-created sessions ("opencode" or "claude-code")
         parts: body.parts,
+        createdAt: body.createdAt, // Original timestamp from source
       });
 
       return json({ ok: true, messageId });

@@ -1141,7 +1141,7 @@ function SessionsView({
   const isMarkdownLoading = selectedSession?.session?._id && markdown === undefined;
 
   return (
-    <div className="h-full flex flex-col lg:flex-row">
+    <div className="h-full flex flex-col lg:flex-row relative">
       {/* Sessions list - hidden on mobile when session selected, h-full and min-h-0 for scroll */}
       <div className={cn(
         "h-full min-h-0 flex flex-col border-r",
@@ -1390,9 +1390,9 @@ function SessionsView({
         )}
       </div>
 
-      {/* Session detail - full width on mobile, h-full for scroll, min-h-0 for flex */}
+      {/* Session detail - full width on mobile, uses absolute positioning on mobile for proper scrolling */}
       {selectedSession && (
-        <div className="h-full min-h-0 w-full lg:w-1/2 flex flex-col overflow-hidden">
+        <div className={cn("absolute inset-0 lg:relative lg:inset-auto h-full min-h-0 w-full lg:w-1/2 flex flex-col overflow-hidden z-10 lg:z-auto", t.bg)}>
           {/* Detail header */}
           <div className={cn("px-4 py-3 border-b flex items-center justify-between", t.border)}>
             <div className="flex items-center gap-3 min-w-0">
@@ -1516,8 +1516,8 @@ function SessionsView({
             </div>
           </div>
 
-          {/* Messages - flex-1 with min-h-0 for proper overflow scroll */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 relative">
+          {/* Messages - flex-1 with min-h-0 for proper overflow scroll, touch-action for mobile */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 relative overscroll-contain touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
             {/* Subtle loading indicator in corner during session transition - no overlay to prevent flash */}
             {isSessionLoading && (
               <div className="absolute top-2 right-2 z-10">

@@ -8,6 +8,37 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Issue #13 - Mobile Scrolling Fix)
+
+- [x] Fixed mobile scrolling in session detail view (GitHub #13)
+  - Root cause: Messages container lacked iOS-specific scroll properties
+  - Root cause: Session detail panel didn't cover the session list behind it on mobile
+  - Added `overscroll-contain` and `touch-pan-y` classes to messages container
+  - Added `WebkitOverflowScrolling: 'touch'` inline style for iOS momentum scrolling
+  - Changed session detail container to use `absolute inset-0` positioning on mobile
+  - Added `t.bg` background color class so detail view covers session list
+  - Parent container already had `relative` positioning
+  - No changes to desktop layout (lg: breakpoint preserves desktop behavior)
+
+## Recently Completed (Issue #29 - Timestamp Preservation Fix)
+
+- [x] Fixed opencode-sync --force setting wrong dates (GitHub #29)
+  - Root cause: CLI plugin was not sending `createdAt` timestamp from local data
+  - Root cause: Convex mutations always used `Date.now()` for new inserts
+  - Updated opencode-sync-plugin `src/cli.ts`:
+    - Added `createdAt: data.time?.created` to session sync request body
+    - Added `createdAt: msg.time?.created` to message sync request body
+  - Updated `convex/sessions.ts`:
+    - Added `createdAt: v.optional(v.number())` to upsert args
+    - Modified insert to use `args.createdAt ?? now` for sessionCreatedAt
+  - Updated `convex/messages.ts`:
+    - Added `createdAt: v.optional(v.number())` to upsert args
+    - Modified insert to use `args.createdAt ?? now` for messageCreatedAt
+  - Updated `convex/http.ts`:
+    - Added `createdAt: body.createdAt` to `/sync/session` mutation call
+    - Added `createdAt: body.createdAt` to `/sync/message` mutation call
+  - Original timestamps from local OpenCode sessions now preserved when syncing
+
 ## Recently Completed (Token Double-Counting Fix - Issue #32, PR #33)
 
 - [x] Fixed token double-counting bug in message handlers

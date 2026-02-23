@@ -8,6 +8,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Fixed mobile scrolling in session detail view (fixes #13)
+  - Added `overscroll-contain`, `touch-pan-y`, and `WebkitOverflowScrolling: 'touch'` to messages container
+  - Session detail uses absolute positioning on mobile with background color to cover session list
+  - iOS scrolling now works properly within the messages area
+
+- Fixed opencode-sync --force setting wrong dates (fixes #29)
+  - Plugin was not sending original `createdAt` timestamps from local session/message data
+  - Convex mutations were not accepting `createdAt` argument, always using `Date.now()`
+  - Updated opencode-sync-plugin CLI to include `createdAt: data.time?.created` for sessions and messages
+  - Updated `internal.sessions.upsert` to accept optional `createdAt` and use it for new inserts
+  - Updated `internal.messages.upsert` to accept optional `createdAt` and use it for new inserts
+  - Updated HTTP endpoints `/sync/session` and `/sync/message` to pass `createdAt` to mutations
+  - Sessions and messages now preserve their original timestamps when synced
+
 - Fixed token double-counting bug in message handlers (fixes #32)
   - Message handlers (upsert, batchUpsert) were accumulating per-message promptTokens/completionTokens onto the session record
   - Since session-level sync already sets these as authoritative absolute values, the accumulation resulted in inflated token totals
