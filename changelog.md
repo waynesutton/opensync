@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed token double-counting bug in message handlers (fixes #32)
+  - Message handlers (upsert, batchUpsert) were accumulating per-message promptTokens/completionTokens onto the session record
+  - Since session-level sync already sets these as authoritative absolute values, the accumulation resulted in inflated token totals
+  - Removed all token accumulation from message handlers
+  - Session tokens are now set exclusively by session-level sync (the authoritative source)
+  - Message handlers only update messageCount and searchableText
+  - Co-authored-by: Shah (Shahfarzane)
+
 ### Added
 
 - Batch deletion system with reactive UI progress tracking (fixes #30)

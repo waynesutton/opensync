@@ -8,6 +8,18 @@ OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.
 
 - [ ] (add next task here)
 
+## Recently Completed (Token Double-Counting Fix - Issue #32, PR #33)
+
+- [x] Fixed token double-counting bug in message handlers
+  - Root cause: messages.upsert and messages.batchUpsert were accumulating per-message promptTokens/completionTokens onto the session record
+  - Session-level sync already sets absolute token values, so accumulation caused inflated totals
+  - Removed sessionPromptTokens/sessionCompletionTokens variables from both mutations
+  - Removed token accumulation calculations (newPromptTokens, newCompletionTokens, totalPromptTokens, totalCompletionTokens)
+  - Removed token fields from session patch operations
+  - Message handlers now only update messageCount and searchableText
+  - Session tokens set exclusively by sessions.upsert (authoritative source from CLI plugins)
+  - Co-authored fix with Shah (Shahfarzane) from PR #33
+
 ## Recently Completed (Batch Deletion System - Issue #30)
 
 - [x] Fixed "Too many reads in a single function execution" error in deleteUserData
