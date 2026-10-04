@@ -8,6 +8,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- Documentation and issue review (2026-10-04 02:18 UTC): published 28 audited documentation files across two docs-only commits; closed four resolved reports and documented remaining app/plugin dependencies. App sync fixes pass 120 tests and await index backfill; OpenCode fixes pass five tests and await npm publication. No unrelated product features released.
+
 - Focused production release (2026-10-04 00:53 UTC): Convex static hosting, custom API/client URLs, owner administration, opt-in usage leaderboard, paginated user directory and shared typography. Removed the migration notice while retaining setup warnings. Discussion #38 announces completion. 109 tests pass; unrelated future product work excluded.
 
 

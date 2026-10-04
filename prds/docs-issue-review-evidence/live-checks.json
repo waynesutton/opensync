@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-10-04T02:15:59.251687+00:00",
+  "checks": [
+    {
+      "url": "https://api.opensync.dev/health",
+      "status": 200
+    },
+    {
+      "url": "https://www.opensync.dev/",
+      "status": 200,
+      "assets": [
+        "/assets/index-YkCikWk3.css",
+        "/assets/index-tFpc-Ego.js"
+      ]
+    },
+    {
+      "url": "https://www.opensync.dev/dashboard",
+      "status": 200
+    },
+    {
+      "url": "https://www.opensync.dev/usage-leaderboard",
+      "status": 200
+    },
+    {
+      "url": "https://api.opensync.dev/api/sessions",
+      "status": 401
+    },
+    {
+      "url": "https://docs.opensync.dev/getting-started/requirements",
+      "status": 200
+    },
+    {
+      "url": "https://docs.opensync.dev/hosting/static-hosting",
+      "status": 200
+    },
+    {
+      "url": "https://docs.opensync.dev/api/endpoints",
+      "status": 200
+    },
+    {
+      "url": "https://docs.opensync.dev/plugins/opencode-sync",
+      "status": 200
+    }
+  ],
+  "scope": "Read-only HTTP checks; no authenticated data writes or email"
+}

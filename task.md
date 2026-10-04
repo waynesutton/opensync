@@ -870,3 +870,5 @@ Deferred. See [PRD-FEATURES.md](docs/PRD-FEATURES.md).
 - Marketplace payment uses Convex Stripe component (future)
 - See [PLUGIN-AUTH-PRD.md](docs/PLUGIN-AUTH-PRD.md) for full plugin authentication specification
 - See [CLAUDE-CODE-PLUGIN.md](docs/CLAUDE-CODE-PLUGIN.md) for Claude Code plugin documentation
+
+- [x] 2026-10-04 02:18 UTC: Published audited docs (91eb411, 030d4a5), completed issue review/comments and closed four resolved reports; 120 app tests and 5 plugin tests pass. Index-only staging deployed (ef0bdd2); application activation and npm publication remain pending. See `prds/docs-and-issue-review-2026-10-03.md`.

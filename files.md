@@ -211,3 +211,5 @@ Claude AI skill files.
 
 - `convex/syncCompatibility.test.ts`: regression coverage for message snapshots, ownership, retry idempotency and rapid session metadata updates.
 - `prds/docs-and-issue-review-2026-10-03.md`: issue map, release boundaries, changed files and validation evidence.
+
+- `prds/docs-issue-review-evidence/`: public docs screenshots, issue/comment status, file manifest, runtime comparison and read-only endpoint verification.
