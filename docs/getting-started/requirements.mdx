@@ -1,126 +1,132 @@
 ---
 title: "Self-Hosting Requirements"
-description: "What you need to self-host OpenSync"
+description: "Deploy your own OpenSync instance with Convex static hosting and WorkOS"
 ---
 
 # Self-Hosting Requirements
 
-OpenSync can run on managed cloud services or on your own infrastructure. This page covers what you need for each approach.
+The standard OpenSync setup uses your own Convex Cloud project for the React/Vite frontend, database, backend functions and file storage. The frontend is served by the `@convex-dev/static-hosting` component. WorkOS handles sign-in.
 
-## Cloud deployment
+Deploying your own OpenSync instance this way uses managed infrastructure. Running the Convex backend on your own server is a separate, advanced setup described below.
 
-The standard deployment uses these managed services:
+## Accounts and services
 
-| Service | Purpose | Required | Free tier |
-| --- | --- | --- | --- |
-| [Convex](https://convex.dev) | Real-time database, backend functions, file storage | Yes | 1M function calls/month |
-| [WorkOS](https://workos.com) | Authentication via AuthKit (GitHub, Google, email) | Yes | 1M MAUs |
-| [OpenAI](https://platform.openai.com) | text-embedding-3-small for semantic search | Optional | Pay-as-you-go |
-| [Netlify](https://netlify.com) or [Vercel](https://vercel.com) | Static frontend hosting | Yes | Generous free tier |
-
-<Info title="Cost for small teams">
-  Most individual developers and small teams will stay within free tiers for Convex, WorkOS, and Netlify. The main variable cost is OpenAI embeddings, which run about $0.02 per 1M tokens. A typical coding session generates roughly 2K-10K tokens of searchable text, so embedding costs are negligible.
-</Info>
-
-## What Convex handles
-
-Convex serves as the entire backend for OpenSync. There is no separate server or API layer to deploy. Convex provides:
-
-- **Real-time database** with automatic sync to connected clients
-- **Serverless functions** for queries, mutations, and actions
-- **HTTP endpoints** for the plugin sync API (`/sync/session`, `/sync/message`, etc.)
-- **Full-text search** indexes for keyword search across sessions
-- **Vector search** indexes for semantic search with 1536-dimension OpenAI embeddings
-- **File storage** for daily wrapped images and profile photos
-- **Scheduled functions** for background processing like embedding generation
-
-All backend logic lives in the `convex/` directory of the repository.
-
-## What WorkOS handles
-
-WorkOS AuthKit provides authentication with zero configuration for OAuth providers:
-
-- GitHub sign-in
-- Google sign-in
-- Email/password sign-in
-- Session management and token refresh
-
-WorkOS is configured through environment variables. See the [WorkOS setup guide](/auth/workos) for details.
-
-## 100% Local deployment
-
-For air-gapped environments or developers who want full control:
-
-| Component | Cloud service | Local alternative |
+| Service | Purpose | Required |
 | --- | --- | --- |
-| Database & backend | Convex Cloud | Convex self-hosted (when available) |
-| Authentication | WorkOS | Disable auth or use a local provider |
-| Embeddings | OpenAI API | Local models via Ollama (nomic-embed-text, etc.) |
-| Frontend | Netlify/Vercel | Any static file server (`npx serve dist/`) |
+| [Convex](https://convex.dev) | Static frontend hosting, database, backend functions, HTTP API and file storage | Yes |
+| [WorkOS](https://workos.com) | AuthKit sign-in and session management | Yes |
+| [OpenAI](https://platform.openai.com) | Embeddings for semantic search | Only for semantic search |
+| [Resend](https://resend.com) | App email through the Convex Resend component | Only for email features |
+| A domain registrar and DNS provider | Custom frontend/API domains and email verification | Only when using your own domains |
 
-<Warning title="Local deployment is advanced">
-  Running fully local requires modifying authentication logic and embedding generation. The codebase assumes Convex Cloud and WorkOS by default. See the [Fork Guide](/fork/guide) for instructions on customizing these components.
-</Warning>
+Use any DNS provider that supports the records required by your services. Start with the URLs assigned to your Convex deployment if you do not need a custom domain.
 
-## System requirements
+Review current provider pricing and limits for your expected usage. Custom-domain features may require paid plans; do not assume every feature is included in a free tier.
 
-For local development:
+## Development tools
 
-- **Node.js** 18 or later
-- **npm** 9+ or **bun** 1.0+
-- **Git** for cloning the repository
+- **Node.js 24 LTS**, the version used to validate the current release.
+- **npm**, included with Node.js; use the repository's `package-lock.json` with `npm ci`.
+- **Git** to clone and maintain your fork.
+- Access to your own Convex project and WorkOS application.
 
-No Docker or container runtime is needed. Convex runs as a cloud service and the frontend is a standard Vite/React app.
+Docker is not required for the managed Convex Cloud setup. The frontend builds with Vite; its static output is uploaded to Convex.
 
-## Environment variables
+## Choose the static-hosting release
 
-All configuration is done through environment variables. Here is the minimum set for a cloud deployment:
+The reviewed static-hosting source is on the [`codex/convex-static-hosting-release` branch](https://github.com/waynesutton/opensync/tree/codex/convex-static-hosting-release), at commit [`bdb6ad0`](https://github.com/waynesutton/opensync/commit/bdb6ad0bcd4f8d37713283508d8f7c1d66c48d17). It has been deployed to the hosted app; it has not yet been merged into the repository's `main` branch.
+
+Use that reviewed release when following this page. Older hosting guides and the default branch may still describe the previous setup. Do not deploy unrelated local feature work as part of setting up hosting.
+
+## Convex setup
+
+Your reviewed checkout must register the static-hosting component in `convex/convex.config.ts` and serve it from `convex/http.ts`. Keep existing API and webhook routes before the static SPA fallback so frontend routing does not intercept them.
+
+Use separate Convex development and production deployments. Configure each deployment deliberately, deploy its backend functions, then publish the frontend assets to that same deployment. Uploading a frontend does not deploy backend changes.
+
+Convex provides the database, real-time subscriptions, server functions, plugin sync HTTP endpoints, search indexes, scheduled work and file storage. You do not need a separate frontend hosting account for this setup.
+
+The [Convex static-hosting component](https://www.convex.dev/components/static-hosting) serves the dashboard through HTTP actions. The browser's Convex client connects to the deployment's cloud API URL (`.convex.cloud` or its verified custom domain) for queries, mutations and live subscriptions. Plugins use the HTTP actions URL (`.convex.site` or its verified custom API domain). These are different endpoints; do not substitute one for the other.
+
+## WorkOS setup
+
+Create your own WorkOS application and enable the sign-in methods you intend to offer. Production OAuth providers require their own configuration; do not assume they are enabled automatically.
+
+Before publishing the frontend:
+
+1. Register its exact callback URL in WorkOS, ending in `/callback`.
+2. Allow its origin in WorkOS CORS for the current browser authentication flow.
+3. Configure the application homepage, login and sign-out URLs for that origin.
+4. Set the matching WorkOS client ID in both the frontend build and Convex backend.
+
+For example, an app at `https://app.example.com` uses callback `https://app.example.com/callback` and origin `https://app.example.com`. Keep development and production settings separate.
+
+WorkOS custom sign-in and email domains are optional. The hosted OpenSync release uses `signin.opensync.dev` for AuthKit and the default `api.workos.com` authentication API. Changing frontend hosting does not require changing token storage or the authentication issuer.
+
+See [WorkOS AuthKit](/auth/workos) for the authentication integration.
+
+## Configuration and secrets
+
+Public frontend values are baked into the Vite build:
 
 ```bash
-# Frontend (Vite)
 VITE_CONVEX_URL=https://your-deployment.convex.cloud
-VITE_WORKOS_CLIENT_ID=client_...
-
-# Convex backend (set via npx convex env set)
-WORKOS_API_KEY=sk_...
-WORKOS_CLIENT_ID=client_...
-WORKOS_COOKIE_PASSWORD=a-random-string-at-least-32-characters
-
-# Optional: enables semantic search
-OPENAI_API_KEY=sk-...
+VITE_WORKOS_CLIENT_ID=client_your_client_id
+VITE_REDIRECT_URI=https://app.example.com/callback
+# Optional: your plugin HTTP endpoint when using custom domains
+VITE_API_URL=https://api.example.com
 ```
 
-For the complete list with descriptions, see [Environment Variables](/hosting/env).
+These are examples: replace them with your own deployment and WorkOS application values. The static-hosting uploader supplies `VITE_CONVEX_URL` when used with `--build`.
 
-## Architecture overview
+Set backend configuration on the intended Convex deployment:
 
-```
-CLI Tool (OpenCode, Claude, Cursor, etc.)
-    |
-    v
-Sync Plugin (npm package, runs locally)
-    |
-    v  HTTPS POST /sync/session, /sync/message
-    |
-Convex HTTP Endpoints (convex/http.ts)
-    |
-    v
-Convex Database (sessions, messages, parts, embeddings)
-    |
-    v
-React Dashboard (Vite, served from Netlify/Vercel)
-    |
-    v
-User's browser (real-time subscriptions via Convex client)
-```
+| Variable | Purpose |
+| --- | --- |
+| `WORKOS_CLIENT_ID` | Match your WorkOS application and JWT validation |
+| `WORKOS_API_KEY` | Server-side WorkOS operations in your chosen release |
+| `OPENAI_API_KEY` | Optional semantic-search embedding generation |
+| `SITE_URL` | Your canonical frontend URL for app links |
 
-Plugins authenticate using API keys generated in the dashboard Settings. Each API call includes an `Authorization: Bearer osk_...` header that maps to a user account.
+Store private API keys in Convex environment variables. Never prefix private keys with `VITE_` or place them in the frontend bundle. The current hosted browser-auth flow does not require `WORKOS_COOKIE_PASSWORD`; a different server-session integration may have additional requirements.
+
+The repository's `deploy:static:prod` script pins hosted OpenSync's public WorkOS client and callback. Forks must replace those values or use the static-hosting uploader with their own build configuration. Never deploy a fork to OpenSync's production or development project.
+
+See [Environment Variables](/hosting/env) for the configuration reference.
+
+## Optional email
+
+To enable app email, use your own Resend account, verified sending domain, API key and webhook signing secret. Set `RESEND_FROM_EMAIL` to a sender on that domain and point the signed delivery webhook at your own Convex HTTP endpoint, `/resend-webhook`.
+
+Product-update emails also need `EMAIL_POSTAL_ADDRESS` for the unsubscribe footer. Keep `RESEND_TEST_MODE=true` until you deliberately enable delivery. The current admin console allows search, drafts and previews in test mode but blocks sending.
+
+Fork owners must replace the hosted owner's email allowlist in `convex/lib/adminPolicy.ts` with their own verified identities before using the owner console. A client-supplied email or database role does not grant access.
+
+## Optional custom domains
+
+Add the custom domain in the correct Convex deployment and copy the verification TXT and destination records it provides. For Cloudflare, use DNS-only records for the Convex CNAMEs. Verify HTTPS before routing users to the domain, then register its exact frontend callback and origin in WorkOS.
+
+Hosted OpenSync uses `www.opensync.dev` for the frontend and `api.opensync.dev` for HTTP actions; both target production Convex. The apex redirects to `www`, preserving the path and query. `app.opensync.dev` is the Convex client API domain, not the dashboard URL. Production uses `CONVEX_CLOUD_URL=https://app.opensync.dev` and `CONVEX_SITE_URL=https://api.opensync.dev` as its canonical overrides. Use your own domain names for a fork; never point your fork at these hosted endpoints.
+
+For hosted plugin setup, copy `https://api.opensync.dev` from Settings. Existing plugin configurations remain valid. The currently published OpenCode and Claude Code login commands still require a Convex URL; Settings includes a compatibility URL for them.
+
+## Running the backend yourself
+
+Convex supports running its backend on your own servers. That is different from publishing frontend assets with the static-hosting component on Convex Cloud. You become responsible for operating, securing, backing up and upgrading that backend.
+
+OpenSync is not a turnkey offline or air-gapped application: the standard configuration relies on WorkOS and optionally OpenAI and Resend. A fully local deployment requires replacing those integrations, preserving authentication and authorization, and adapting embedding generation and indexes if the model changes. Do not disable authentication on a publicly reachable instance.
+
+Start with the [official Convex self-hosting guide](https://docs.convex.dev/self-hosting) and review the [Fork Guide](/fork/guide). This hosting migration did not validate a fully local deployment.
+
+## Release scope
+
+The hosted app uses Convex static hosting and includes the focused owner console and opt-in public usage leaderboard. Other local product work, including teams, user moderation, the evaluation leaderboard and the larger in-app documentation redesign, has not been released. Review the exact checkout you deploy instead of assuming all local changes match the hosted app.
 
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Quick Start" href="/getting-started/quick-start" description="Deploy OpenSync in 5 minutes" />
-  <Card title="Convex Backend" href="/hosting/convex" description="Set up and deploy the Convex backend" />
-  <Card title="WorkOS Auth" href="/auth/workos" description="Configure authentication" />
-  <Card title="Environment Variables" href="/hosting/env" description="Complete variable reference" />
+  <Card title="Quick Start" href="/getting-started/quick-start" description="Choose the hosted app or prepare your own instance" />
+  <Card title="Convex Backend" href="/hosting/convex" description="Configure your own backend deployment" />
+  <Card title="Static Hosting Component" href="https://www.convex.dev/components/static-hosting" description="Host the React/Vite frontend on Convex" />
+  <Card title="WorkOS Auth" href="/auth/workos" description="Configure sign-in and allowed origins" />
 </CardGroup>
