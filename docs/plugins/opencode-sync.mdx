@@ -5,7 +5,7 @@ description: "Sync sessions from OpenCode to OpenSync"
 
 # OpenCode Plugin
 
-The `opencode-sync-plugin` syncs your [OpenCode](https://opencode.ai) sessions to OpenSync automatically. Every session, message, and token count is pushed to your dashboard in real time.
+The `opencode-sync-plugin` syncs your [OpenCode](https://opencode.ai) sessions to OpenSync automatically. Supported session and message updates appear in your dashboard as the plugin syncs them.
 
 **Source identifier:** `opencode`
 
@@ -52,13 +52,13 @@ opencode-sync --version
     opencode-sync status
     ```
 
-    You should see `Connected: true` with your Convex URL.
+    Check that the saved URL and credential status match your deployment.
   </Step>
 </Steps>
 
 ## Config file
 
-Credentials are stored in `~/.opencode-sync/config.json`:
+Credentials are stored in `~/.opensync/credentials.json`:
 
 ```json
 {
@@ -67,7 +67,7 @@ Credentials are stored in `~/.opencode-sync/config.json`:
 }
 ```
 
-This file is created by the `login` command and removed by `logout`.
+This file is created by `login`. `logout` clears its saved credentials.
 
 ## Commands
 
@@ -77,30 +77,31 @@ Stores your Convex URL and API key. Prompts interactively if values are not prov
 
 ### opencode-sync status
 
-Shows connection state and sync statistics:
-
-```
-Connected: true
-Convex URL: https://reminiscent-gull-645.convex.cloud
-Sessions synced: 42
-Last sync: 2 minutes ago
-```
+Shows whether credentials are configured and the saved backend URL. Use `opencode-sync verify` to check credentials and OpenCode plugin registration.
 
 ### opencode-sync sync
 
-Manually triggers a sync of all sessions. Useful after a network interruption or if you notice missing sessions.
+In published version 0.3.7, plain `opencode-sync sync` checks connectivity **and creates a test session**. It does not import your session history.
+
+For the legacy JSON storage layout, use an explicit import mode:
 
 ```bash
-opencode-sync sync
+# Import sessions not already present on the server
+opencode-sync sync --all
+
+# Import sessions not recorded in local sync tracking
+opencode-sync sync --new
 ```
 
-<Info>
-  Sessions sync automatically as you work. You only need to run manual sync if something got out of step.
-</Info>
+`opencode-sync sync --force` clears local tracking and resends all readable sessions. Use it only when you intend to resync history.
+
+<Warning>
+  OpenCode versions that store history in `opencode.db` need a compatible SQLite reader. The published 0.3.7 importer expects JSON directories; repeatedly running `--force` cannot fix a storage-format mismatch. Track [issue #34](https://github.com/waynesutton/opensync/issues/34).
+</Warning>
 
 ### opencode-sync logout
 
-Removes stored credentials from `~/.opencode-sync/config.json`.
+Clears stored credentials in `~/.opensync/credentials.json`.
 
 ```bash
 opencode-sync logout
@@ -108,7 +109,7 @@ opencode-sync logout
 
 ## How syncing works
 
-1. OpenCode stores session data in `~/.opencode/sessions/` as JSON files.
+1. The published reader expects legacy session JSON in `~/.local/share/opencode/storage/session/` as JSON files.
 2. The plugin reads session and message data from this directory.
 3. Each session is pushed to the `/sync/session` HTTP endpoint on your Convex deployment.
 4. Each message within the session is pushed to `/sync/message`.
@@ -144,20 +145,20 @@ This happens automatically. You always enter the `.convex.cloud` URL during logi
 
 1. Run `opencode-sync status` to check the connection.
 2. Verify your API key is still valid in the dashboard Settings.
-3. Check that OpenCode is writing to `~/.opencode/sessions/`.
-4. Try `opencode-sync sync` to force a manual sync.
+3. Check that OpenCode is writing to `~/.local/share/opencode/storage/session/`.
+4. For legacy JSON history, use `opencode-sync sync --all`. For `opencode.db`, check the compatibility note above.
 
 ### Sessions missing
 
-- OpenCode may buffer session data. Wait a few seconds after ending a session, then run `opencode-sync sync`.
-- Check that the session directory (`~/.opencode/sessions/`) contains JSON files.
+- Check whether your OpenCode version uses JSON storage or `opencode.db` before attempting an import.
+- Check that the session directory (`~/.local/share/opencode/storage/session/`) contains JSON files.
 
 ### Permission errors
 
-The plugin needs read access to `~/.opencode/sessions/`. On macOS, this is usually granted automatically. On Linux, check file permissions:
+The plugin needs read access to `~/.local/share/opencode/storage/session/`. On macOS, this is usually granted automatically. On Linux, check file permissions:
 
 ```bash
-ls -la ~/.opencode/sessions/
+ls -la ~/.local/share/opencode/storage/session/
 ```
 
 ### Network errors

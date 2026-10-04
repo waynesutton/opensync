@@ -5,7 +5,7 @@ description: "Complete REST API reference for OpenSync"
 
 # API Endpoints
 
-OpenSync exposes a REST API through Convex HTTP endpoints. All endpoints are authenticated with API keys.
+OpenSync exposes a REST API through Convex HTTP endpoints. The session, sync and search endpoints use API keys; `/health` is public.
 
 ## Base URL
 
@@ -56,10 +56,8 @@ Create or update a session. Uses upsert logic based on `externalId`, so calling 
   "projectName": "my-app",
   "promptTokens": 3200,
   "completionTokens": 1800,
-  "totalTokens": 5000,
   "cost": 0.037,
-  "durationMs": 45000,
-  "messageCount": 8
+  "durationMs": 45000
 }
 ```
 
@@ -68,10 +66,6 @@ Create or update a session. Uses upsert logic based on `externalId`, so calling 
 | Field | Type | Description |
 | --- | --- | --- |
 | `externalId` | string | Unique session ID from the originating tool. Used for dedup. |
-| `source` | string | Plugin identifier (e.g., "opencode", "claude-code", "codex-cli", "cursor") |
-| `promptTokens` | number | Total input tokens |
-| `completionTokens` | number | Total output tokens |
-| `cost` | number | Estimated USD cost |
 
 **Optional fields:**
 
@@ -82,9 +76,12 @@ Create or update a session. Uses upsert logic based on `externalId`, so calling 
 | `provider` | string | Model provider |
 | `projectPath` | string | Absolute project path |
 | `projectName` | string | Project directory name |
-| `totalTokens` | number | Sum of prompt + completion |
 | `durationMs` | number | Session duration in ms |
-| `messageCount` | number | Number of messages |
+| `source` | string | Plugin identifier, such as `opencode` or `claude-code` |
+| `promptTokens` | number | Cumulative input tokens for the session |
+| `completionTokens` | number | Cumulative output tokens for the session |
+| `cost` | number | Estimated USD cost |
+| `createdAt` | number | Original timestamp in milliseconds; single-session endpoint only |
 
 **Response:**
 
@@ -113,8 +110,7 @@ Create or update a message within a session. The session is identified by `sessi
     },
     {
       "type": "tool-call",
-      "toolName": "edit_file",
-      "args": "{\"path\": \"src/auth.ts\", \"content\": \"...\"}"
+      "content": { "toolName": "edit_file", "path": "src/auth.ts" }
     }
   ],
   "model": "claude-sonnet-4-20250514",
@@ -136,7 +132,10 @@ Create or update a message within a session. The session is identified by `sessi
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `parts` | array | Array of message part objects |
+| `parts` | array | Objects with `type` and `content`; send a complete parts snapshot when updating a message |
+| `textContent` | string | Plain text of the message |
+| `source` | string | Source for an automatically created session |
+| `createdAt` | number | Original timestamp in milliseconds; single-message endpoint only |
 | `model` | string | Model used for this message |
 | `promptTokens` | number | Input tokens for this message |
 | `completionTokens` | number | Output tokens for this message |
@@ -147,8 +146,8 @@ Create or update a message within a session. The session is identified by `sessi
 | Type | Fields | Description |
 | --- | --- | --- |
 | `text` | `content` | Plain text content |
-| `tool-call` | `toolName`, `args` | A tool/function call |
-| `tool-result` | `toolName`, `content` | Result returned by a tool |
+| `tool-call` | `content` | Tool-call details inside the content value |
+| `tool-result` | `content` | Result returned by a tool |
 
 ### POST /sync/batch
 
@@ -172,215 +171,95 @@ Sync multiple sessions and messages in a single request. Preferred for bulk oper
 ```json
 {
   "ok": true,
-  "sessions": { "inserted": 1, "updated": 0 },
-  "messages": { "inserted": 1, "updated": 0 }
+  "sessions": 1,
+  "messages": 1,
+  "errors": []
 }
 ```
+
+
+The batch response counts inserted and updated items; unchanged retries are excluded. Inspect `errors` even when the HTTP status is 200 and `ok` is true. The current batch validators do not accept `createdAt` timestamps. Timestamp compatibility is tracked in [issue #29](https://github.com/waynesutton/opensync/issues/29).
+
+### GET /sync/sessions/list
+
+Returns `{ "sessionIds": [...] }` containing the authenticated user's external session IDs. Plugins use this to skip already imported sessions.
 
 ## Query endpoints
 
 ### GET /api/sessions
 
-List sessions for the authenticated user.
+Returns `{ "sessions": [...] }`, ordered by most recently updated. `limit` defaults to 50. This route currently has no cursor or source-filter parameter.
 
-**Query parameters:**
+Each session includes `id`, `externalId`, token totals, cost, visibility, message count and timestamps. Title, model, provider and project fields are present when recorded. Use `id` for the read and export endpoints below, not the plugin's external ID.
 
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| `limit` | number | 50 | Max sessions to return (1-200) |
-| `cursor` | string | null | Pagination cursor from previous response |
-| `source` | string | all | Filter by source plugin |
+### GET /api/sessions/get
 
-**Response:**
+Pass the required `id` query parameter. Returns `{ "session": {...}, "messages": [...] }` for a session owned by the authenticated user. Messages include their parts.
 
-```json
-{
-  "sessions": [
-    {
-      "_id": "j57a...",
-      "title": "Fix login redirect",
-      "source": "opencode",
-      "model": "claude-sonnet-4-20250514",
-      "messageCount": 12,
-      "promptTokens": 3200,
-      "completionTokens": 1800,
-      "totalTokens": 5000,
-      "cost": 0.037,
-      "createdAt": 1706140800000
-    }
-  ],
-  "cursor": "eyJ..."
-}
+```bash
+curl --get "https://api.opensync.dev/api/sessions/get" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "id=$SESSION_ID"
 ```
 
-### GET /api/sessions/:id
+## Search endpoint
 
-Get a single session with all its messages.
+### GET /api/search
 
-**Response:**
-
-```json
-{
-  "_id": "j57a...",
-  "title": "Fix login redirect",
-  "source": "opencode",
-  "model": "claude-sonnet-4-20250514",
-  "messages": [
-    {
-      "role": "user",
-      "textContent": "I'm seeing a redirect loop...",
-      "promptTokens": 150,
-      "completionTokens": 0,
-      "createdAt": 1706140800000
-    },
-    {
-      "role": "assistant",
-      "textContent": "The issue is in your AuthProvider...",
-      "promptTokens": 0,
-      "completionTokens": 450,
-      "createdAt": 1706140803000
-    }
-  ]
-}
-```
-
-## Search endpoints
-
-### POST /search
-
-Search across all sessions using full-text or semantic search.
-
-**Request body (full-text):**
-
-```json
-{
-  "query": "redirect loop authentication",
-  "type": "fulltext",
-  "limit": 10
-}
-```
-
-Full-text search matches against `sessions.searchableText`, which contains the session title and all message content. Results are ranked by relevance.
-
-**Request body (semantic):**
-
-```json
-{
-  "query": "How do I handle OAuth callback errors?",
-  "type": "semantic",
-  "limit": 10
-}
-```
-
-Semantic search converts the query to a 1536-dimension embedding using OpenAI's `text-embedding-3-small` model and performs a vector similarity search against `sessionEmbeddings`. Results are ranked by cosine similarity.
-
-**Response:**
-
-```json
-{
-  "results": [
-    {
-      "sessionId": "j57a...",
-      "title": "Fix OAuth redirect",
-      "score": 0.87,
-      "snippet": "...the callback URL needs to match..."
-    }
-  ]
-}
-```
-
-## Export endpoints
-
-### GET /api/export
-
-Export sessions in evaluation framework formats.
-
-**Query parameters:**
-
-| Param | Type | Description |
+| Parameter | Default | Description |
 | --- | --- | --- |
-| `format` | string | Required. One of: `deepeval`, `openai`, `text` |
-| `sessionIds` | string | Comma-separated session IDs. If omitted, exports all eval-ready sessions. |
-| `status` | string | Filter by eval status: `golden`, `correct`, `incorrect`, `needs_review` |
-| `limit` | number | Max sessions to export |
+| `q` | Required | Search query |
+| `type` | `fulltext` | `fulltext`, `semantic` or `hybrid` |
+| `limit` | 20 | Maximum results |
 
-**Response:** The response is the exported file content with the appropriate Content-Type header (`application/json` for DeepEval/OpenAI, `text/plain` for text format).
+```bash
+curl --get "https://api.opensync.dev/api/search" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "q=authentication middleware" \
+  --data-urlencode "type=fulltext" \
+  --data-urlencode "limit=10"
+```
+
+Returns `{ "results": [...] }` with session metadata. Full-text results use `id`; semantic results use `_id`; hybrid can include either shape. Read the ID with `result.id ?? result._id`. Scores, snippets and `matchedIn` are not returned by this REST API. Semantic and hybrid requests require configured embeddings and a working OpenAI API key.
 
 ## Context endpoint
 
 ### GET /api/context
 
-Retrieve relevant session context for RAG (Retrieval-Augmented Generation) pipelines. Returns the most relevant session snippets for a given query.
-
-**Query parameters:**
-
-| Param | Type | Description |
+| Parameter | Default | Description |
 | --- | --- | --- |
-| `q` | string | Natural language query |
-| `limit` | number | Max results (default: 5) |
+| `q` | Required | Natural-language query |
+| `limit` | 5 | Maximum sessions |
+| `format` | `text` | `text` or `messages` |
 
-**Response:**
+Uses semantic search. Text format returns `{ "text": "...", "sessionCount": 1 }`. Messages format returns `{ "messages": [...], "sessionCount": 1 }`; each message contains `role`, `content` and session metadata.
 
-```json
-{
-  "context": [
-    {
-      "sessionId": "j57a...",
-      "title": "Set up Convex auth",
-      "content": "The relevant portion of the conversation...",
-      "score": 0.91
-    }
-  ]
-}
-```
+## Export endpoint
 
-Use this endpoint to inject past session knowledge into your AI prompts.
+### GET /api/export
+
+Exports one owned session. Pass its required `id` and optional `format`:
+
+| Format | Response |
+| --- | --- |
+| `json` (default) | JSON object with session metadata and role/content messages |
+| `markdown` | Markdown attachment |
+| `jsonl` | JSON object with `content` and `filename`; write the content to a file yourself |
+
+Evaluation dataset export is a separate route, `/api/export/evals`; it is not selected with `/api/export?format=deepeval`. Use the dashboard [export workflow](/dashboard/evals) for evaluation exports while API-key access to that separate route is being verified.
+
+## Statistics endpoint
+
+### GET /api/stats
+
+Returns `sessionCount`, `messageCount`, `totalTokens`, `totalCost`, `totalDurationMs` and `modelUsage`. Each model entry includes tokens, cost and sessions. These values depend on data supplied by your plugins.
 
 ## Health endpoint
 
 ### GET /health
 
-Public endpoint (no auth required). Returns the API status.
+Public endpoint. Returns `status: "ok"` and `timestamp` in milliseconds.
 
-**Response:**
+## Errors and retries
 
-```json
-{
-  "status": "ok",
-  "version": "1.0.0"
-}
-```
-
-## Error responses
-
-All endpoints return errors in this format:
-
-```json
-{
-  "error": "Unauthorized",
-  "message": "Invalid or missing API key"
-}
-```
-
-Common HTTP status codes:
-
-| Code | Meaning |
-| --- | --- |
-| 200 | Success |
-| 400 | Bad request (invalid parameters) |
-| 401 | Unauthorized (missing or invalid API key) |
-| 404 | Resource not found |
-| 429 | Rate limited |
-| 500 | Server error |
-
-## Rate limits
-
-The API enforces rate limits per API key. Current limits:
-
-| Endpoint | Limit |
-| --- | --- |
-| `/sync/*` | 100 requests/minute |
-| `/api/*` | 60 requests/minute |
-| `/search` | 30 requests/minute |
-
-If you hit a rate limit, the response includes a `Retry-After` header with the number of seconds to wait.
+API errors use `{ "error": "message" }`. See [Error handling](/api/errors). No fixed per-minute API quota is documented by the current implementation. Use bounded requests and exponential backoff for temporary failures; honor `Retry-After` if an upstream service supplies it.

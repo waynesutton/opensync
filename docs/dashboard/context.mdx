@@ -78,19 +78,21 @@ Embeddings are generated asynchronously after session sync. There may be a brief
 ### Full-text
 
 ```bash
-curl -X POST "https://api.opensync.dev/search" \
-  -H "Authorization: Bearer osk_your_key" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "authentication middleware", "type": "fulltext", "limit": 10}'
+curl --get "https://api.opensync.dev/api/search" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "q=authentication middleware" \
+  --data-urlencode "type=fulltext" \
+  --data-urlencode "limit=10"
 ```
 
 ### Semantic
 
 ```bash
-curl -X POST "https://api.opensync.dev/search" \
-  -H "Authorization: Bearer osk_your_key" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "how to handle login errors", "type": "semantic", "limit": 10}'
+curl --get "https://api.opensync.dev/api/search" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "q=how to handle login errors" \
+  --data-urlencode "type=semantic" \
+  --data-urlencode "limit=10"
 ```
 
 ### Context endpoint (for RAG)
@@ -102,20 +104,7 @@ curl "https://api.opensync.dev/api/context?q=handle+auth+errors&limit=5" \
   -H "Authorization: Bearer osk_your_key"
 ```
 
-Response:
-
-```json
-{
-  "context": [
-    {
-      "sessionId": "j57a...",
-      "title": "Fix OAuth callback loop",
-      "content": "The relevant conversation excerpt...",
-      "score": 0.91
-    }
-  ]
-}
-```
+The default response is a JSON object with `text` and `sessionCount`. Pass `format=messages` for a `messages` array and `sessionCount`.
 
 ## Use cases
 
@@ -127,9 +116,9 @@ Inject past session knowledge into new prompts. When starting a new coding task,
 
 Find how you solved a specific problem before. Semantic search is especially useful here because you can describe the problem in your own words.
 
-### Team documentation
+### Personal knowledge base
 
-If your team shares an OpenSync instance (via self-hosting), search becomes a shared knowledge base of all coding sessions across the team.
+Search retrieves the authenticated user's sessions. Sharing a self-hosted deployment does not grant access to other users' private sessions; team management remains planned.
 
 ### Eval dataset curation
 

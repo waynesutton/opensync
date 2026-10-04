@@ -12,24 +12,10 @@ Hybrid search runs both full-text and semantic search in parallel, then merges t
 1. Your query is sent to both search engines simultaneously.
 2. **Full-text search** matches against `sessions.searchableText` using Convex's search indexes.
 3. **Semantic search** converts the query to an embedding and matches against `sessionEmbeddings` using cosine similarity.
-4. Results from both are merged using a weighted scoring formula.
-5. Sessions that appear in both result sets receive a boost.
+4. Results are merged using reciprocal rank fusion (RRF).
+5. A session found by both searches receives contributions from both ranks.
 
-### Scoring formula
-
-```
-final_score = (weight_fulltext * fulltext_score) + (weight_semantic * semantic_score) + overlap_boost
-```
-
-Default weights:
-
-| Weight | Value | Description |
-| --- | --- | --- |
-| `weight_fulltext` | 0.5 | Weight for keyword match score |
-| `weight_semantic` | 0.5 | Weight for embedding similarity score |
-| `overlap_boost` | 0.1 | Bonus for sessions appearing in both result sets |
-
-Sessions that match both keyword terms and semantic meaning rank highest.
+For each zero-based rank, the API adds `1 / (60 + rank)` to the session's score. The score orders results internally and is not included in the REST response.
 
 ## When to use hybrid search
 
@@ -56,40 +42,16 @@ The Context tab in the dashboard supports a hybrid mode:
 ## Using via API
 
 ```bash
-curl -X POST "https://api.opensync.dev/search" \
-  -H "Authorization: Bearer osk_your_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "authentication middleware Express",
-    "type": "hybrid",
-    "limit": 10
-  }'
+curl --get "https://api.opensync.dev/api/search" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "q=authentication middleware Express" \
+  --data-urlencode "type=hybrid" \
+  --data-urlencode "limit=10"
 ```
 
-Response:
+The response contains a `results` array. See the [API reference](/api/endpoints) for the returned fields; the REST API does not return snippets or relevance scores.
 
-```json
-{
-  "results": [
-    {
-      "sessionId": "j57a...",
-      "title": "Express Auth Middleware",
-      "snippet": "...configuring passport.js middleware...",
-      "score": 0.94,
-      "matchedIn": ["fulltext", "semantic"]
-    },
-    {
-      "sessionId": "m23c...",
-      "title": "Secure API routes",
-      "snippet": "...adding authentication checks to Express routes...",
-      "score": 0.81,
-      "matchedIn": ["semantic"]
-    }
-  ]
-}
-```
-
-The `matchedIn` field indicates which search engine(s) found the result.
+Hybrid results may use `id` or `_id` depending on which search path found the session. Normalize with `result.id ?? result._id`.
 
 ## Use case: RAG pipeline
 
@@ -101,7 +63,7 @@ curl "https://api.opensync.dev/api/context?q=handle+auth+errors&limit=5" \
   -H "Authorization: Bearer osk_your_key"
 ```
 
-The `/api/context` endpoint uses hybrid search internally and returns results formatted for LLM prompt injection.
+The `/api/context` endpoint uses semantic search internally and returns results formatted for LLM prompt injection.
 
 ### Example RAG flow
 
@@ -129,4 +91,4 @@ Hybrid search requires:
 - OpenAI API key (for the semantic component)
 - Embeddings generated for your sessions
 
-If no OpenAI key is configured, hybrid search falls back to full-text only.
+The REST hybrid endpoint requires a working OpenAI key. Use `type=fulltext` when embeddings are unavailable; the REST endpoint does not automatically fall back.

@@ -9,7 +9,7 @@ Full-text search finds sessions containing specific words or phrases. It uses Co
 
 ## How it works
 
-OpenSync maintains a search index on the `sessions.searchableText` field. This field is built by concatenating the session title with all message text content. When you search, Convex's search engine tokenizes your query and matches against this index.
+OpenSync maintains a search index on the `sessions.searchableText` field. Sync maintains this field from the title and recorded message text, capped at 10,000 characters. It is not a complete index of every message in a long session. When you search, Convex's search engine tokenizes your query and matches against this index.
 
 ### What gets indexed
 
@@ -23,11 +23,7 @@ Tool call names and arguments are not included in `searchableText` by default. O
 
 ### Ranking
 
-Results are ranked by Convex's built-in relevance scoring, which factors in:
-
-- Term frequency (how often the term appears in the session)
-- Inverse document frequency (terms that are rare across all sessions score higher)
-- Position (terms appearing earlier in the document score slightly higher)
+Results follow Convex full-text relevance ranking. The REST endpoint does not return a numeric relevance score.
 
 ## Search syntax
 
@@ -45,7 +41,7 @@ Finds sessions containing "authentication" anywhere in the searchable text.
 react hooks useState
 ```
 
-All terms must be present (AND logic). This finds sessions containing "react", "hooks", and "useState".
+Convex tokenizes the query and ranks matching documents. Use distinctive terms to improve relevance.
 
 ### Prefix matching
 
@@ -53,11 +49,11 @@ All terms must be present (AND logic). This finds sessions containing "react", "
 refact
 ```
 
-Matches "refactoring", "refactored", "refactor", etc. Convex search supports prefix matching by default.
+Matches terms beginning with "refact", such as "refactoring". Only the final query term receives prefix matching; earlier terms match whole terms.
 
 ### Phrase search
 
-Exact phrase matching is not currently supported. Multi-word queries use AND logic across individual terms.
+OpenSync does not expose a quoted-phrase operator. Multi-word input is passed to Convex as a search expression.
 
 ## Using full-text search in the dashboard
 
@@ -72,36 +68,14 @@ You can combine search with filters (source, date range, eval status) to narrow 
 ## Using full-text search via API
 
 ```bash
-curl -X POST "https://api.opensync.dev/search" \
-  -H "Authorization: Bearer osk_your_key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "authentication middleware express",
-    "type": "fulltext",
-    "limit": 10
-  }'
+curl --get "https://api.opensync.dev/api/search" \
+  -H "Authorization: Bearer $OPENSYNC_API_KEY" \
+  --data-urlencode "q=authentication middleware express" \
+  --data-urlencode "type=fulltext" \
+  --data-urlencode "limit=10"
 ```
 
-Response:
-
-```json
-{
-  "results": [
-    {
-      "sessionId": "j57a...",
-      "title": "Express Auth Middleware Setup",
-      "snippet": "...setting up authentication middleware for the Express app...",
-      "score": 0.95
-    },
-    {
-      "sessionId": "k82b...",
-      "title": "Add JWT middleware",
-      "snippet": "...authentication layer using JSON web tokens...",
-      "score": 0.78
-    }
-  ]
-}
-```
+The response contains a `results` array. See the [API reference](/api/endpoints) for the returned fields; the REST API does not return snippets or relevance scores.
 
 ## Tips for better results
 
@@ -120,3 +94,5 @@ Response:
 | Need fast, precise matching | Need meaning-based matching |
 
 For more on semantic search, see [Semantic Search](/search/semantic). For combining both, see [Hybrid Search](/search/hybrid).
+
+Search behavior reference: [Convex full-text search](https://docs.convex.dev/search/text-search).
