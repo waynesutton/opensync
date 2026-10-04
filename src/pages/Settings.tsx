@@ -1,3 +1,7 @@
+import { getPluginEndpoints } from "../lib/pluginEndpoints";
+import { UsageLeaderboardPreferences } from "../components/UsageLeaderboardPreferences";
+import { AdminLink } from "../components/AdminLink";
+import { EmailPreferences } from "../components/EmailPreferences";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -38,7 +42,10 @@ import {
 } from "lucide-react";
 
 // Convex URL from environment
-const CONVEX_URL = import.meta.env.VITE_CONVEX_URL as string;
+const PLUGIN_ENDPOINTS = getPluginEndpoints(
+  import.meta.env.VITE_CONVEX_URL,
+  import.meta.env.VITE_API_URL,
+);
 
 // AI Coding Agents configuration
 type AgentStatus = "supported" | "community" | "planned" | "tbd";
@@ -230,8 +237,8 @@ export function SettingsPage() {
   };
 
   const handleCopyUrl = async () => {
-    if (CONVEX_URL) {
-      await navigator.clipboard.writeText(CONVEX_URL);
+    if (PLUGIN_ENDPOINTS.apiUrl) {
+      await navigator.clipboard.writeText(PLUGIN_ENDPOINTS.apiUrl);
       setCopiedUrl(true);
       setTimeout(() => setCopiedUrl(false), 2000);
     }
@@ -320,6 +327,7 @@ export function SettingsPage() {
             )}
           </button>
         </div>
+        <AdminLink />
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
@@ -372,7 +380,7 @@ export function SettingsPage() {
                       <label
                         className={cn("text-xs mb-1.5 block", t.textSubtle)}
                       >
-                        Convex URL
+                        API URL
                       </label>
                       <div className="flex items-center gap-2">
                         <code
@@ -383,7 +391,7 @@ export function SettingsPage() {
                             t.textSecondary,
                           )}
                         >
-                          {CONVEX_URL || "Not configured"}
+                          {PLUGIN_ENDPOINTS.apiUrl || "Not configured"}
                         </code>
                         <button
                           onClick={handleCopyUrl}
@@ -467,6 +475,20 @@ export function SettingsPage() {
                       )}
                     </div>
                   </div>
+
+                  <p className={cn("mt-3 text-xs", t.textSubtle)}>
+                    Use this API URL with your existing API key. Your current plugin configuration keeps working.
+                  </p>
+                  {PLUGIN_ENDPOINTS.legacyUrl && (
+                    <details className={cn("mt-3 text-xs", t.textSubtle)}>
+                      <summary className="cursor-pointer">OpenCode / Claude Code compatibility URL</summary>
+                      <p className="mt-2">
+                        Their currently published login commands require a Convex URL.
+                        Paste this URL when prompted; use the same API key.
+                      </p>
+                      <code className="mt-2 block break-all select-all">{PLUGIN_ENDPOINTS.legacyUrl}</code>
+                    </details>
+                  )}
 
                   {/* Quick Setup */}
                   <div
@@ -967,6 +989,7 @@ export function SettingsPage() {
         {/* Profile Tab */}
         {activeTab === "profile" && (
           <div className="space-y-8">
+            <UsageLeaderboardPreferences />
             {/* Collapsible Profile Section */}
             <section>
               <button
@@ -1275,6 +1298,7 @@ export function SettingsPage() {
             </section>
           </div>
         )}
+        <EmailPreferences />
       </main>
 
       {/* Revoke API Key Confirmation Modal */}

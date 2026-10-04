@@ -6,6 +6,7 @@ import { AuthKitProvider, useAuth } from "@workos-inc/authkit-react";
 import { ConvexProviderWithAuthKit } from "@convex-dev/workos";
 import App from "./App";
 import "./index.css";
+import "./styles/typography.css";
 
 // Ensure VITE_CONVEX_URL is defined before creating client
 const convexUrl = import.meta.env.VITE_CONVEX_URL;

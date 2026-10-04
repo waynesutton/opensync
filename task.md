@@ -1,5 +1,11 @@
 # Tasks
 
+## Completed — focused hosting release (2026-10-04 00:53 UTC)
+
+- [x] Capture the isolated live hosting/admin/usage/design release; remove the migration notice, retaining setup warnings and leaderboard links.
+- [x] Verify 109 tests, frontend/backend types, scoped lint and live navigation. Publish and close migration-complete Discussion #38.
+- [ ] Confirm usage indexing completion and complete mobile/plugin QA; see `prds/convex-static-hosting-release-2026-10-03.md`.
+
 Current development tasks and feature backlog for OpenSync.
 
 OpenSync supports two AI coding tools: **OpenCode** and **Claude Code**.

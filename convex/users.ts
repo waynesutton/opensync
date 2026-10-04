@@ -1,3 +1,4 @@
+import { reconcileUsageSession, syncUsagePerson } from "./usageAccounting";
 import { v } from "convex/values";
 import {
   mutation,
@@ -108,16 +109,19 @@ export const getOrCreate = mutation({
           updatedAt: Date.now(),
         });
       }
+      await syncUsagePerson(ctx, existing._id);
       return existing._id;
     }
 
-    return await ctx.db.insert("users", {
+    const userId = await ctx.db.insert("users", {
       workosId: identity.subject,
       email: identity.email,
       name: identity.name,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
+    await syncUsagePerson(ctx, userId);
+    return userId;
   },
 });
 
@@ -269,7 +273,10 @@ export const getByWorkosId = internalMutation({
       .withIndex("by_workos_id", (q) => q.eq("workosId", workosId))
       .first();
 
-    if (existing) return existing;
+    if (existing) {
+      await syncUsagePerson(ctx, existing._id);
+      return existing;
+    }
 
     // Create if doesn't exist
     const userId = await ctx.db.insert("users", {
@@ -278,6 +285,7 @@ export const getByWorkosId = internalMutation({
       updatedAt: Date.now(),
     });
 
+    await syncUsagePerson(ctx, userId);
     return await ctx.db.get(userId);
   },
 });
@@ -332,6 +340,8 @@ export const deleteAllData = mutation({
         apiLogs: 0,
       },
     });
+
+    await syncUsagePerson(ctx, user._id);
 
     // Schedule background batch deletion
     await ctx.scheduler.runAfter(0, internal.users.orchestrateBatchDeletion, {
@@ -478,6 +488,7 @@ export const updateDeletionStatus = internalMutation({
     }
 
     await ctx.db.patch(userId, updates);
+    await syncUsagePerson(ctx, userId);
     return null;
   },
 });
@@ -626,13 +637,16 @@ export const deleteSessionsBatch = internalMutation({
     const sessions = await ctx.db
       .query("sessions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
-      .take(BATCH_SIZE);
+      .take(50);
 
     if (sessions.length === 0) {
       return { deleted: 0, hasMore: false };
     }
 
-    await Promise.all(sessions.map((s) => ctx.db.delete(s._id)));
+    for (const session of sessions) {
+      await ctx.db.delete("sessions", session._id);
+      await reconcileUsageSession(ctx, session._id);
+    }
 
     // Update progress
     const user = await ctx.db.get(userId);
@@ -807,6 +821,8 @@ export const deleteUserRecord = internalMutation({
   returns: v.null(),
   handler: async (ctx, { userId }) => {
     await ctx.db.delete(userId);
+    await syncUsagePerson(ctx, userId);
+    await ctx.scheduler.runAfter(0, internal.usageAccounting.cleanupDeletedUser, { userId });
     return null;
   },
 });
@@ -834,6 +850,7 @@ export const clearDeletionStatus = mutation({
       deletionProgress: undefined,
     });
 
+    await syncUsagePerson(ctx, user._id);
     return null;
   },
 });
@@ -972,6 +989,7 @@ export const initiateDeletion = internalMutation({
         apiLogs: 0,
       },
     });
+    await syncUsagePerson(ctx, userId);
     return null;
   },
 });

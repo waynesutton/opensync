@@ -1,0 +1,27 @@
+/* One heading voice across the app; sizes stay with each page's hierarchy. */
+:root {
+  --app-heading-font:
+    ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --app-heading-weight: 400;
+  --app-heading-tracking: -0.025em;
+  --app-heading-leading: 1.2;
+  --app-display-size: clamp(34px, 4.3vw, 49px);
+  --app-display-tracking: -0.055em;
+  --app-display-leading: 1.12;
+}
+
+/* The class-aware selector also normalizes old font-medium heading utilities. */
+:is(h1, h2, h3, h4, h5, h6),
+:is(h1, h2, h3, h4, h5, h6)[class] {
+  font-family: var(--app-heading-font);
+  font-weight: var(--app-heading-weight);
+  letter-spacing: var(--app-heading-tracking);
+  line-height: var(--app-heading-leading);
+}
+
+:is(h1, h2, h3, h4, h5, h6).app-display-title {
+  font-size: var(--app-display-size);
+  letter-spacing: var(--app-display-tracking);
+  line-height: var(--app-display-leading);
+}

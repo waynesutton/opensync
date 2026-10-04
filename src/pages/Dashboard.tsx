@@ -1,3 +1,4 @@
+import { AdminLink } from "../components/AdminLink";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -267,6 +268,17 @@ export function DashboardPage() {
               {mode}
             </button>
           ))}
+          <Link
+            to="/usage-leaderboard"
+            className={cn(
+              "px-2 sm:px-3 py-1 text-[11px] sm:text-xs rounded transition-colors whitespace-nowrap shrink-0",
+              t.textSubtle,
+              "hover:opacity-80",
+            )}
+            title="Public usage leaderboard"
+          >
+            Leaderboard
+          </Link>
         </div>
 
         {/* Spacer */}
@@ -316,6 +328,7 @@ export function DashboardPage() {
           >
             <Bell className="h-4 w-4" />
           </Link>
+          <AdminLink />
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}

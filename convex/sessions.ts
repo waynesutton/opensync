@@ -1,4 +1,6 @@
+import { reconcileUsageSession } from "./usageAccounting";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { nanoid } from "nanoid";
 
@@ -206,6 +208,7 @@ export const remove = mutation({
     }
 
     await ctx.db.delete(sessionId);
+    await reconcileUsageSession(ctx, sessionId);
     return true;
   },
 });
@@ -382,12 +385,13 @@ export const upsert = internalMutation({
       }
 
       await ctx.db.patch(existing._id, updates);
+      await reconcileUsageSession(ctx, existing._id);
       return existing._id;
     }
 
     // Insert new session - use provided createdAt or current time
     const sessionCreatedAt = args.createdAt ?? now;
-    return await ctx.db.insert("sessions", {
+    const sessionId = await ctx.db.insert("sessions", {
       userId: args.userId,
       externalId: args.externalId,
       title: args.title,
@@ -407,6 +411,8 @@ export const upsert = internalMutation({
       createdAt: sessionCreatedAt,
       updatedAt: now,
     });
+    await reconcileUsageSession(ctx, sessionId);
+    return sessionId;
   },
 });
 
@@ -583,6 +589,7 @@ export const batchUpsert = internalMutation({
     let inserted = 0;
     let updated = 0;
     let skipped = 0;
+    const usageSessionIds: Id<"sessions">[] = [];
 
     // Process sessions in parallel using Promise.all
     const results = await Promise.all(
@@ -632,11 +639,12 @@ export const batchUpsert = internalMutation({
           if (session.durationMs !== undefined) updates.durationMs = session.durationMs;
 
           await ctx.db.patch(existing._id, updates);
+          usageSessionIds.push(existing._id);
           return { action: "updated" as const };
         }
 
         // Insert new session
-        await ctx.db.insert("sessions", {
+        const sessionId = await ctx.db.insert("sessions", {
           userId: args.userId,
           externalId: session.externalId,
           title: session.title,
@@ -656,9 +664,13 @@ export const batchUpsert = internalMutation({
           createdAt: now,
           updatedAt: now,
         });
+        usageSessionIds.push(sessionId);
         return { action: "inserted" as const };
       })
     );
+
+    // Shared per-user counters must be reconciled serially within the batch.
+    for (const sessionId of usageSessionIds) await reconcileUsageSession(ctx, sessionId);
 
     // Count results
     for (const result of results) {

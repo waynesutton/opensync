@@ -1,8 +1,81 @@
-import { httpRouter } from "convex/server";
+import { resend } from "./email";
+import type { ActionCtx } from "./_generated/server";
+import { registerStaticRoutes } from "@convex-dev/static-hosting";
+import { httpRouter, type GenericActionCtx, type GenericDataModel } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { api, internal } from "./_generated/api";
+import { api, internal, components } from "./_generated/api";
 
 const http = httpRouter();
+// Verify delivery events using the existing deployment-specific signing secret.
+http.route({
+  path: "/resend-webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    return await resend.handleResendEventWebhook(ctx, request);
+  }),
+});
+
+
+// Small plain HTML page confirming the unsubscribe result
+function unsubscribePage(message: string): Response {
+  return new Response(
+    `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenSync</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #18181b; display: flex; align-items: center; justify-content: center; min-height: 90vh; margin: 0;">
+    <div style="max-width: 420px; padding: 24px; text-align: center;">
+      <h1 style="font-size: 18px; margin: 0 0 12px;">OpenSync</h1>
+      <p style="font-size: 14px; line-height: 1.6; color: #52525b; margin: 0;">${message}</p>
+    </div>
+  </body>
+</html>`,
+    { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+  );
+}
+
+// Runs the token lookup and opt-out patch, then renders the result page
+async function handleUnsubscribe(
+  ctx: ActionCtx,
+  request: Request,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token") ?? "";
+  const ok: boolean = await ctx.runMutation(
+    internal.broadcasts.unsubscribeByToken,
+    { token },
+  );
+  if (!ok) {
+    return unsubscribePage(
+      "This unsubscribe link is invalid or has expired. You can manage email preferences from Settings after signing in.",
+    );
+  }
+  return unsubscribePage(
+    "You've been unsubscribed from OpenSync product update emails. You can turn them back on anytime from Settings.",
+  );
+}
+
+// Link clicks from the email footer
+http.route({
+  path: "/unsubscribe",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    return await handleUnsubscribe(ctx, request);
+  }),
+});
+
+// One-click unsubscribe (List-Unsubscribe-Post header, sent by mail clients)
+http.route({
+  path: "/unsubscribe",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    return await handleUnsubscribe(ctx, request);
+  }),
+});
+
 
 // ============================================================================
 // AUTHENTICATION HELPERS
@@ -188,30 +261,34 @@ http.route({
       let sessionCount = 0;
       let messageCount = 0;
 
-      // Batch upsert sessions in a single mutation
+      // Keep every sync transaction bounded, including per-user usage accounting.
       if (body.sessions && body.sessions.length > 0) {
-        try {
-          const result = await ctx.runMutation(internal.sessions.batchUpsert, {
-            userId: auth.user._id,
-            sessions: body.sessions,
-          });
-          sessionCount = result.inserted + result.updated;
-        } catch (e) {
-          errors.push(`Sessions batch error: ${e}`);
+        for (let offset = 0; offset < body.sessions.length; offset += 50) {
+          try {
+            const result = await ctx.runMutation(internal.sessions.batchUpsert, {
+              userId: auth.user._id,
+              sessions: body.sessions.slice(offset, offset + 50),
+            });
+            sessionCount += result.inserted + result.updated;
+          } catch (e) {
+            errors.push(`Sessions batch error: ${e}`);
+          }
         }
       }
 
-      // Batch upsert messages in a single mutation
+      // Message batches may span distinct sessions, so bound these as well.
       if (body.messages && body.messages.length > 0) {
-        try {
-          const result = await ctx.runMutation(internal.messages.batchUpsert, {
-            userId: auth.user._id,
-            messages: body.messages,
-          });
-          messageCount = result.inserted + result.updated;
-          errors.push(...result.errors);
-        } catch (e) {
-          errors.push(`Messages batch error: ${e}`);
+        for (let offset = 0; offset < body.messages.length; offset += 50) {
+          try {
+            const result = await ctx.runMutation(internal.messages.batchUpsert, {
+              userId: auth.user._id,
+              messages: body.messages.slice(offset, offset + 50),
+            });
+            messageCount += result.inserted + result.updated;
+            errors.push(...result.errors);
+          } catch (e) {
+            errors.push(`Messages batch error: ${e}`);
+          }
         }
       }
 
@@ -626,6 +703,33 @@ http.route({
   method: "GET",
   handler: httpAction(async () => {
     return json({ status: "ok", timestamp: Date.now() });
+  }),
+});
+
+// Serve the SPA after exact API routes, retaining the existing security headers.
+const staticRoutes = httpRouter();
+registerStaticRoutes(staticRoutes, components.staticHosting, { spaFallback: true });
+// 0.2.1 has no response-header hook. Convex's runtime adapter is checked here
+// so an incompatible future upgrade fails during deployment, not live requests.
+const staticHandler = staticRoutes.lookup("/", "GET")?.[0] as
+  | { _handler?: (ctx: GenericActionCtx<GenericDataModel>, request: Request) => Promise<Response> }
+  | undefined;
+const serveStatic = staticHandler?._handler;
+if (typeof serveStatic !== "function") throw new Error("Static hosting handler adapter changed");
+http.route({
+  pathPrefix: "/",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    // Convex's typed handler adapter preserves component responses and streaming.
+    const response = await serveStatic(ctx, request);
+    if (response.status === 200 && new URL(request.url).pathname.startsWith("/assets/")) {
+      response.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+    } else if (response.status >= 400) {
+      response.headers.set("Cache-Control", "no-store");
+    }
+    response.headers.set("X-Frame-Options", "DENY");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    return response;
   }),
 });
 

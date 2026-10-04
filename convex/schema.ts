@@ -8,8 +8,16 @@ export default defineSchema({
     email: v.optional(v.string()),
     name: v.optional(v.string()),
     avatarUrl: v.optional(v.string()),
+    // Independent, explicit consent for the public token leaderboard.
+    usageLeaderboardOptIn: v.optional(v.boolean()),
+    usageLeaderboardFirstName: v.optional(v.string()),
     // Legacy field - kept for backward compatibility
     profilePhotoId: v.optional(v.id("_storage")),
+    // Optional product email preferences; existing accounts need no backfill.
+    emailUpdatesOptOut: v.optional(v.boolean()),
+    emailUpdatesOptOutAt: v.optional(v.number()),
+    emailSuppressed: v.optional(v.boolean()),
+    unsubscribeToken: v.optional(v.string()),
     // API key for external access
     apiKey: v.optional(v.string()),
     apiKeyCreatedAt: v.optional(v.number()),
@@ -44,7 +52,67 @@ export default defineSchema({
   })
     .index("by_workos_id", ["workosId"])
     .index("by_email", ["email"])
-    .index("by_api_key", ["apiKey"]),
+    .index("by_api_key", ["apiKey"])
+    .index("by_unsubscribetoken", ["unsubscribeToken"])
+    .searchIndex("search_email", { searchField: "email" })
+    .searchIndex("search_name", { searchField: "name" }),
+
+  // Private directory and usage projections; public queries return an explicit safe DTO.
+  usagePeople: defineTable({
+    userId: v.id("users"), name: v.optional(v.string()), email: v.optional(v.string()),
+    searchText: v.string(), nameSort: v.string(), emailSort: v.string(),
+    firstName: v.string(), lastName: v.string(), publicOptIn: v.boolean(), publicFirstName: v.string(),
+    totalTokens: v.number(), sessionCount: v.number(), topModel: v.string(),
+    lastActiveAt: v.number(), joinedAt: v.number(), updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_tokens", ["totalTokens"])
+    .index("by_sessions", ["sessionCount"])
+    .index("by_name", ["nameSort"])
+    .index("by_email", ["emailSort"])
+    .index("by_model", ["topModel"])
+    .index("by_active", ["lastActiveAt"])
+    .index("by_joined", ["joinedAt"])
+    .index("by_public_tokens", ["publicOptIn", "totalTokens"])
+    .index("by_public_first_name", ["publicOptIn", "publicFirstName"])
+    .index("by_public_model_first_name", ["publicOptIn", "topModel", "publicFirstName"])
+    .index("by_public_sessions", ["publicOptIn", "sessionCount"])
+    .index("by_public_name", ["publicOptIn", "nameSort"])
+    .index("by_public_model", ["publicOptIn", "topModel"])
+    .index("by_model_tokens", ["topModel", "totalTokens"])
+    .index("by_model_sessions", ["topModel", "sessionCount"])
+    .index("by_model_name", ["topModel", "nameSort"])
+    .index("by_public_model_tokens", ["publicOptIn", "topModel", "totalTokens"])
+    .index("by_public_model_sessions", ["publicOptIn", "topModel", "sessionCount"])
+    .index("by_public_model_name", ["publicOptIn", "topModel", "nameSort"])
+    .index("by_public_active", ["publicOptIn", "lastActiveAt"])
+    .index("by_public_joined", ["publicOptIn", "joinedAt"])
+    .index("by_model_active", ["topModel", "lastActiveAt"])
+    .index("by_model_joined", ["topModel", "joinedAt"])
+    .index("by_public_model_active", ["publicOptIn", "topModel", "lastActiveAt"])
+    .index("by_public_model_joined", ["publicOptIn", "topModel", "joinedAt"])
+    .searchIndex("search_people", { searchField: "searchText", filterFields: ["publicOptIn", "topModel"] }),
+  usageModelTotals: defineTable({
+    userId: v.id("users"), period: v.string(), model: v.string(),
+    tokens: v.number(), sessions: v.number(), updatedAt: v.number(),
+  })
+    .index("by_user_period_model", ["userId", "period", "model"])
+    .index("by_user_period_tokens", ["userId", "period", "tokens"])
+    .index("by_user_period", ["userId", "period"]),
+  // Applied contribution makes repeated backfill and concurrent sync idempotent.
+  usageSessionLedger: defineTable({
+    sessionId: v.id("sessions"), userId: v.id("users"), model: v.string(),
+    period: v.string(), tokens: v.number(), lastActiveAt: v.number(),
+  })
+    .index("by_session", ["sessionId"])
+    .index("by_user", ["userId"])
+    .index("by_user_active", ["userId", "lastActiveAt"]),
+  usageDirectoryState: defineTable({
+    key: v.literal("backfill"),
+    phase: v.union(v.literal("users"), v.literal("sessions"), v.literal("complete")),
+    cursor: v.union(v.string(), v.null()), runId: v.string(),
+    processedUsers: v.number(), processedSessions: v.number(), updatedAt: v.number(),
+  }).index("by_key", ["key"]),
 
   // Sessions from OpenCode and Claude Code plugins
   sessions: defineTable({
@@ -265,4 +333,54 @@ export default defineSchema({
       vectorField: "embedding",
       dimensions: 1536,
     }),
+  // Product update email broadcasts composed on /admin and sent via Resend
+  emailBroadcasts: defineTable({
+    // Absent recipient fields preserve legacy all-account drafts.
+    recipientId: v.optional(v.id("users")),
+    recipientEmail: v.optional(v.string()),
+    subject: v.string(),
+    // Plain text body rendered into the shared minimal HTML template
+    bodyText: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("sending"),
+      v.literal("sent"),
+      v.literal("failed"),
+    ),
+    // Opted-in recipient count snapshot taken when the send starts
+    recipientCount: v.optional(v.number()),
+    sentCount: v.optional(v.number()),
+    failedCount: v.optional(v.number()),
+    createdBy: v.id("users"),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    sentAt: v.optional(v.number()),
+  }),
+
+  // One row per (broadcast, user) send; doubles as the double-send guard
+  emailBroadcastSends: defineTable({
+    broadcastId: v.id("emailBroadcasts"),
+    userId: v.id("users"),
+    // Resend component email id for webhook correlation
+    emailId: v.optional(v.string()),
+    // Latest lifecycle status (queued, then webhook event types)
+    status: v.string(),
+  })
+    .index("by_broadcastid", ["broadcastId"])
+    .index("by_emailid", ["emailId"])
+    .index("by_broadcastid_and_userid", ["broadcastId", "userId"]),
+
+  // Audit log for platform admin actions (owner transfers etc.)
+  adminAuditLog: defineTable({
+    actorId: v.id("users"),
+    action: v.string(),
+    targetType: v.string(),
+    targetId: v.string(),
+    details: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_actorid", ["actorId"])
+    .index("by_targettype_and_targetid", ["targetType", "targetId"]),
+
 });

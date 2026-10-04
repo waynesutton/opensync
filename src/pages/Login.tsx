@@ -419,7 +419,7 @@ export function LoginPage() {
 
               {/* Tagline */}
               <h2
-                className={`mt-8 text-lg font-medium sm:text-xl ${isDark ? "text-zinc-200" : "text-[#1a1a1a]"}`}
+                className={`app-display-title mt-8 ${isDark ? "text-zinc-200" : "text-[#1a1a1a]"}`}
               >
                 Dashboards for OpenCode, Claude Code, Codex, Cursor, and Factory
                 Droid.
@@ -1325,22 +1325,6 @@ export function LoginPage() {
                   src="/workos.svg"
                   alt="WorkOS"
                   className={`h-3 w-auto ${isDark ? "invert" : ""}`}
-                />
-              </a>
-              <span className={isDark ? "text-zinc-500" : "text-[#8b7355]"}>
-                +
-              </span>
-              <a
-                href="https://netlify.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-opacity hover:opacity-80"
-                title="Netlify"
-              >
-                <img
-                  src="/netlify-logo.svg"
-                  alt="Netlify"
-                  className={`h-5 w-auto ${isDark ? "" : "invert"}`}
                 />
               </a>
             </div>

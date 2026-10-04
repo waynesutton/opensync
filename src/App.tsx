@@ -1,3 +1,4 @@
+import { UsageLeaderboardPage } from "./pages/UsageLeaderboard";
 import { useState, useEffect, type ReactNode } from "react";
 import {
   Routes,
@@ -14,6 +15,7 @@ import { ThemeProvider } from "./lib/theme";
 import { LoginPage } from "./pages/Login";
 import { DashboardPage } from "./pages/Dashboard";
 import { PublicSessionPage } from "./pages/PublicSession";
+import { AdminPage } from "./pages/Admin";
 import { SettingsPage } from "./pages/Settings";
 import { EvalsPage } from "./pages/Evals";
 import { ContextPage } from "./pages/Context";
@@ -196,6 +198,8 @@ export default function App() {
         <Route path="/docs/*" element={<DocsRedirect />} />
         {/* Legacy docs route (redirect to Mintlify) */}
         <Route path="/docs-legacy" element={<DocsRedirect />} />
+        <Route path="/usage-leaderboard" element={<UsageLeaderboardPage />} />
+        <Route path="/leaderboard" element={<Navigate to="/usage-leaderboard" replace />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/updates" element={<UpdatesPage />} />
         <Route
@@ -206,6 +210,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         {/* Profile redirects to settings (profile tab is in settings) */}
         <Route
           path="/profile"

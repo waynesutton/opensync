@@ -100,7 +100,7 @@ Use API keys (osk_*) generated in Dashboard Settings. No browser required.
 - Auth: WorkOS AuthKit (SSO, magic link, OAuth)
 - Frontend: React + Vite + Tailwind CSS
 - Embeddings: OpenAI text-embedding-3-small
-- Hosting: Netlify (frontend), Convex Cloud (backend)
+- Hosting: Convex static-hosting component (frontend), Convex Cloud (backend)
 
 ## Environment Variables
 

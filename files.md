@@ -194,3 +194,15 @@ Claude AI skill files.
 | File          | Description                       |
 | ------------- | --------------------------------- |
 | `convex-*.md` | Various Convex development skills |
+
+## Focused hosting release additions
+
+- `convex/admin.ts`, `authHelper.ts`, `lib/adminPolicy.ts`: verified owner authorization.
+- `convex/broadcasts.ts`, `email.ts`, `hostingChecks.ts`: guarded email administration, delivery integration and explicit owner infrastructure check.
+- `convex/usageAccounting.ts`, `usageDirectory.ts`: usage ledger, resumable indexing, admin queries and public consent projection.
+- `src/pages/Admin.tsx`, `src/components/AdminLink.tsx`, `AdminUsageUsers.tsx`, `RecipientPicker.tsx`, `EmailPreferences.tsx`: owner console, recipient selection and account email preferences.
+- `src/pages/UsageLeaderboard.tsx`, `src/components/UsageGauge.tsx`, `UsageLeaderboardPreferences.tsx`: opt-in public usage board and profile controls.
+- `src/lib/pluginEndpoints.ts`: plugin HTTP URL resolution with legacy-client and development compatibility.
+- `src/styles/typography.css`, `usage-directory.css`, `design.md`: shared typography, usage surfaces and persistent design guidance.
+- `convex/*.test.ts`, `src/pages/__tests__/`, `src/lib/pluginEndpoints.test.tsx`, `vitest.config.ts`: offline release validation.
+- `prds/convex-static-hosting-release-2026-10-03.md`, `prds/migration-complete-discussion.md`: live release handoff and closed public announcement.

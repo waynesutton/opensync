@@ -1,13 +1,7 @@
 // Banner shown when required environment variables are missing
 // Helps users who one-click deployed but haven't completed backend setup
-// Also shows a temporary maintenance notice on every page when setup is complete
 
 import { AlertTriangle, ExternalLink } from "lucide-react";
-
-// Temporary maintenance notice. Remove this constant, the URL, and the block below when maintenance is done.
-const MAINTENANCE_MESSAGE =
-  "OpenSync will have downtime this week for maintenance and upgrades. Apologies for the inconvenience.";
-const MAINTENANCE_URL = "https://github.com/waynesutton/opensync/discussions/36";
 
 export function SetupIncompleteBanner() {
   const convexUrl = import.meta.env.VITE_CONVEX_URL;
@@ -17,26 +11,7 @@ export function SetupIncompleteBanner() {
   if (!convexUrl) missing.push("VITE_CONVEX_URL");
   if (!workosClientId) missing.push("VITE_WORKOS_CLIENT_ID");
 
-  // All required env vars are set: show the maintenance notice instead
-  if (missing.length === 0) {
-    return (
-      <div role="status" className="bg-amber-400 px-4 py-2 text-neutral-900">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm text-center">
-          <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-          <span>{MAINTENANCE_MESSAGE}</span>
-          <a
-            href={MAINTENANCE_URL}
-            className="inline-flex items-center gap-1 font-medium underline underline-offset-2 hover:text-neutral-700"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Details
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-          </a>
-        </div>
-      </div>
-    );
-  }
+  if (missing.length === 0) return null;
 
   return (
     <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2">

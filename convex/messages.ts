@@ -1,3 +1,4 @@
+import { reconcileUsageSession } from "./usageAccounting";
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
@@ -183,6 +184,7 @@ export const upsert = internalMutation({
       await ctx.db.patch(sessionId, sessionUpdate);
     }
 
+    await reconcileUsageSession(ctx, sessionId);
     return messageId;
   },
 });
@@ -403,6 +405,7 @@ export const batchUpsert = internalMutation({
           updatedAt: now,
         });
       }
+      await reconcileUsageSession(ctx, sessionId);
     }
 
     return { inserted, updated, skipped, errors };

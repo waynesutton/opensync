@@ -1,2 +1,0 @@
-# SPA fallback - serve index.html for all routes so React Router handles navigation
-/*    /index.html   200
