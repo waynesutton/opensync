@@ -9,6 +9,8 @@ The `claude-code-sync` plugin syncs your [Claude Code](https://claude.ai) sessio
 
 **Source identifier:** `claude-code`
 
+<Note>Hosted OpenSync uses `https://api.opensync.dev` for HTTP requests. The currently published Claude Code 0.1.15 login validator still requires a Convex URL. Use `https://reminiscent-gull-645.convex.cloud` from Settings → API Access → compatibility URL. Existing credentials remain valid.</Note>
+
 ## Installation
 
 Install globally with npm:
@@ -42,7 +44,7 @@ claude-code-sync --version
 
     Enter your Convex URL and API key when prompted:
 
-    - **Convex URL**: `https://polished-penguin-622.convex.cloud` (for hosted) or your self-hosted URL
+    - **Convex URL**: `https://reminiscent-gull-645.convex.cloud` (for hosted) or your self-hosted URL
     - **API Key**: The key you copied from Settings
   </Step>
   <Step title="Verify the connection">
@@ -60,7 +62,7 @@ Credentials are stored in `~/.claude-code-sync/config.json`:
 
 ```json
 {
-  "convexUrl": "https://polished-penguin-622.convex.cloud",
+  "convexUrl": "https://reminiscent-gull-645.convex.cloud",
   "apiKey": "osk_..."
 }
 ```
@@ -77,7 +79,7 @@ Shows connection info and sync stats:
 
 ```
 Connected: true
-Convex URL: https://polished-penguin-622.convex.cloud
+Convex URL: https://reminiscent-gull-645.convex.cloud
 Sessions synced: 28
 Last sync: 5 minutes ago
 ```
@@ -160,7 +162,7 @@ If you see "Unauthorized" or "Invalid API key":
 For slow connections, the plugin retries failed requests up to 3 times with exponential backoff. If syncs consistently fail, check your network and Convex deployment health:
 
 ```bash
-curl https://polished-penguin-622.convex.site/health
+curl https://reminiscent-gull-645.convex.site/health
 ```
 
 ## Updating

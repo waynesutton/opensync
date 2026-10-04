@@ -9,6 +9,8 @@ The `opencode-sync-plugin` syncs your [OpenCode](https://opencode.ai) sessions t
 
 **Source identifier:** `opencode`
 
+<Note>Hosted OpenSync uses `https://api.opensync.dev` for HTTP requests. The currently published OpenCode 0.3.7 login validator still requires a Convex URL. Use `https://reminiscent-gull-645.convex.cloud` from Settings → API Access → compatibility URL. Existing credentials remain valid.</Note>
+
 ## Installation
 
 Install globally with npm:
@@ -42,7 +44,7 @@ opencode-sync --version
 
     Enter your Convex URL and API key when prompted:
 
-    - **Convex URL**: `https://polished-penguin-622.convex.cloud` (for hosted) or your self-hosted URL
+    - **Convex URL**: `https://reminiscent-gull-645.convex.cloud` (for hosted) or your self-hosted URL
     - **API Key**: The key you copied from Settings
   </Step>
   <Step title="Verify the connection">
@@ -60,7 +62,7 @@ Credentials are stored in `~/.opencode-sync/config.json`:
 
 ```json
 {
-  "convexUrl": "https://polished-penguin-622.convex.cloud",
+  "convexUrl": "https://reminiscent-gull-645.convex.cloud",
   "apiKey": "osk_..."
 }
 ```
@@ -79,7 +81,7 @@ Shows connection state and sync statistics:
 
 ```
 Connected: true
-Convex URL: https://polished-penguin-622.convex.cloud
+Convex URL: https://reminiscent-gull-645.convex.cloud
 Sessions synced: 42
 Last sync: 2 minutes ago
 ```
@@ -129,9 +131,9 @@ opencode-sync logout
 The plugin converts your Convex URL from `.convex.cloud` to `.convex.site` for HTTP endpoints:
 
 ```
-https://polished-penguin-622.convex.cloud
+https://reminiscent-gull-645.convex.cloud
   becomes
-https://polished-penguin-622.convex.site
+https://reminiscent-gull-645.convex.site
 ```
 
 This happens automatically. You always enter the `.convex.cloud` URL during login.

@@ -7,7 +7,7 @@ description: "Start syncing sessions in under 2 minutes with opensync.dev"
 
 The fastest way to get started. Sign in at [opensync.dev](https://www.opensync.dev), install a plugin locally, and start syncing in under 2 minutes.
 
-No servers to configure. No databases to provision. The hosted version runs on Convex with WorkOS authentication and handles everything for you.
+No servers to configure. No databases to provision. The frontend uses Convex static hosting, with a Convex backend and WorkOS authentication.
 
 ## What you get
 
@@ -78,7 +78,7 @@ OpenSync works with these AI coding tools through dedicated sync plugins:
     ```
 
     When prompted, enter:
-    - **Convex URL**: `https://polished-penguin-622.convex.cloud`
+    - **Convex URL**: `https://reminiscent-gull-645.convex.cloud`
     - **API Key**: The key you copied from Settings
   </Step>
   <Step title="Start coding">
@@ -87,7 +87,7 @@ OpenSync works with these AI coding tools through dedicated sync plugins:
 </Steps>
 
 <Info title="Hosted Convex URL">
-  The hosted version uses `https://polished-penguin-622.convex.cloud` as the Convex URL. All plugins need this URL during login.
+  Hosted OpenSync uses `https://api.opensync.dev` for plugin HTTP requests. Current OpenCode 0.3.7 and Claude Code 0.1.15 login commands require the compatibility URL `https://reminiscent-gull-645.convex.cloud`. Use the custom API URL for clients that support it; keep existing working configurations. `https://app.opensync.dev` is the Convex client endpoint, not the plugin endpoint.
 </Info>
 
 ## Verify it works
@@ -102,7 +102,7 @@ You should see output like:
 
 ```
 Connected: true
-Convex URL: https://polished-penguin-622.convex.cloud
+Convex URL: https://reminiscent-gull-645.convex.cloud
 Sessions synced: 0
 ```
 
@@ -125,7 +125,7 @@ Message parts are preserved, including text content, tool calls, and code blocks
 ## Data and privacy
 
 - Sessions are stored in your personal Convex database partition
-- No data is shared between accounts
+- Sessions are private by default. Optional session sharing and the public usage leaderboard are separate choices. The [leaderboard](/dashboard/usage-leaderboard) publishes only the disclosed usage fields when you opt in.
 - WorkOS handles authentication with enterprise-grade security
 - You can delete any session or your entire account at any time
 - Self-hosting is available if you need full control over the infrastructure

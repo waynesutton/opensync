@@ -1,79 +1,38 @@
 ---
 title: "FAQ"
-description: "Frequently asked questions"
+description: "Answers about hosting, privacy, usage and plugin compatibility"
 ---
 
-# Frequently Asked Questions
+# Frequently asked questions
 
-Common questions about OpenSync.
+## Where does OpenSync run?
 
-<FaqItem question="What is OpenSync?">
-  OpenSync is an open-source platform for syncing and viewing your AI coding
-  sessions from various tools like OpenCode, Claude Code, Codex CLI, and Cursor.
-  It provides a unified dashboard to track, search, and export your AI
-  conversations.
-</FaqItem>
+The hosted frontend uses Convex static hosting. Convex also runs the backend and database; WorkOS handles sign-in. The separate documentation site is published with Mintlify. See [static hosting](/hosting/static-hosting).
 
-<FaqItem question="Is OpenSync free?">
-  Yes, OpenSync is open-source and free to self-host. The hosted version at
-  opensync.dev offers a free tier with generous limits. Premium features may be
-  added in the future.
-</FaqItem>
+## Which URL do I enter in a plugin?
 
-<FaqItem question="What tools are supported?">
-Currently supported:
-- OpenCode
-- Claude Code
-- Codex CLI
-- Cursor
-- Pi
-- Factory Droid
+Use `https://api.opensync.dev` with clients that support custom HTTP domains. Current OpenCode 0.3.7 and Claude Code 0.1.15 login commands require the compatibility URL from Settings. Keep existing working configurations. See [hosted setup](/getting-started/hosted).
 
-More plugins are in development. You can also build your own using the sync API.
+## Does everyone appear on the leaderboard?
 
-</FaqItem>
+No. Participation is off by default. Opting in shares your chosen first name, token total, rank and top model. It does not share email or session content. Turn participation off in Settings → Profile to leave. See [usage leaderboard](/dashboard/usage-leaderboard).
 
-<FaqItem question="Where is my data stored?">
-  - **Hosted version:** Data is stored in our Convex deployment, secured by
-  WorkOS authentication - **Self-hosted:** Data is stored in your own Convex
-  instance, under your control
-</FaqItem>
+## Are token totals the same as my current context size?
 
-<FaqItem question="How do I migrate from hosted to self-hosted?">
-Currently, there's no automated migration. You would need to:
-1. Deploy your own instance
-2. Configure plugins to sync to your new instance
-3. Future sessions will sync there
+No. Context size describes one request's context window. Recorded usage can span multiple requests and includes the values reported by plugins. It is not a verified bill or subscription-quota reading. Historical indexing and plugin limitations can affect totals.
 
-Existing sessions cannot be exported from the hosted version yet.
+## Can I move to my own deployment?
 
-</FaqItem>
+Create your own Convex and WorkOS setup and point your plugins at that instance. Existing working plugin configurations do not move automatically. CSV and session exports are available, but a complete account migration/import is not automated. Retain source data and check plugin backfill compatibility before relying on a resync.
 
-<FaqItem question="Can I use OpenSync without authentication?">
-  No, authentication is required to secure your sessions. WorkOS AuthKit is the
-  default auth provider, but you could modify the code to use a different
-  provider.
-</FaqItem>
+## Can I delete my data?
 
-<FaqItem question="How is cost calculated?">
-  Costs are estimated based on published model pricing: - Token counts are
-  provided by the source tools - Prices are looked up from a pricing table -
-  Actual costs may vary based on your provider agreements
-</FaqItem>
+Settings → Profile includes data and account deletion controls with background progress. If deletion fails, capture the request ID and report it without sharing private content. Do not delete an entire Convex deployment as a routine account-cleanup step. See [common issues](/troubleshooting/common-issues).
 
-<FaqItem question="Can I delete my data?">
-  Yes: - **Individual sessions:** Delete from the session detail page - **All
-  data:** Contact support for hosted, or delete your Convex deployment for
-  self-hosted
-</FaqItem>
+## Are teams available?
 
-<FaqItem question="How do I report a bug?">
-  Open an issue on [GitHub](https://github.com/waynesutton/opensync/issues)
-  with: - Clear description of the problem - Steps to reproduce - Expected vs
-  actual behavior - Environment details (browser, OS, plugin version)
-</FaqItem>
+Team membership and team administration remain planned. The current owner console is restricted to platform owners; it does not grant team-admin access.
 
-<FaqItem question="How can I contribute?">
-  See our [Contributing guide](/fork/contribute). We welcome: - Bug reports
-  - Feature requests - Pull requests - Documentation improvements
-</FaqItem>
+## How do I report a problem?
+
+Search the [existing issues](https://github.com/waynesutton/opensync/issues) first. Include the plugin version, source-tool version, OS, reproduction steps and exact error. Remove API keys, callback codes and private session content.

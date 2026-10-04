@@ -1,0 +1,32 @@
+---
+title: "Owner console"
+description: "Review users and recorded usage as an authorized owner"
+---
+
+# Owner console
+
+Authorized owners can open `/admin` to review users, usage and email drafts. Ordinary accounts cannot access its private queries.
+
+## Find a user
+
+Search by first name, last name, full name or email. Search results use relevance ordering. Clear the search to return to the sortable usage directory.
+
+The directory loads 100 accounts at a time and supports **Load more**, top-model and public-consent filters, and configurable columns. Sort by recorded tokens, sessions, name, top model, last active or join date. Last active and join date support newest-first and oldest-first ordering.
+
+Open a user to see their top models and monthly usage. The six-month history groups retained session totals by session-start month in UTC. The gauge compares against the largest token total currently loaded; it is not a billing or plan-limit meter.
+
+## Public and private views
+
+Owners can review accounts regardless of leaderboard consent. The public board includes only opted-in accounts and exposes fewer fields. See [usage leaderboard](/dashboard/usage-leaderboard).
+
+This console does not enable team membership, moderation, impersonation or planned evaluation leaderboards.
+
+## Email drafts
+
+The email tab supports drafts, previews, recipient search, readiness checks and history. Selecting one existing account does not send an email. Sending is a separate explicit action and is blocked while `RESEND_TEST_MODE=true`.
+
+The footer's mailing address comes from `EMAIL_POSTAL_ADDRESS` on the relevant Convex deployment. Change it in the deployment's environment settings. Do not put personal mailing addresses in public source files.
+
+## Fork owners
+
+Replace the hosted owner identities in `convex/lib/adminPolicy.ts` and configure verified WorkOS claims before using the console. See [WorkOS setup](/auth/workos).

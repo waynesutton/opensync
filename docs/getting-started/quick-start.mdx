@@ -1,86 +1,46 @@
 ---
-title: "Quick Start"
-description: "Deploy OpenSync in 5 minutes"
+title: "Quick start"
+description: "Use hosted OpenSync or deploy the reviewed release to your own Convex project"
 ---
 
-# Quick Start
+# Quick start
 
-Get OpenSync running in 5 minutes with one-click deploy.
+For the hosted app, follow [plugin setup](/getting-started/hosted). You do not need to deploy anything.
 
-## Deploy Backend
+## Deploy your own instance
 
-<Steps>
-  <Step title="Deploy to Convex">
-    Click the button below to deploy the Convex backend: [![Deploy to
-    Convex](https://convex.dev/button.svg)](https://convex.dev/new?template=waynesutton/opensync)
-    This creates a new Convex project with all the required tables and
-    functions.
-  </Step>
-  <Step title="Deploy Frontend">
-    Deploy the frontend to Netlify or Vercel: [![Deploy to
-    Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/waynesutton/opensync)
-    Or use Vercel: [![Deploy with
-    Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/waynesutton/opensync)
-  </Step>
-  <Step title="Configure Environment">
-    Set the required environment variables in your hosting platform: -
-    `VITE_CONVEX_URL` - Your Convex deployment URL - `WORKOS_API_KEY` - Your
-    WorkOS API key - `WORKOS_CLIENT_ID` - Your WorkOS client ID -
-    `WORKOS_COOKIE_PASSWORD` - A secure 32+ character secret
-  </Step>
-</Steps>
-
-## Get API Key
-
-Once deployed, get your API key to connect plugins:
-
-<Steps>
-  <Step title="Sign in">Visit your deployed OpenSync instance and sign in</Step>
-  <Step title="Open Settings">
-    Click your profile icon and select **Settings**
-  </Step>
-  <Step title="Generate Key">Click **Generate API Key** and copy the key</Step>
-</Steps>
-
-<Warning title="Keep your API key secure">
-  Your API key provides full access to your sessions. Never share it publicly or
-  commit it to version control.
-</Warning>
-
-## Install Plugin
-
-Install a sync plugin globally on your machine:
-
-<CodeGroup
-  tabs={[
-    { label: "OpenCode", code: "npm install -g opencode-sync-plugin" },
-    { label: "Claude Code", code: "npm install -g claude-code-sync" },
-    { label: "Codex CLI", code: "npm install -g codex-sync" },
-    { label: "Cursor", code: "npm install -g cursor-sync-plugin" },
-  ]}
-/>
-
-Then login with your credentials:
+1. Read the [requirements](/getting-started/requirements). Create your own Convex and WorkOS accounts.
+2. Clone the reviewed release. It is currently separate from `main`:
 
 ```bash
-opencode-sync login
-# Enter your Convex URL and API key when prompted
+git clone --branch codex/convex-static-hosting-release https://github.com/waynesutton/opensync.git
+cd opensync
+npm ci
+npx convex dev
 ```
 
-## Verify Setup
+Select your own Convex project. Keep this terminal running while developing.
 
-Check that everything is working:
+3. Set `WORKOS_CLIENT_ID` and the server-side `WORKOS_API_KEY` on your development deployment using the Convex dashboard. Configure callbacks and allowed origins in [WorkOS](/auth/workos).
+4. Keep the generated `VITE_CONVEX_URL` in `.env.local`. Add your WorkOS client ID:
 
 ```bash
-opencode-sync status
+VITE_WORKOS_CLIENT_ID=client_your_client_id
+# Leave VITE_REDIRECT_URI unset locally to use the actual Vite port.
 ```
 
-You should see:
+5. In a second terminal, start the frontend:
 
-```
-Connected: true
-Convex URL: https://your-deployment.convex.cloud
-Sessions synced: 0
+```bash
+npm run dev
 ```
 
-Start coding with OpenCode, Claude Code, Codex, or Cursor and your sessions will sync automatically.
+Open the exact URL Vite prints. Both `http://localhost:5173/callback` and `http://localhost:5174/callback` must be registered if you use both ports. Register the two origins without `/callback` in the allowed-origins setting.
+
+6. Sign in, generate an API key in Settings and connect a plugin to your own deployment. Do not use the hosted OpenSync API for a private fork.
+
+## Publish the frontend
+
+Follow [Convex static hosting](/hosting/static-hosting) to configure production, deploy backend functions and upload the Vite build. Backend deployment and frontend upload are separate steps.
+
+Optional semantic search requires your own OpenAI key. Email setup is optional and sending stays blocked in test mode. Neither is needed to start reviewing synced sessions.

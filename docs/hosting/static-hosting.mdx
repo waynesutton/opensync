@@ -1,0 +1,68 @@
+---
+title: "Convex static hosting"
+description: "Publish the OpenSync frontend to your own Convex deployment"
+---
+
+# Convex static hosting
+
+OpenSync serves its React/Vite frontend with `@convex-dev/static-hosting` 0.2.1. The same Convex project hosts its backend and HTTP API.
+
+## Before you start
+
+Use Node.js 24, `npm ci`, your own Convex project and WorkOS application. Start from the reviewed [static-hosting release](https://github.com/waynesutton/opensync/tree/codex/convex-static-hosting-release). That deployed release is not yet merged into `main`. See [requirements](/getting-started/requirements).
+
+The release registers `staticHosting` in `convex/convex.config.ts` and calls `registerStaticRoutes` after the API routes in `convex/http.ts`. Keep those routes and the SPA fallback in that order.
+
+## Configure your frontend build
+
+Set your own public values in `.env.local` for development and `.env.production.local` for production:
+
+```bash
+VITE_WORKOS_CLIENT_ID=client_your_client_id
+VITE_REDIRECT_URI=https://your-frontend.example/callback
+# Optional custom HTTP endpoint shown in plugin setup
+VITE_API_URL=https://api.your-domain.example
+```
+
+Replace these examples with your own values. The uploader sets `VITE_CONVEX_URL` for the selected deployment when building. Private keys belong in Convex environment variables, never in a `VITE_*` value.
+
+Register the exact frontend callback and allowed origin in [WorkOS](/auth/workos). For a fork, replace the hosted-owner allowlist in `convex/lib/adminPolicy.ts` with your own verified identities.
+
+## Deploy and upload
+
+Check that `.env.local` selects your own project. Deploy backend changes before assets that depend on them:
+
+```bash
+# Development backend and frontend
+npx convex dev --once
+npx @convex-dev/static-hosting upload --build --component staticHosting
+```
+
+For production, configure that deployment's backend variables and frontend build values first:
+
+```bash
+npx convex deploy
+npx @convex-dev/static-hosting upload --build --component staticHosting --prod
+```
+
+Uploading assets alone does not deploy backend functions. The repository's `deploy:static:prod` script pins hosted OpenSync's WorkOS client and callback; forks should use the commands above with their own configuration.
+
+Open the frontend URL reported by the upload. Verify sign-in, a direct `/dashboard` reload, Settings, plugin sync and `/health` on the HTTP endpoint before switching an existing domain.
+
+## Custom domains
+
+Add domains to the intended Convex deployment and use its supplied verification and destination records. Wait for verified HTTPS before changing canonical overrides. The client and HTTP domains have different jobs:
+
+| Hosted URL | Purpose |
+| --- | --- |
+| `https://www.opensync.dev` | Frontend and `/callback` |
+| `https://app.opensync.dev` | Convex client API and live subscriptions |
+| `https://api.opensync.dev` | Plugin sync, REST API and HTTP actions |
+
+For a fork, use your own domains. Set `CONVEX_CLOUD_URL` and `CONVEX_SITE_URL` overrides only after their respective custom domains are verified. Keep the original deployment URLs for compatibility. See [environment variables](/hosting/env).
+
+## Related
+
+- [Official static-hosting component](https://www.convex.dev/components/static-hosting)
+- [Quick start](/getting-started/quick-start)
+- [Previous frontend hosting guide](/archive/v1/netlify)

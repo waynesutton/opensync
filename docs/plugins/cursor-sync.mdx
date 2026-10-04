@@ -9,6 +9,8 @@ The `cursor-opensync-plugin` syncs your [Cursor](https://cursor.com) AI coding s
 
 **Source identifier:** `cursor`
 
+<Note>For hosted setup, use `https://api.opensync.dev` as the API URL. The CLI may still label this field “Convex URL”. `https://app.opensync.dev` is the Convex client endpoint, not the plugin HTTP endpoint. Existing `.convex.cloud` configurations remain supported.</Note>
+
 ## Installation
 
 Install globally with npm:
@@ -42,7 +44,7 @@ cursor-sync --version
 
     Enter your Convex URL and API key when prompted:
 
-    - **Convex URL**: `https://polished-penguin-622.convex.cloud` (for hosted) or your self-hosted URL
+    - **Convex URL**: `https://api.opensync.dev` (for hosted) or your self-hosted URL
     - **API Key**: The key you copied from Settings
   </Step>
   <Step title="Verify the connection">
@@ -58,7 +60,7 @@ Credentials are stored in `~/.cursor-sync/config.json`:
 
 ```json
 {
-  "convexUrl": "https://polished-penguin-622.convex.cloud",
+  "convexUrl": "https://api.opensync.dev",
   "apiKey": "osk_..."
 }
 ```
@@ -75,7 +77,7 @@ Shows connection info and sync stats:
 
 ```
 Connected: true
-Convex URL: https://polished-penguin-622.convex.cloud
+Convex URL: https://api.opensync.dev
 Sessions synced: 67
 Last sync: 30 seconds ago
 ```

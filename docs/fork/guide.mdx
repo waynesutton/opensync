@@ -1,102 +1,42 @@
 ---
-title: "Fork Guide"
-description: "Self-host OpenSync from your own fork"
+title: "Fork guide"
+description: "Prepare your own instance without copying hosted credentials"
 ---
 
-# Fork Guide
+# Fork guide
 
-Self-host OpenSync by forking the repository and deploying your own instance.
+Deploy OpenSync to your own Convex project with your own WorkOS application.
 
-## Why Fork?
+## Choose a release
 
-- **Data ownership** - Keep all data in your own Convex instance
-- **Customization** - Modify features to fit your workflow
-- **Privacy** - Run entirely on your infrastructure
-- **Learning** - Study and modify the codebase
+Fork the repository on GitHub, including the `codex/convex-static-hosting-release` branch. The hosted static-hosting release is on that branch and has not yet been merged into `main`. Clone that branch from your fork, install dependencies with `npm ci`, then follow [Quick start](/getting-started/quick-start).
 
-## Quick Fork
+Before deployment:
 
-<Steps>
-  <Step title="Fork on GitHub">
-    Visit
-    [github.com/waynesutton/opensync](https://github.com/waynesutton/opensync)
-    and click **Fork**.
-  </Step>
-  <Step title="Clone locally">
-    ```bash git clone https://github.com/YOUR_USERNAME/opensync cd opensync ```
-  </Step>
-  <Step title="Install dependencies">```bash npm install ```</Step>
-  <Step title="Start Convex">
-    ```bash npx convex dev ``` This creates a new Convex project linked to your
-    account.
-  </Step>
-  <Step title="Start frontend">```bash npm run dev ```</Step>
-</Steps>
+- Select your own Convex project and separate development/production deployments.
+- Configure your WorkOS callback URLs, allowed origins and matching client IDs.
+- Replace the owner allowlist in `convex/lib/adminPolicy.ts` with your own verified identities.
+- Replace hosted build values in `deploy:static:prod`, or use the uploader commands in the [static-hosting guide](/hosting/static-hosting).
+- Keep private keys in your deployment's environment settings.
 
-## Project Structure
+## Develop locally
 
-```
-opensync/
-├── convex/           # Convex backend
-│   ├── schema.ts     # Database schema
-│   ├── http.ts       # HTTP endpoints
-│   ├── sessions.ts   # Session functions
-│   └── ...
-├── src/              # React frontend
-│   ├── pages/        # Page components
-│   ├── components/   # UI components
-│   └── ...
-├── docs/             # Documentation (MDX)
-└── scripts/          # Build scripts
-```
-
-## Local Development
-
-### Backend + Frontend
-
-Run both in separate terminals:
+Run these in separate terminals:
 
 ```bash
-# Terminal 1: Convex backend
 npx convex dev
+```
 
-# Terminal 2: Vite frontend
+```bash
 npm run dev
 ```
 
-### Environment Setup
+Use the frontend URL printed by Vite. Configure both localhost callbacks if you switch between ports 5173 and 5174.
 
-Create `.env.local`:
+## Publish and maintain
 
-```bash
-VITE_CONVEX_URL=https://your-convex-deployment.convex.cloud
-```
+Deploy backend functions, upload frontend assets and verify sign-in and plugin sync before directing users to the instance. Follow [Convex static hosting](/hosting/static-hosting).
 
-## Deploy Your Fork
+Review upstream changes before merging. Planned teams, evaluation leaderboards, moderation and the larger in-app docs redesign are separate from the deployed release. Do not bulk deploy an unrelated development checkout.
 
-### Backend
-
-```bash
-npx convex deploy
-```
-
-### Frontend
-
-Deploy to Netlify or Vercel with your repository.
-
-## Syncing Updates
-
-Keep your fork updated with upstream:
-
-```bash
-# Add upstream remote
-git remote add upstream https://github.com/waynesutton/opensync
-
-# Fetch and merge updates
-git fetch upstream
-git merge upstream/main
-```
-
-<Tip title="Stay updated">
-  Watch the repository for releases to get notified of important updates.
-</Tip>
+This setup uses managed Convex and WorkOS. See [requirements](/getting-started/requirements) if you intend to operate the Convex backend yourself.

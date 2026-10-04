@@ -6,7 +6,7 @@
   "logo": {
     "light": "/logo-light.svg",
     "dark": "/logo-dark.svg",
-    "href": "https://opensync.dev"
+    "href": "https://www.opensync.dev"
   },
   "favicon": "/favicon.svg",
   "colors": {
@@ -18,7 +18,7 @@
     "links": [
       {
         "label": "Dashboard",
-        "href": "https://opensync.dev"
+        "href": "https://www.opensync.dev/dashboard"
       },
       {
         "type": "github",
@@ -44,7 +44,9 @@
           "dashboard/sessions",
           "dashboard/evals",
           "dashboard/analytics",
-          "dashboard/context"
+          "dashboard/context",
+          "dashboard/usage-leaderboard",
+          "dashboard/admin"
         ]
       },
       {
@@ -83,7 +85,7 @@
         "group": "Hosting & Deploy",
         "pages": [
           "hosting/convex",
-          "hosting/netlify",
+          "hosting/static-hosting",
           "hosting/env"
         ]
       },

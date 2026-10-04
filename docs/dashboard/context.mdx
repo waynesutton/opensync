@@ -78,7 +78,7 @@ Embeddings are generated asynchronously after session sync. There may be a brief
 ### Full-text
 
 ```bash
-curl -X POST "https://polished-penguin-622.convex.site/search" \
+curl -X POST "https://api.opensync.dev/search" \
   -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
   -d '{"query": "authentication middleware", "type": "fulltext", "limit": 10}'
@@ -87,7 +87,7 @@ curl -X POST "https://polished-penguin-622.convex.site/search" \
 ### Semantic
 
 ```bash
-curl -X POST "https://polished-penguin-622.convex.site/search" \
+curl -X POST "https://api.opensync.dev/search" \
   -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
   -d '{"query": "how to handle login errors", "type": "semantic", "limit": 10}'
@@ -98,7 +98,7 @@ curl -X POST "https://polished-penguin-622.convex.site/search" \
 The dedicated `/api/context` endpoint returns results formatted for injection into LLM prompts:
 
 ```bash
-curl "https://polished-penguin-622.convex.site/api/context?q=handle+auth+errors&limit=5" \
+curl "https://api.opensync.dev/api/context?q=handle+auth+errors&limit=5" \
   -H "Authorization: Bearer osk_your_key"
 ```
 

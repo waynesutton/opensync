@@ -56,7 +56,7 @@ The Context tab in the dashboard supports a hybrid mode:
 ## Using via API
 
 ```bash
-curl -X POST "https://polished-penguin-622.convex.site/search" \
+curl -X POST "https://api.opensync.dev/search" \
   -H "Authorization: Bearer osk_your_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -97,7 +97,7 @@ Hybrid search is ideal for Retrieval-Augmented Generation because it retrieves b
 
 ```bash
 # Fetch relevant context from past sessions
-curl "https://polished-penguin-622.convex.site/api/context?q=handle+auth+errors&limit=5" \
+curl "https://api.opensync.dev/api/context?q=handle+auth+errors&limit=5" \
   -H "Authorization: Bearer osk_your_key"
 ```
 

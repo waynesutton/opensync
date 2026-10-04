@@ -1,124 +1,42 @@
 ---
-title: "Common Issues"
-description: "Solutions to common problems"
+title: "Common issues"
+description: "Check authentication, sync and hosting without deleting your data"
 ---
 
-# Common Issues
+# Common issues
 
-Solutions to frequently encountered problems.
+Start with the error and the affected environment before changing configuration.
 
-## Authentication Issues
+## Sign-in fails
 
-### "Invalid redirect URI"
+For an invalid redirect, compare the exact callback URL with WorkOS. For CORS, check the allowed origin separately. Register ports 5173 and 5174 if both are used locally. Match the frontend and backend WorkOS client IDs. The current browser integration does not use `WORKOS_COOKIE_PASSWORD`. See [WorkOS setup](/auth/workos).
 
-**Cause:** Your callback URL isn't configured in WorkOS.
+## Plugin rejects the custom API URL
 
-**Solution:**
+Published `opencode-sync-plugin` 0.3.7 and `claude-code-sync` 0.1.15 login validators require a Convex URL. For hosted OpenSync, use the compatibility URL from Settings:
 
-1. Go to WorkOS Dashboard > AuthKit > Redirects
-2. Add your callback URL (e.g., `https://your-app.com/callback`)
-3. For development, add `http://localhost:5173/callback`
-
-### "Cookie not set"
-
-**Cause:** `WORKOS_COOKIE_PASSWORD` is missing or too short.
-
-**Solution:**
-Ensure the password is at least 32 characters:
-
-```bash
-openssl rand -base64 32
+```text
+https://reminiscent-gull-645.convex.cloud
 ```
 
-### "User not created"
+For supported custom-domain clients and REST calls, use `https://api.opensync.dev`. `https://app.opensync.dev` serves the Convex client, not plugin HTTP requests. Existing keys and valid plugin configurations continue working.
 
-**Cause:** Auto-provision may not be configured.
+## OpenCode force sync finds no sessions
 
-**Solution:**
-Check that Convex auth config includes auto-provision settings.
+OpenCode installations using `opencode.db` need a compatible plugin reader. The published 0.3.7 reader expects the older JSON storage layout. This is tracked in [issue #34](https://github.com/waynesutton/opensync/issues/34). Reinstalling the app or deleting server data does not fix that reader.
 
-## Sync Issues
+## Dates or token totals look wrong
 
-### Plugin shows "Not connected"
+Record your plugin version and whether the problem happened during live sync or backfill. Preserve your source data. Date backfill and token accounting have plugin-dependent reports; see [#29](https://github.com/waynesutton/opensync/issues/29) and [#16](https://github.com/waynesutton/opensync/issues/16). A context-window count is different from cumulative usage across requests.
 
-**Cause:** Invalid or missing API key.
+## Frontend is blank or a route fails on reload
 
-**Solution:**
+Check the browser console, the built `VITE_CONVEX_URL`, the WorkOS client ID and the selected Convex deployment. Confirm static routes are registered after API routes and that the SPA fallback serves `/dashboard`. Follow [static hosting](/hosting/static-hosting).
 
-1. Generate a new API key in Settings
-2. Run `plugin-name login` again with the new key
+## Semantic search has no results
 
-### Sessions not appearing
+Check that the intended deployment has its OpenAI key and that embedding jobs succeeded. Full-text search and semantic search have different prerequisites. Do not change embedding models without checking vector dimensions and planning reindexing.
 
-**Cause:** Sessions may not be syncing.
+## Deletion reports an error
 
-**Solution:**
-
-1. Check plugin status: `plugin-name status`
-2. Try manual sync: `plugin-name sync`
-3. Verify the source tool is writing sessions
-
-### Duplicate sessions
-
-**Cause:** Session IDs may have changed.
-
-**Solution:**
-
-1. This usually resolves itself
-2. If persistent, clear and re-sync
-
-## Search Issues
-
-### Semantic search not working
-
-**Cause:** OpenAI API key not configured.
-
-**Solution:**
-
-```bash
-npx convex env set OPENAI_API_KEY sk-...
-```
-
-### No search results
-
-**Cause:** Search index may be empty.
-
-**Solution:**
-
-1. Ensure sessions exist in the database
-2. Check that searchableText is populated
-3. Wait for embeddings to generate
-
-## Deployment Issues
-
-### Convex deploy fails
-
-**Cause:** Schema or function errors.
-
-**Solution:**
-
-1. Run `npx convex dev` to see errors locally
-2. Fix TypeScript errors
-3. Ensure schema is valid
-
-### Frontend shows blank page
-
-**Cause:** Missing environment variables.
-
-**Solution:**
-
-1. Check browser console for errors
-2. Verify `VITE_CONVEX_URL` is set
-3. Ensure Convex is deployed and running
-
-## Performance Issues
-
-### Slow loading
-
-**Cause:** Large number of sessions or messages.
-
-**Solution:**
-
-1. Use pagination (default behavior)
-2. Add filters to reduce data fetched
-3. Check Convex dashboard for slow queries
+Capture the request ID and error text, excluding API keys and session content. Avoid repeated account deletion attempts while a deletion is running. Report the error in the existing [deletion follow-up](https://github.com/waynesutton/opensync/issues/29).
