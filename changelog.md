@@ -13,6 +13,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 
+- Preserve rapid message snapshots and omitted parts, scope message lookups to sessions, and retain rapid provider/cost/completion updates. Added 11 regression cases; 120 release tests pass.
+
 - Fixed Netlify build error: `t.bg` property does not exist on theme classes
   - Changed `t.bg` to `t.bgPrimary` in Dashboard.tsx session detail container (line 1395)
   - Theme classes use `bgPrimary` not `bg` for primary background color

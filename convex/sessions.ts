@@ -333,9 +333,8 @@ export const upsert = internalMutation({
     if (existing) {
       // Idempotency check: skip if recently updated with same key values
       const noMeaningfulChanges =
-        args.title === existing.title &&
-        args.model === existing.model &&
-        args.projectPath === existing.projectPath &&
+        (["title", "model", "projectPath", "projectName", "provider", "source", "cost", "durationMs"] as const)
+          .every(key => args[key] === undefined || args[key] === existing[key]) &&
         (promptTokens === 0 || promptTokens === existing.promptTokens) &&
         (completionTokens === 0 || completionTokens === existing.completionTokens);
 
@@ -611,9 +610,10 @@ export const batchUpsert = internalMutation({
         if (existing) {
           // Idempotency check
           const noChanges =
-            session.title === existing.title &&
-            session.model === existing.model &&
-            (promptTokens === 0 || promptTokens === existing.promptTokens);
+            (["title", "model", "projectPath", "projectName", "provider", "source", "cost", "durationMs"] as const)
+              .every(key => session[key] === undefined || session[key] === existing[key]) &&
+            (promptTokens === 0 || promptTokens === existing.promptTokens) &&
+            (completionTokens === 0 || completionTokens === existing.completionTokens);
 
           if (noChanges && now - existing.updatedAt < SESSION_DEDUP_MS) {
             return { action: "skipped" as const };

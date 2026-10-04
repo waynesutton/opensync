@@ -1,5 +1,13 @@
 # Tasks
 
+## Issue review (2026-10-04 01:58 UTC)
+
+- [x] Publish the audited Mintlify docs (91eb411).
+- [x] Verify narrow sync fixes with 120 tests, types and targeted lint.
+- [ ] Complete staged-index production rollout and smoke checks.
+- [ ] Publish coordinated plugin fixes after npm/source reconciliation.
+
+
 ## Completed — focused hosting release (2026-10-04 00:53 UTC)
 
 - [x] Capture the isolated live hosting/admin/usage/design release; remove the migration notice, retaining setup warnings and leaderboard links.
