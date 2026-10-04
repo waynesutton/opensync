@@ -1,0 +1,1 @@
+[{"number":3,"state":"OPEN","title":"Bug: Session data (directory, model, provider) not synced correctly from local storage","url":"https://github.com/waynesutton/opencode-sync-plugin/issues/3"},{"number":1,"state":"OPEN","title":"Verification fails when using `opencode.jsonc` instead of `opencode.json`","url":"https://github.com/waynesutton/opencode-sync-plugin/issues/1"}]

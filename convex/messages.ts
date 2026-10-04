@@ -1,10 +1,21 @@
 import { reconcileUsageSession } from "./usageAccounting";
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
+import { internalMutation, type MutationCtx } from "./_generated/server";
+import { Id, type Doc } from "./_generated/dataModel";
+import type { Infer } from "convex/values";
 
-// Dedup window to prevent rapid updates causing write conflicts
-const MESSAGE_DEDUP_MS = 5 * 1000;
+// Skip identical snapshots, never content that merely arrived within a time window.
+async function unchanged(ctx: MutationCtx, existing: Doc<"messages">, input: Infer<typeof messageInputValidator>) {
+  const sameFields = (["textContent", "model", "promptTokens", "completionTokens", "durationMs"] as const)
+    .every(key => input[key] === undefined || input[key] === existing[key]);
+  if (!sameFields) return false;
+  if (input.parts === undefined) return true;
+  const stored = await ctx.db.query("parts").withIndex("by_message", q => q.eq("messageId", existing._id)).take(1001);
+  if (stored.length > 1000) return false;
+  const incoming = input.parts;
+  return stored.length === incoming.length && stored.sort((a, b) => a.order - b.order)
+    .every((part, index) => part.type === incoming[index].type && JSON.stringify(part.content) === JSON.stringify(incoming[index].content));
+}
 
 // Internal: upsert message from sync
 export const upsert = internalMutation({
@@ -33,17 +44,6 @@ export const upsert = internalMutation({
   returns: v.id("messages"),
   handler: async (ctx, args) => {
     const now = Date.now();
-
-    // Check if message already exists (idempotency check first)
-    const existing = await ctx.db
-      .query("messages")
-      .withIndex("by_external_id", (q) => q.eq("externalId", args.externalId))
-      .first();
-
-    // Early return if message exists and was recently updated (idempotent)
-    if (existing && now - existing.createdAt < MESSAGE_DEDUP_MS) {
-      return existing._id;
-    }
 
     // Find session using index
     let session = await ctx.db
@@ -92,6 +92,13 @@ export const upsert = internalMutation({
       sessionSearchableText = session.searchableText;
     }
 
+    // Scope message identity to the authenticated user's resolved session.
+    const existing = await ctx.db.query("messages")
+      .withIndex("by_session_external", q => q.eq("sessionId", sessionId).eq("externalId", args.externalId))
+      .first();
+
+    if (existing && await unchanged(ctx, existing, args)) return existing._id;
+
     let messageId: Id<"messages">;
     let shouldUpdateSessionStats = false;
 
@@ -106,14 +113,16 @@ export const upsert = internalMutation({
       });
       messageId = existing._id;
 
-      // Delete existing parts in parallel
-      const existingParts = await ctx.db
-        .query("parts")
-        .withIndex("by_message", (q) => q.eq("messageId", messageId))
-        .collect();
-      
-      if (existingParts.length > 0) {
-        await Promise.all(existingParts.map((part) => ctx.db.delete(part._id)));
+      // An omitted parts field leaves the stored snapshot intact.
+      if (args.parts !== undefined) {
+        const existingParts = await ctx.db
+          .query("parts")
+          .withIndex("by_message", (q) => q.eq("messageId", messageId))
+          .collect();
+
+        if (existingParts.length > 0) {
+          await Promise.all(existingParts.map((part) => ctx.db.delete(part._id)));
+        }
       }
     } else {
       // Create new message - use provided createdAt or current time
@@ -284,18 +293,18 @@ export const batchUpsert = internalMutation({
         sessionSearchableText = session.searchableText || "";
       }
 
-      // Process messages in parallel
-      const results = await Promise.all(
-        messages.map(async (msg) => {
+      // Serial writes make repeated IDs inside the same batch idempotent.
+      const results = [];
+      for (const msg of messages) {
+        results.push(await (async () => {
           try {
             // Check if message exists
             const existing = await ctx.db
               .query("messages")
-              .withIndex("by_external_id", (q) => q.eq("externalId", msg.externalId))
+              .withIndex("by_session_external", (q) => q.eq("sessionId", sessionId).eq("externalId", msg.externalId))
               .first();
 
-            // Early return for dedup
-            if (existing && now - existing.createdAt < MESSAGE_DEDUP_MS) {
+            if (existing && await unchanged(ctx, existing, msg)) {
               return { action: "skipped" as const, text: "" };
             }
 
@@ -312,32 +321,33 @@ export const batchUpsert = internalMutation({
               });
               messageId = existing._id;
 
-              // Delete existing parts in parallel
-              const existingParts = await ctx.db
-                .query("parts")
-                .withIndex("by_message", (q) => q.eq("messageId", messageId))
-                .collect();
-              if (existingParts.length > 0) {
-                await Promise.all(existingParts.map((p) => ctx.db.delete(p._id)));
-              }
+              // Preserve parts on metadata-only updates.
+              if (msg.parts !== undefined) {
+                const existingParts = await ctx.db
+                  .query("parts")
+                  .withIndex("by_message", (q) => q.eq("messageId", messageId))
+                  .collect();
+                if (existingParts.length > 0) {
+                  await Promise.all(existingParts.map((p) => ctx.db.delete(p._id)));
+                }
 
-              return { action: "updated" as const, text: "" };
+              }
+            } else {
+              // Insert new message
+              messageId = await ctx.db.insert("messages", {
+                sessionId,
+                externalId: msg.externalId,
+                role: msg.role,
+                textContent: msg.textContent,
+                model: msg.model,
+                promptTokens: msg.promptTokens,
+                completionTokens: msg.completionTokens,
+                durationMs: msg.durationMs,
+                createdAt: now,
+              });
             }
 
-            // Insert new message
-            messageId = await ctx.db.insert("messages", {
-              sessionId,
-              externalId: msg.externalId,
-              role: msg.role,
-              textContent: msg.textContent,
-              model: msg.model,
-              promptTokens: msg.promptTokens,
-              completionTokens: msg.completionTokens,
-              durationMs: msg.durationMs,
-              createdAt: now,
-            });
-
-            // Insert parts in parallel
+            // Insert the replacement snapshot for both new and existing messages.
             if (msg.parts && msg.parts.length > 0) {
               await Promise.all(
                 msg.parts.map((part, i) =>
@@ -366,12 +376,12 @@ export const batchUpsert = internalMutation({
                 .join(" ");
             }
 
-            return { action: "inserted" as const, text: textContent };
+            return { action: existing ? "updated" as const : "inserted" as const, text: textContent };
           } catch (e) {
             return { action: "error" as const, error: `${msg.externalId}: ${e}`, text: "" };
           }
-        })
-      );
+        })());
+      }
 
       // Aggregate results for session update
       let newMessages = 0;
@@ -384,6 +394,7 @@ export const batchUpsert = internalMutation({
           if (result.text) textParts.push(result.text);
         } else if (result.action === "updated") {
           updated++;
+          if (result.text) textParts.push(result.text);
         } else if (result.action === "skipped") {
           skipped++;
         } else if (result.action === "error") {

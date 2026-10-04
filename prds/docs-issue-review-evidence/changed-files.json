@@ -1,0 +1,68 @@
+{
+  "docs_published": [
+    "docs/api/authentication.mdx",
+    "docs/api/endpoints.mdx",
+    "docs/api/errors.mdx",
+    "docs/archive/v1/netlify.mdx",
+    "docs/auth/workos.mdx",
+    "docs/dashboard/admin.mdx",
+    "docs/dashboard/context.mdx",
+    "docs/dashboard/overview.mdx",
+    "docs/dashboard/usage-leaderboard.mdx",
+    "docs/docs.json",
+    "docs/fork/guide.mdx",
+    "docs/getting-started/hosted.mdx",
+    "docs/getting-started/quick-start.mdx",
+    "docs/getting-started/requirements.mdx",
+    "docs/hosting/convex.mdx",
+    "docs/hosting/env.mdx",
+    "docs/hosting/netlify.mdx",
+    "docs/hosting/static-hosting.mdx",
+    "docs/index.mdx",
+    "docs/plugins/claude-code-sync.mdx",
+    "docs/plugins/codex-sync.mdx",
+    "docs/plugins/cursor-sync.mdx",
+    "docs/plugins/opencode-sync.mdx",
+    "docs/search/fulltext.mdx",
+    "docs/search/hybrid.mdx",
+    "docs/search/semantic.mdx",
+    "docs/troubleshooting/common-issues.mdx",
+    "docs/troubleshooting/faq.mdx"
+  ],
+  "app_fix_review": [
+    "changelog.md",
+    "convex/messages.ts",
+    "convex/schema.ts",
+    "convex/sessions.ts",
+    "convex/syncCompatibility.test.ts",
+    "files.md",
+    "prds/docs-and-issue-review-2026-10-03.md",
+    "task.md"
+  ],
+  "plugin_fix_review": [
+    "changelog.md",
+    "files.md",
+    "package-lock.json",
+    "package.json",
+    "prds/verification-and-metadata-fixes.md",
+    "src/cli.ts",
+    "src/compatibility.ts",
+    "src/index.ts",
+    "task.md",
+    "tests/compatibility.test.ts",
+    "tests/live-metadata.test.ts"
+  ],
+  "production_index_stage": [
+    "convex/schema.ts",
+    "prds/sync-index-stage.md"
+  ],
+  "local_tracking": [
+    "prds/docs-and-issue-review-2026-10-03.md",
+    "prds/opensync_issue_triage_fixes_1434c6e3.plan.md",
+    "prds/issue-triage-fixes-2026-07.md",
+    "changelog.md",
+    "task.md",
+    "files.md",
+    "prds/docs-issue-review-evidence/"
+  ]
+}

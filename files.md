@@ -206,3 +206,10 @@ Claude AI skill files.
 - `src/styles/typography.css`, `usage-directory.css`, `design.md`: shared typography, usage surfaces and persistent design guidance.
 - `convex/*.test.ts`, `src/pages/__tests__/`, `src/lib/pluginEndpoints.test.tsx`, `vitest.config.ts`: offline release validation.
 - `prds/convex-static-hosting-release-2026-10-03.md`, `prds/migration-complete-discussion.md`: live release handoff and closed public announcement.
+
+## October 2026 issue review
+
+- `convex/syncCompatibility.test.ts`: regression coverage for message snapshots, ownership, retry idempotency and rapid session metadata updates.
+- `prds/docs-and-issue-review-2026-10-03.md`: issue map, release boundaries, changed files and validation evidence.
+
+- `prds/docs-issue-review-evidence/`: public docs screenshots, issue/comment status, file manifest, runtime comparison and read-only endpoint verification.
